@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>Project Mapping Control</title>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="/stylesheets/vendor/uikit.min.css" />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+
+    <!-- UIkit JS -->
+    <script src="/javascripts/vendor/uikit.min.js"></script>
+    <script src="/javascripts/vendor/uikit-icons.min.js"></script>
+  </head>
+
+  <body>
+    <div id="page" class="fullscreen">
+      <ul id="zone-select" uk-tab>
+        <li class="uk-active"><a href="javascript:void(0)">Zone 1</a></li>
+        <li class=""><a href="javascript:void(0)">Zone 2</a></li>
+        <li class=""><a href="javascript:void(0)">Zone 3</a></li>
+      </ul>
+
+      <div uk-grid>
+        <form class="uk-form uk-grid uk-width-1-1">
+          <div class="uk-width-1-3">
+            <label>Clouds</label>
+            <input type="range" class="uk-range" min="0" max="100" value="0" />
+          </div>
+          <div class="uk-width-1-3">
+            <label>Rain</label>
+            <input type="range" class="uk-range" min="0" max="100" value="0" />
+          </div>
+          <div class="uk-width-1-3">
+            <label>Snow</label>
+            <input type="range" class="uk-range" min="0" max="100" value="0" />
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/javascripts/main.js"></script>
+  </body>
+</html>
+;

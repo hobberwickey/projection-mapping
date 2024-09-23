@@ -1,0 +1,658 @@
+const defaultInputSections = [
+  [
+    [0, 0],
+    [0.5, 0.5],
+    [0, 1],
+  ],
+  [
+    [0, 0],
+    [0.5, 0.5],
+    [1, 0],
+  ],
+  [
+    [1, 0],
+    [0.5, 0.5],
+    [1, 1],
+  ],
+  [
+    [0, 1],
+    [0.5, 0.5],
+    [1, 1],
+  ],
+];
+const defaultOutputSections = [
+  [
+    [0, 0],
+    [0.5, 0.5],
+    [0, 1],
+  ],
+  [
+    [0, 0],
+    [0.5, 0.5],
+    [1, 0],
+  ],
+  [
+    [1, 0],
+    [0.5, 0.5],
+    [1, 1],
+  ],
+  [
+    [0, 1],
+    [0.5, 0.5],
+    [1, 1],
+  ],
+];
+
+class Screen {
+  constructor() {
+    this.selected = 0;
+    this.pointSize = 10;
+    this.layer = "output";
+    this.srcs = ["/videos/clouds.mp4", "/videos/snow.mp4", "videos/rain.mp4"];
+    this.videos = [...document.querySelectorAll("video")];
+    this.zoneColors = {
+      input: [
+        [255, 0, 0],
+        [0, 255, 0],
+        [0, 0, 255],
+      ],
+      output: [
+        [255, 255, 0],
+        [255, 0, 255],
+        [0, 255, 255],
+      ],
+    };
+    this.contextWidth = 1280;
+    this.contextHeight = 800;
+
+    this.ctx = document
+      .querySelector("#screen")
+      .getContext("2d", { willReadFrequently: true });
+
+    this.ui = document.querySelector("#ui").getContext("2d");
+
+    // Calculated
+    this.zones = JSON.parse(localStorage.getItem("zones")) || [
+      {
+        input: JSON.parse(JSON.stringify(defaultInputSections)),
+        output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      },
+    ];
+    this.pointClouds = null;
+    this.matrices = this.videos.map((v) => null);
+    this.buffers = this.videos.map((v) => null);
+    this.contexts = this.videos.map((v) => null);
+
+    this.selectedZone = null;
+    this.selectedTri = null;
+    this.selectedPoint = null;
+
+    this.srcs.map((src, idx) => {
+      this.videos[idx].addEventListener("loadedmetadata", () => {
+        setTimeout(() => {
+          // this.calculatePointClouds();
+          this.createContext(idx);
+          this.createBuffers(idx);
+          this.calculateMatrix(idx);
+          this.step(idx);
+        }, 100);
+      });
+
+      this.videos[idx].src = src;
+    });
+
+    window.addEventListener("mousedown", (e) => {
+      this.videos.map((video) => {
+        video.pause();
+      });
+
+      this.checkPoints(e);
+    });
+
+    window.addEventListener("mouseup", () => {
+      this.videos.map((video) => {
+        video.play();
+      });
+
+      this.selectedZone = null;
+      this.selectedTri = null;
+      this.selectedPoint = null;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (
+        this.selectedZone !== null &&
+        this.selectedTri !== null &&
+        this.selectedPoint !== null
+      ) {
+        this.movePoint(e);
+
+        this.calculatePointClouds();
+        this.calculateMatrices();
+
+        for (var i = 0; i < this.videos.length; i++) {
+          this.drawFrame(i);
+        }
+      }
+    });
+
+    window.addEventListener("keypress", (e) => {
+      if (e.keyCode === 32) {
+        this.layer = this.layer === "input" ? "output" : "input";
+      }
+    });
+
+    // this.drawUI();
+  }
+
+  // connect(e) {
+  //     e.target.value.cancelVideoFrameCallback(animation_handle);
+  //     step();
+  // }
+
+  step(idx) {
+    let start = Date.now();
+    this.drawFrame(idx);
+    this.videos[idx].requestVideoFrameCallback(this.step.bind(this, idx));
+    console.log(Date.now() - start);
+  }
+
+  _drawFrame(idx) {
+    let start = Date.now();
+    let video = this.videos[idx];
+    let pointCloud = this.pointClouds[idx];
+    let matrices = this.matrices[idx];
+    let buffer = this.buffers[idx];
+
+    let iWidth = buffer.canvas.width;
+    let iHeight = buffer.canvas.height;
+
+    let oWidth = this.contextWidth;
+    let oHeight = this.contextHeight;
+
+    buffer.drawImage(video, 0, 0, iWidth, iHeight);
+    let iData = buffer.getImageData(0, 0, iWidth, iHeight);
+
+    this.ctx.clearRect(0, 0, oWidth, oHeight);
+    let oData = this.ctx.getImageData(0, 0, oWidth, oHeight);
+
+    let zLength = pointCloud.length;
+    for (var i = 0; i < zLength; i++) {
+      let tLength = pointCloud[i].length;
+      let matrix = matrices[i];
+
+      for (var j = 0; j < tLength; j++) {
+        let iClrIdx = (pointCloud[i][j][0] + pointCloud[i][j][1] * iWidth) << 2;
+        let oCoords = this.applyToPoint(matrix, pointCloud[i][j]);
+        let oClrIdx = ((oCoords[0] | 0) + (oCoords[1] | 0) * oWidth) << 2;
+
+        oData.data[oClrIdx] = iData.data[iClrIdx];
+        oData.data[oClrIdx + 1] = iData.data[iClrIdx + 1];
+        oData.data[oClrIdx + 2] = iData.data[iClrIdx + 2];
+        oData.data[oClrIdx + 3] = iData.data[iClrIdx + 3];
+      }
+    }
+
+    this.ctx.putImageData(oData, 0, 0);
+
+    // video.requestVideoFrameCallback(this.step.bind(this, idx));
+  }
+
+  drawFrame(idx) {
+    let start = Date.now();
+    let video = this.videos[idx];
+    // let pointCloud = this.pointClouds[idx];
+    let matrices = this.matrices[idx];
+    let buffer = this.buffers[idx];
+
+    let iWidth = buffer.canvas.width;
+    let iHeight = buffer.canvas.height;
+
+    let oWidth = this.contextWidth;
+    let oHeight = this.contextHeight;
+
+    this.contexts[idx].clearRect(0, 0, oWidth, oHeight);
+
+    for (var i = 0; i < this.zones.length; i++) {
+      let zone = this.zones[i]["input"];
+
+      if (!this.matrices[i]) {
+        continue;
+      }
+
+      for (var j = 0; j < zone.length; j++) {
+        let pnt = zone[j];
+        let originX = (iWidth * pnt[0][0]) | 0;
+        let originY = (iHeight * pnt[0][1]) | 0;
+        let matrix = this.matrices[i][j];
+
+        buffer.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
+        buffer.save();
+        buffer.beginPath();
+        buffer.moveTo(originX, originY);
+        for (var k = 1; k < 3; k++) {
+          let x = (iWidth * pnt[k][0]) | 0;
+          let y = (iHeight * pnt[k][1]) | 0;
+
+          buffer.lineTo(x, y);
+        }
+        buffer.lineTo(originX, originY);
+        buffer.clip();
+        buffer.drawImage(video, 0, 0, iWidth, iHeight);
+        buffer.restore();
+
+        this.contexts[idx].setTransform(
+          matrix.a,
+          matrix.b,
+          matrix.c,
+          matrix.d,
+          matrix.e,
+          matrix.f,
+        );
+        this.contexts[idx].drawImage(buffer.canvas, 0, 0, oWidth, oHeight);
+        this.contexts[idx].resetTransform();
+      }
+    }
+  }
+
+  isInsideTriangle(P, p1, p2, p3) {
+    let x = P[0];
+    let x1 = p1[0];
+    let x2 = p2[0];
+    let x3 = p3[0];
+
+    let y = P[1];
+    let y1 = p1[1];
+    let y2 = p2[1];
+    let y3 = p3[1];
+
+    let full = Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
+    let first = Math.abs(x1 * (y2 - y) + x2 * (y - y1) + x * (y1 - y2));
+    let second = Math.abs(x1 * (y - y3) + x * (y3 - y1) + x3 * (y1 - y));
+    let third = Math.abs(x * (y2 - y3) + x2 * (y3 - y) + x3 * (y - y2));
+
+    return Math.abs(first + second + third - full) < 0.0000000001;
+  }
+
+  calculatePointClouds() {
+    // Cloud structure:
+    // --video layer
+    //   --zone layer
+    //     --triangle layer
+
+    let video_clouds = [];
+
+    for (var v = 0; v < this.videos.length; v++) {
+      let video = this.videos[v];
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+
+      let zone_clouds = [];
+      for (var z = 0; z < this.zones.length; z++) {
+        let zone = this.zones[z].input;
+
+        for (var t = 0; t < zone.length; t++) {
+          let triangle = zone[t];
+          let transformed = triangle.map((tri) => {
+            return [(tri[0] * width) | 0, (tri[1] * height) | 0];
+          });
+
+          let triangle_cloud = [];
+          for (var x = 0; x < width; x++) {
+            for (var y = 0; y < height; y++) {
+              if (
+                this.isInsideTriangle(
+                  [x, y],
+                  transformed[0],
+                  transformed[1],
+                  transformed[2],
+                )
+              ) {
+                triangle_cloud.push([x, y]);
+              }
+            }
+          }
+
+          zone_clouds.push(triangle_cloud);
+        }
+
+        video_clouds.push(zone_clouds);
+      }
+    }
+
+    this.pointClouds = video_clouds;
+  }
+
+  calculateMatrices() {
+    // let video_matrices = [];
+
+    for (var v = 0; v < this.videos.length; v++) {
+      this.calculateMatrix(v);
+    }
+
+    // console.log(video_matrices);
+
+    // this.matrices = video_matrices;
+  }
+
+  calculateMatrix(idx) {
+    let video = this.videos[idx];
+    let widthI = video.videoWidth;
+    let heightI = video.videoHeight;
+
+    // let widthO = this.contexts[idx].canvas.width;
+    // let heightO = this.contexts[idx].canvas.height;
+
+    let widthO = video.videoWidth;
+    let heightO = video.videoHeight;
+
+    let zone_matrices = [];
+    for (var z = 0; z < this.zones.length; z++) {
+      let zoneI = this.zones[z].input;
+      let zoneO = this.zones[z].output;
+
+      for (var t = 0; t < zoneI.length; t++) {
+        let triangleI = zoneI[t];
+        let transformedI = triangleI.map((tri) => {
+          return [(tri[0] * widthI) | 0, (tri[1] * heightI) | 0];
+        });
+
+        let triangleO = zoneO[t];
+        let transformedO = triangleO.map((tri) => {
+          return [(tri[0] * widthO) | 0, (tri[1] * heightO) | 0];
+        });
+
+        let triangle_matrix = this.matrixFromTriangles(
+          transformedI,
+          transformedO,
+        );
+
+        console.log(triangle_matrix);
+
+        zone_matrices.push(triangle_matrix);
+      }
+    }
+
+    this.matrices[idx] = zone_matrices;
+  }
+
+  createBuffers() {
+    for (var i = 0; i < this.videos.length; i++) {
+      this.createBuffer(i);
+    }
+  }
+
+  createBuffer(idx) {
+    let video = this.videos[idx];
+    let buffer = document.createElement("canvas");
+
+    buffer.width = video.videoWidth;
+    buffer.height = video.videoHeight;
+
+    let bufferCtx = buffer.getContext("2d", { willReadFrequently: true });
+    this.buffers[idx] = bufferCtx;
+  }
+
+  createContexts() {
+    for (var i = 0; i < this.videos.length; i++) {
+      this.createContext(i);
+    }
+  }
+
+  createContext(idx) {
+    console.log("Creating Context:", idx);
+    let video = this.videos[idx];
+    let canvas = document.createElement("canvas");
+
+    canvas.width = this.contextWidth;
+    canvas.height = this.contextHeight;
+
+    let ctx = canvas.getContext("2d", { willReadFrequently: true });
+    this.contexts[idx] = ctx;
+    document.querySelector(".contexts").appendChild(canvas);
+  }
+
+  drawUI() {
+    this.ui.clearRect(0, 0, this.ui.canvas.width, this.ui.canvas.height);
+    this.drawPoints();
+    this.tracePoints();
+
+    window.requestAnimationFrame(this.drawUI.bind(this));
+  }
+
+  tracePoints() {
+    let zoneCnt = this.zones.length;
+
+    for (var i = 0; i < zoneCnt; i++) {
+      let clr = this.zoneColors[this.layer][i];
+      this.ui.strokeStyle = `rgb(${clr[0]},${clr[1]},${clr[2]})`;
+
+      let zone = this.zones[i][this.layer];
+      let pntCnt = zone.length;
+
+      let width = this.contexts[0].width;
+      let height = this.contexts[0].height;
+
+      for (var j = 0; j < pntCnt; j++) {
+        let pnt = zone[j];
+        let originX = (width * pnt[0][0]) | 0;
+        let originY = (height * pnt[0][1]) | 0;
+
+        this.ui.beginPath();
+        this.ui.moveTo(originX, originY);
+        for (var k = 1; k < 3; k++) {
+          let x = (width * pnt[k][0]) | 0;
+          let y = (height * pnt[k][1]) | 0;
+
+          this.ui.lineTo(x, y);
+        }
+        this.ui.lineTo(originX, originY);
+        this.ui.stroke();
+        this.ui.closePath();
+      }
+    }
+  }
+
+  drawPoints() {
+    this.loopPoints(this.drawPoint.bind(this));
+  }
+
+  drawPoint(x, y, zoneIdx) {
+    let offset = this.pointSize >> 1;
+    let clr = this.zoneColors[this.layer][zoneIdx];
+
+    this.ui.fillStyle = `rgb(${clr[0]},${clr[1]},${clr[2]})`;
+    this.ui.fillRect(x - offset, y - offset, this.pointSize, this.pointSize);
+
+    return true;
+  }
+
+  checkPoints(e) {
+    this.loopPoints(this.checkPoint.bind(this, e));
+  }
+
+  checkPoint(e, x, y, zoneIdx, quadIdx, pntIdx) {
+    let offset = this.pointSize >> 1;
+    let mouseX = e.pageX * (this.contextWidth / window.innerWidth);
+    let mouseY = e.pageY * (this.contextHeight / window.innerHeight);
+
+    if (
+      mouseX <= x + offset &&
+      mouseX >= x - offset &&
+      mouseY <= y + offset &&
+      mouseY >= y - offset
+    ) {
+      this.selectedZone = zoneIdx;
+      this.selectedTri = quadIdx;
+      this.selectedPoint = pntIdx;
+
+      return false;
+    }
+    return true;
+  }
+
+  movePoint(e) {
+    // TODO: THIS is what needs to be calulated per video
+    let surface = {
+      // input: this.videos[this.selectedZone],
+      input: this.ctx.canvas,
+      output: this.ctx.canvas,
+    }[this.layer];
+    let width = surface.width;
+    let height = surface.height;
+
+    let x = (e.pageX * (this.ctx.canvas.width / window.innerWidth)) / width;
+    let y = (e.pageY * (this.ctx.canvas.height / window.innerHeight)) / height;
+
+    let pnt =
+      this.zones[this.selectedZone][this.layer][this.selectedTri][
+        this.selectedPoint
+      ];
+
+    pnt[0] = x;
+    pnt[1] = y;
+  }
+
+  loopPoints(fn) {
+    let zoneCnt = this.zones.length;
+    let pntSize = this.pointSize;
+
+    for (var i = 0; i < zoneCnt; i++) {
+      let zone = this.zones[i][this.layer];
+      let pntCnt = zone.length;
+      let surface = {
+        input: this.ctx.canvas,
+        output: this.ctx.canvas,
+      }[this.layer];
+      let width = surface.width;
+      let height = surface.height;
+
+      for (var j = 0; j < pntCnt; j++) {
+        let pnt = zone[j];
+        let x;
+        let y;
+
+        for (var k = 0; k < 3; k++) {
+          x = (width * pnt[k][0]) | 0;
+          y = (height * pnt[k][1]) | 0;
+
+          let cont = fn(x, y, i, j, k);
+          if (!cont) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  inverse(matrix) {
+    const { a, b, c, d, e, f } = matrix;
+    const denom = a * d - b * c;
+
+    return {
+      a: d / denom,
+      b: b / -denom,
+      c: c / -denom,
+      d: a / denom,
+      e: (d * e - c * f) / -denom,
+      f: (b * e - a * f) / denom,
+    };
+  }
+
+  transform(...matrices) {
+    matrices = Array.isArray(matrices[0]) ? matrices[0] : matrices;
+
+    const multiply = (m1, m2) => {
+      return {
+        a: m1.a * m2.a + m1.c * m2.b,
+        c: m1.a * m2.c + m1.c * m2.d,
+        e: m1.a * m2.e + m1.c * m2.f + m1.e,
+        b: m1.b * m2.a + m1.d * m2.b,
+        d: m1.b * m2.c + m1.d * m2.d,
+        f: m1.b * m2.e + m1.d * m2.f + m1.f,
+      };
+    };
+
+    switch (matrices.length) {
+      case 0:
+        throw new Error("no matrices provided");
+
+      case 1:
+        return matrices[0];
+
+      case 2:
+        return multiply(matrices[0], matrices[1]);
+
+      default: {
+        const [m1, m2, ...rest] = matrices;
+        const m = multiply(m1, m2);
+        return transform(m, ...rest);
+      }
+    }
+  }
+
+  smoothMatrix(matrix, precision = 10000000000) {
+    return {
+      a: Math.round(matrix.a * precision) / precision,
+      b: Math.round(matrix.b * precision) / precision,
+      c: Math.round(matrix.c * precision) / precision,
+      d: Math.round(matrix.d * precision) / precision,
+      e: Math.round(matrix.e * precision) / precision,
+      f: Math.round(matrix.f * precision) / precision,
+    };
+  }
+
+  matrixFromTriangles(t1, t2) {
+    const px1 = t1[0][0];
+    const py1 = t1[0][1];
+    const px2 = t2[0][0];
+    const py2 = t2[0][1];
+
+    // point q = second point of the triangle
+    const qx1 = t1[1][0];
+    const qy1 = t1[1][1];
+    const qx2 = t2[1][0];
+    const qy2 = t2[1][1];
+
+    // point r = third point of the triangle
+    const rx1 = t1[2][0];
+    const ry1 = t1[2][1];
+    const rx2 = t2[2][0];
+    const ry2 = t2[2][1];
+
+    const r1 = {
+      a: px1 - rx1,
+      b: py1 - ry1,
+      c: qx1 - rx1,
+      d: qy1 - ry1,
+      e: rx1,
+      f: ry1,
+    };
+    const r2 = {
+      a: px2 - rx2,
+      b: py2 - ry2,
+      c: qx2 - rx2,
+      d: qy2 - ry2,
+      e: rx2,
+      f: ry2,
+    };
+
+    const inverseR1 = this.inverse(r1);
+    const affineMatrix = this.transform([r2, inverseR1]);
+
+    // round the matrix elements to smooth the finite inversion
+    return this.smoothMatrix(affineMatrix);
+  }
+
+  applyToPoint(matrix, point) {
+    return [
+      matrix.a * point[0] + matrix.c * point[1] + matrix.e,
+      matrix.b * point[0] + matrix.d * point[1] + matrix.f,
+    ];
+  }
+}
+
+let screen = null;
+window.addEventListener("load", () => {
+  screen = new Screen();
+});
