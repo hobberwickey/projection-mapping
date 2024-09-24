@@ -1,45 +1,45 @@
 const defaultInputSections = [
   [
-    [0, 0],
+    [0.01, 0.01],
     [0.5, 0.5],
-    [0, 1],
+    [0.01, 0.99],
   ],
   [
-    [0, 0],
+    [0.01, 0.01],
     [0.5, 0.5],
-    [1, 0],
+    [0.99, 0.01],
   ],
   [
-    [1, 0],
+    [0.99, 0.01],
     [0.5, 0.5],
-    [1, 1],
+    [0.99, 0.99],
   ],
   [
-    [0, 1],
+    [0.01, 0.99],
     [0.5, 0.5],
-    [1, 1],
+    [0.99, 0.99],
   ],
 ];
 const defaultOutputSections = [
   [
-    [0, 0],
+    [0.01, 0.01],
     [0.5, 0.5],
-    [0, 1],
+    [0.01, 0.99],
   ],
   [
-    [0, 0],
+    [0.01, 0.01],
     [0.5, 0.5],
-    [1, 0],
+    [0.99, 0.01],
   ],
   [
-    [1, 0],
+    [0.99, 0.01],
     [0.5, 0.5],
-    [1, 1],
+    [0.99, 0.99],
   ],
   [
-    [0, 1],
+    [0.01, 0.99],
     [0.5, 0.5],
-    [1, 1],
+    [0.99, 0.99],
   ],
 ];
 
@@ -48,18 +48,28 @@ class Screen {
     this.selected = 0;
     this.pointSize = 10;
     this.layer = "output";
-    this.srcs = ["/videos/clouds.mp4", "/videos/snow.mp4", "videos/rain.mp4"];
-    this.videos = [...document.querySelectorAll("video")];
+    this.srcs = [
+      "/videos/clouds.mp4",
+      "/videos/rain.mp4",
+      "/videos/snow.mp4",
+      // "/videos/bbc_crabs.mp4",
+      "/videos/crab_rave.mp4",
+    ];
+    this.videos = [];
     this.zoneColors = {
       input: [
         [255, 0, 0],
-        [0, 255, 0],
-        [0, 0, 255],
+        [255, 0, 0],
+        [255, 0, 0],
+        [255, 0, 0],
+        [255, 0, 0],
       ],
       output: [
         [255, 255, 0],
-        [255, 0, 255],
-        [0, 255, 255],
+        [255, 255, 0],
+        [255, 255, 0],
+        [255, 255, 0],
+        [255, 255, 0],
       ],
     };
     this.contextWidth = 1280;
@@ -77,6 +87,22 @@ class Screen {
         input: JSON.parse(JSON.stringify(defaultInputSections)),
         output: JSON.parse(JSON.stringify(defaultOutputSections)),
       },
+      {
+        input: JSON.parse(JSON.stringify(defaultInputSections)),
+        output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      },
+      {
+        input: JSON.parse(JSON.stringify(defaultInputSections)),
+        output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      },
+      {
+        input: JSON.parse(JSON.stringify(defaultInputSections)),
+        output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      },
+      {
+        input: JSON.parse(JSON.stringify(defaultInputSections)),
+        output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      },
     ];
     this.pointClouds = null;
     this.matrices = this.videos.map((v) => null);
@@ -88,17 +114,24 @@ class Screen {
     this.selectedPoint = null;
 
     this.srcs.map((src, idx) => {
-      this.videos[idx].addEventListener("loadedmetadata", () => {
+      let vid = document.createElement("video");
+      document.querySelector(".videos").appendChild(vid);
+
+      vid.loop = true;
+      vid.muted = true;
+      vid.addEventListener("loadedmetadata", () => {
         setTimeout(() => {
           // this.calculatePointClouds();
           this.createContext(idx);
           this.createBuffers(idx);
           this.calculateMatrix(idx);
           this.step(idx);
+          this.drawUI();
         }, 100);
       });
+      vid.src = src;
 
-      this.videos[idx].src = src;
+      this.videos.push(vid);
     });
 
     window.addEventListener("mousedown", (e) => {
@@ -126,8 +159,7 @@ class Screen {
         this.selectedPoint !== null
       ) {
         this.movePoint(e);
-
-        this.calculatePointClouds();
+        // this.calculatePointClouds();
         this.calculateMatrices();
 
         for (var i = 0; i < this.videos.length; i++) {
@@ -151,52 +183,52 @@ class Screen {
   // }
 
   step(idx) {
-    let start = Date.now();
+    // let start = Date.now();
     this.drawFrame(idx);
     this.videos[idx].requestVideoFrameCallback(this.step.bind(this, idx));
-    console.log(Date.now() - start);
+    // console.log(Date.now() - start);
   }
 
-  _drawFrame(idx) {
-    let start = Date.now();
-    let video = this.videos[idx];
-    let pointCloud = this.pointClouds[idx];
-    let matrices = this.matrices[idx];
-    let buffer = this.buffers[idx];
+  // _drawFrame(idx) {
+  //   let start = Date.now();
+  //   let video = this.videos[idx];
+  //   let pointCloud = this.pointClouds[idx];
+  //   let matrices = this.matrices[idx];
+  //   let buffer = this.buffers[idx];
 
-    let iWidth = buffer.canvas.width;
-    let iHeight = buffer.canvas.height;
+  //   let iWidth = buffer.canvas.width;
+  //   let iHeight = buffer.canvas.height;
 
-    let oWidth = this.contextWidth;
-    let oHeight = this.contextHeight;
+  //   let oWidth = this.contextWidth;
+  //   let oHeight = this.contextHeight;
 
-    buffer.drawImage(video, 0, 0, iWidth, iHeight);
-    let iData = buffer.getImageData(0, 0, iWidth, iHeight);
+  //   buffer.drawImage(video, 0, 0, iWidth, iHeight);
+  //   let iData = buffer.getImageData(0, 0, iWidth, iHeight);
 
-    this.ctx.clearRect(0, 0, oWidth, oHeight);
-    let oData = this.ctx.getImageData(0, 0, oWidth, oHeight);
+  //   this.ctx.clearRect(0, 0, oWidth, oHeight);
+  //   let oData = this.ctx.getImageData(0, 0, oWidth, oHeight);
 
-    let zLength = pointCloud.length;
-    for (var i = 0; i < zLength; i++) {
-      let tLength = pointCloud[i].length;
-      let matrix = matrices[i];
+  //   let zLength = pointCloud.length;
+  //   for (var i = 0; i < zLength; i++) {
+  //     let tLength = pointCloud[i].length;
+  //     let matrix = matrices[i];
 
-      for (var j = 0; j < tLength; j++) {
-        let iClrIdx = (pointCloud[i][j][0] + pointCloud[i][j][1] * iWidth) << 2;
-        let oCoords = this.applyToPoint(matrix, pointCloud[i][j]);
-        let oClrIdx = ((oCoords[0] | 0) + (oCoords[1] | 0) * oWidth) << 2;
+  //     for (var j = 0; j < tLength; j++) {
+  //       let iClrIdx = (pointCloud[i][j][0] + pointCloud[i][j][1] * iWidth) << 2;
+  //       let oCoords = this.applyToPoint(matrix, pointCloud[i][j]);
+  //       let oClrIdx = ((oCoords[0] | 0) + (oCoords[1] | 0) * oWidth) << 2;
 
-        oData.data[oClrIdx] = iData.data[iClrIdx];
-        oData.data[oClrIdx + 1] = iData.data[iClrIdx + 1];
-        oData.data[oClrIdx + 2] = iData.data[iClrIdx + 2];
-        oData.data[oClrIdx + 3] = iData.data[iClrIdx + 3];
-      }
-    }
+  //       oData.data[oClrIdx] = iData.data[iClrIdx];
+  //       oData.data[oClrIdx + 1] = iData.data[iClrIdx + 1];
+  //       oData.data[oClrIdx + 2] = iData.data[iClrIdx + 2];
+  //       oData.data[oClrIdx + 3] = iData.data[iClrIdx + 3];
+  //     }
+  //   }
 
-    this.ctx.putImageData(oData, 0, 0);
+  //   this.ctx.putImageData(oData, 0, 0);
 
-    // video.requestVideoFrameCallback(this.step.bind(this, idx));
-  }
+  //   // video.requestVideoFrameCallback(this.step.bind(this, idx));
+  // }
 
   drawFrame(idx) {
     let start = Date.now();
@@ -204,55 +236,56 @@ class Screen {
     // let pointCloud = this.pointClouds[idx];
     let matrices = this.matrices[idx];
     let buffer = this.buffers[idx];
+    let context = this.contexts[idx];
 
     let iWidth = buffer.canvas.width;
     let iHeight = buffer.canvas.height;
 
-    let oWidth = this.contextWidth;
-    let oHeight = this.contextHeight;
+    let oWidth = context.canvas.width;
+    let oHeight = context.canvas.height;
 
     this.contexts[idx].clearRect(0, 0, oWidth, oHeight);
 
-    for (var i = 0; i < this.zones.length; i++) {
-      let zone = this.zones[i]["input"];
+    let zone = this.zones[idx]["input"];
 
-      if (!this.matrices[i]) {
-        continue;
-      }
-
-      for (var j = 0; j < zone.length; j++) {
-        let pnt = zone[j];
-        let originX = (iWidth * pnt[0][0]) | 0;
-        let originY = (iHeight * pnt[0][1]) | 0;
-        let matrix = this.matrices[i][j];
-
-        buffer.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
-        buffer.save();
-        buffer.beginPath();
-        buffer.moveTo(originX, originY);
-        for (var k = 1; k < 3; k++) {
-          let x = (iWidth * pnt[k][0]) | 0;
-          let y = (iHeight * pnt[k][1]) | 0;
-
-          buffer.lineTo(x, y);
-        }
-        buffer.lineTo(originX, originY);
-        buffer.clip();
-        buffer.drawImage(video, 0, 0, iWidth, iHeight);
-        buffer.restore();
-
-        this.contexts[idx].setTransform(
-          matrix.a,
-          matrix.b,
-          matrix.c,
-          matrix.d,
-          matrix.e,
-          matrix.f,
-        );
-        this.contexts[idx].drawImage(buffer.canvas, 0, 0, oWidth, oHeight);
-        this.contexts[idx].resetTransform();
-      }
+    if (!this.matrices[idx]) {
+      return;
     }
+
+    for (var j = 0; j < zone.length; j++) {
+      let pnt = zone[j];
+      let originX = (iWidth * pnt[0][0]) | 0;
+      let originY = (iHeight * pnt[0][1]) | 0;
+      let matrix = this.matrices[idx][j];
+
+      buffer.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
+      buffer.save();
+      buffer.beginPath();
+      buffer.moveTo(originX, originY);
+      for (var k = 1; k < 3; k++) {
+        let x = (iWidth * pnt[k][0]) | 0;
+        let y = (iHeight * pnt[k][1]) | 0;
+
+        buffer.lineTo(x, y);
+      }
+      buffer.lineTo(originX, originY);
+      buffer.clip();
+      buffer.drawImage(video, 0, 0, iWidth, iHeight);
+      buffer.restore();
+
+      this.contexts[idx].setTransform(
+        matrix.a,
+        matrix.b,
+        matrix.c,
+        matrix.d,
+        matrix.e,
+        matrix.f,
+      );
+      this.contexts[idx].drawImage(buffer.canvas, 0, 0, oWidth, oHeight);
+      this.contexts[idx].resetTransform();
+    }
+
+    console.log(Date.now() - start);
   }
 
   isInsideTriangle(P, p1, p2, p3) {
@@ -367,8 +400,6 @@ class Screen {
           transformedO,
         );
 
-        console.log(triangle_matrix);
-
         zone_matrices.push(triangle_matrix);
       }
     }
@@ -404,8 +435,8 @@ class Screen {
     let video = this.videos[idx];
     let canvas = document.createElement("canvas");
 
-    canvas.width = this.contextWidth;
-    canvas.height = this.contextHeight;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
     let ctx = canvas.getContext("2d", { willReadFrequently: true });
     this.contexts[idx] = ctx;
@@ -430,8 +461,8 @@ class Screen {
       let zone = this.zones[i][this.layer];
       let pntCnt = zone.length;
 
-      let width = this.contexts[0].width;
-      let height = this.contexts[0].height;
+      let width = this.contextWidth;
+      let height = this.contextHeight;
 
       for (var j = 0; j < pntCnt; j++) {
         let pnt = zone[j];
@@ -493,24 +524,28 @@ class Screen {
 
   movePoint(e) {
     // TODO: THIS is what needs to be calulated per video
-    let surface = {
-      // input: this.videos[this.selectedZone],
-      input: this.ctx.canvas,
-      output: this.ctx.canvas,
-    }[this.layer];
-    let width = surface.width;
-    let height = surface.height;
 
-    let x = (e.pageX * (this.ctx.canvas.width / window.innerWidth)) / width;
-    let y = (e.pageY * (this.ctx.canvas.height / window.innerHeight)) / height;
+    let x = e.pageX / window.innerWidth;
+    let y = e.pageY / window.innerHeight;
 
-    let pnt =
-      this.zones[this.selectedZone][this.layer][this.selectedTri][
-        this.selectedPoint
-      ];
+    for (var i = 0; i < this.zones.length; i++) {
+      // let surface = {
+      //   input: this.buffers[i],
+      //   output: this.contexts[i].canvas,
+      // }[this.layer];
+      // let width = surface.width;
+      // let height = surface.height;
 
-    pnt[0] = x;
-    pnt[1] = y;
+      // let x = (e.pageX * (width / window.innerWidth)) / width;
+      // let y = (e.pageY * (height / window.innerHeight)) / height;
+
+      let pnt = this.zones[i][this.layer][this.selectedTri][this.selectedPoint];
+
+      pnt[0] = x;
+      pnt[1] = y;
+    }
+
+    localStorage.setItem("zones", JSON.stringify(this.zones));
   }
 
   loopPoints(fn) {
