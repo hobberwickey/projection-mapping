@@ -1,59 +1,18 @@
-const defaultInputSections = [
-  [
-    [0.01, 0.01],
-    [0.5, 0.5],
-    [0.01, 0.99],
-  ],
-  [
-    [0.01, 0.01],
-    [0.5, 0.5],
-    [0.99, 0.01],
-  ],
-  [
-    [0.99, 0.01],
-    [0.5, 0.5],
-    [0.99, 0.99],
-  ],
-  [
-    [0.01, 0.99],
-    [0.5, 0.5],
-    [0.99, 0.99],
-  ],
-];
-const defaultOutputSections = [
-  [
-    [0.01, 0.01],
-    [0.5, 0.5],
-    [0.01, 0.99],
-  ],
-  [
-    [0.01, 0.01],
-    [0.5, 0.5],
-    [0.99, 0.01],
-  ],
-  [
-    [0.99, 0.01],
-    [0.5, 0.5],
-    [0.99, 0.99],
-  ],
-  [
-    [0.01, 0.99],
-    [0.5, 0.5],
-    [0.99, 0.99],
-  ],
-];
+const defaultInputSections = [];
+const defaultOutputSections = [];
 
 class Screen {
   constructor() {
     this.selected = 0;
     this.pointSize = 10;
+    this.fps = document.querySelector("#fps");
     this.layer = "output";
     this.srcs = [
       "/videos/clouds.mp4",
       "/videos/rain.mp4",
       "/videos/snow.mp4",
-      // "/videos/bbc_crabs.mp4",
-      "/videos/crab_rave.mp4",
+      "/videos/bbc_crabs.mp4",
+      // "/videos/crab_rave.mp4",
     ];
     this.videos = [];
     this.zoneColors = {
@@ -75,9 +34,9 @@ class Screen {
     this.contextWidth = 1280;
     this.contextHeight = 800;
 
-    this.ctx = document
-      .querySelector("#screen")
-      .getContext("2d", { willReadFrequently: true });
+    // this.ctx = document
+    //   .querySelector("#screen")
+    //   .getContext("2d", { willReadFrequently: true });
 
     this.ui = document.querySelector("#ui").getContext("2d");
 
@@ -99,10 +58,10 @@ class Screen {
         input: JSON.parse(JSON.stringify(defaultInputSections)),
         output: JSON.parse(JSON.stringify(defaultOutputSections)),
       },
-      {
-        input: JSON.parse(JSON.stringify(defaultInputSections)),
-        output: JSON.parse(JSON.stringify(defaultOutputSections)),
-      },
+      // {
+      //   input: JSON.parse(JSON.stringify(defaultInputSections)),
+      //   output: JSON.parse(JSON.stringify(defaultOutputSections)),
+      // },
     ];
     this.pointClouds = null;
     this.matrices = this.videos.map((v) => null);
@@ -230,6 +189,26 @@ class Screen {
   //   // video.requestVideoFrameCallback(this.step.bind(this, idx));
   // }
 
+  // rgbToHsl(r, g, b) {
+  //   r /= 255;
+  //   g /= 255;
+  //   b /= 255;
+  //   const l = Math.max(r, g, b);
+  //   const s = l - Math.min(r, g, b);
+  //   const h = s
+  //     ? l === r
+  //       ? (g - b) / s
+  //       : l === g
+  //         ? 2 + (b - r) / s
+  //         : 4 + (r - g) / s
+  //     : 0;
+  //   return [
+  //     60 * h < 0 ? 60 * h + 360 : 60 * h,
+  //     100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
+  //     (100 * (2 * l - s)) / 2,
+  //   ];
+  // }
+
   drawFrame(idx) {
     let start = Date.now();
     let video = this.videos[idx];
@@ -258,6 +237,11 @@ class Screen {
       let originY = (iHeight * pnt[0][1]) | 0;
       let matrix = this.matrices[idx][j];
 
+      // let minX = originX;
+      // let maxX = originX;
+      // let minY = originY;
+      // let maxY = originY;
+
       buffer.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
       buffer.save();
       buffer.beginPath();
@@ -266,12 +250,36 @@ class Screen {
         let x = (iWidth * pnt[k][0]) | 0;
         let y = (iHeight * pnt[k][1]) | 0;
 
+        // if (x < minX) minX = x;
+        // if (x > maxX) maxX = x;
+        // if (y < minY) minY = y;
+        // if (y > maxY) maxY = y;
+
         buffer.lineTo(x, y);
       }
       buffer.lineTo(originX, originY);
       buffer.clip();
       buffer.drawImage(video, 0, 0, iWidth, iHeight);
       buffer.restore();
+
+      // let imgData = buffer.getImageData(
+      //   0,
+      //   0,
+      //   buffer.canvas.width,
+      //   buffer.canvas.height,
+      // );
+
+      // let data = imgData.data;
+      // let imgDataLen = data.length;
+
+      // for (let l = 0; l < imgDataLen; l += 4) {
+      //   if (data[l + 3] !== 0) {
+      //     let [h, s, b] = this.rgbToHsl(data[l], data[l + 1], data[l + 2]);
+      //     data[l + 3] = (b / 100) * 255;
+      //   }
+      // }
+
+      // buffer.putImageData(imgData, 0, 0);
 
       this.contexts[idx].setTransform(
         matrix.a,
@@ -281,11 +289,13 @@ class Screen {
         matrix.e,
         matrix.f,
       );
+      this.contexts[idx].globalAlpha = pnt[3];
       this.contexts[idx].drawImage(buffer.canvas, 0, 0, oWidth, oHeight);
       this.contexts[idx].resetTransform();
     }
 
-    console.log(Date.now() - start);
+    this.fps.innerText = Date.now() - start;
+    // console.log(Date.now() - start);
   }
 
   isInsideTriangle(P, p1, p2, p3) {
@@ -556,8 +566,8 @@ class Screen {
       let zone = this.zones[i][this.layer];
       let pntCnt = zone.length;
       let surface = {
-        input: this.ctx.canvas,
-        output: this.ctx.canvas,
+        input: this.ui.canvas,
+        output: this.ui.canvas,
       }[this.layer];
       let width = surface.width;
       let height = surface.height;
