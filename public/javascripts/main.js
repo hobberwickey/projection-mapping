@@ -9,6 +9,7 @@ class App {
     this.colors = {
       bg: 25,
       fg: 186,
+      hd: 200,
     };
 
     this.videos = {
@@ -58,8 +59,11 @@ class App {
   rotateColors() {
     this.colors.bg = (this.colors.bg + 0.05) % 360;
     this.colors.fg = (this.colors.fg + 0.02) % 360;
+    this.colors.hd = (this.colors.hd + 0.03) % 360;
 
     document.body.style.backgroundColor = `hsl(${this.colors.bg}deg 20.54% 90.41%)`;
+    document.querySelector("nav").style.backgroundColor =
+      `hsl(${this.colors.hd}deg 20.54% 90.41%)`;
     document
       .querySelector(":root")
       .style.setProperty(
