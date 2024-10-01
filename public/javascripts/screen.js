@@ -34,11 +34,9 @@ class Screen {
     this.contextWidth = 1280;
     this.contextHeight = 800;
 
-    // this.ctx = document
-    //   .querySelector("#screen")
-    //   .getContext("2d", { willReadFrequently: true });
-
     this.ui = document.querySelector("#ui").getContext("2d");
+    this.uiOpacity = 0;
+    this.uiOpacityTimer = null;
 
     // Calculated
     this.zones = JSON.parse(localStorage.getItem("zones")) || [
@@ -127,12 +125,66 @@ class Screen {
       }
     });
 
+    window.addEventListener("mousemove", () => {
+      this.uiOpacity = 1;
+      if (this.uiOpacityTimer !== null) {
+        clearTimeout(this.uiOpacityTimer);
+      }
+
+      let opacityFn = () => {
+        this.uiOpacity -= 0.02;
+
+        if (this.uiOpacity > 0) {
+          this.uiOpacityTimer = setTimeout(opacityFn, 30);
+        } else {
+          this.uiOpacity = 0;
+          this.uiOpacityTimer = null;
+        }
+      };
+      this.uiOpacityTimer = setTimeout(opacityFn, 1000);
+      this.drawUI();
+    });
+
     window.addEventListener("keypress", (e) => {
       if (e.keyCode === 32) {
         this.layer = this.layer === "input" ? "output" : "input";
       }
     });
 
+    window.addEventListener(
+      "message",
+      (event) => {
+        let data = JSON.parse(event.data);
+        if (data.action === "add_triangles") {
+          for (var i = 0; i < data.triangles.length; i++) {
+            let triangle = data.triangles[i];
+
+            for (var j = 0; j < this.zones.length; j++) {
+              let zone = this.zones[j];
+
+              zone.input.push(JSON.parse(JSON.stringify(triangle)));
+              zone.output.push(JSON.parse(JSON.stringify(triangle)));
+            }
+          }
+
+          for (var i = 0; i < this.videos.length; i++) {
+            this.calculateMatrix(i);
+          }
+        } else if (data.action === "update_opacity") {
+          let { videoIdx, groupIdx, opacity } = data;
+
+          try {
+            this.zones[videoIdx].output[groupIdx * 2][3] = opacity;
+            this.zones[videoIdx].output[groupIdx * 2 + 1][3] = opacity;
+          } catch (e) {
+            console.log(videoIdx, groupIdx);
+          }
+        }
+
+        localStorage.setItem("zones", JSON.stringify(this.zones));
+      },
+      false,
+    );
     // this.drawUI();
   }
 
@@ -212,6 +264,13 @@ class Screen {
   drawFrame(idx) {
     let start = Date.now();
     let video = this.videos[idx];
+    let ctx = this.contexts[idx];
+
+    if (!video || !ctx) {
+      console.log(idx);
+      return;
+    }
+
     // let pointCloud = this.pointClouds[idx];
     let matrices = this.matrices[idx];
     let buffer = this.buffers[idx];
@@ -225,17 +284,29 @@ class Screen {
 
     this.contexts[idx].clearRect(0, 0, oWidth, oHeight);
 
-    let zone = this.zones[idx]["input"];
+    let zoneI = this.zones[idx].input;
+    let zoneO = this.zones[idx].output;
 
     if (!this.matrices[idx]) {
       return;
     }
 
-    for (var j = 0; j < zone.length; j++) {
-      let pnt = zone[j];
+    for (var j = 0; j < zoneI.length; j++) {
+      let pnt = zoneI[j];
+      let opacity = +zoneO[j][3];
+
+      if (opacity < 0.1) {
+        continue;
+      }
+
       let originX = (iWidth * pnt[0][0]) | 0;
       let originY = (iHeight * pnt[0][1]) | 0;
       let matrix = this.matrices[idx][j];
+
+      if (!matrix) {
+        console.log(j, this.matrices);
+        continue;
+      }
 
       // let minX = originX;
       // let maxX = originX;
@@ -289,13 +360,13 @@ class Screen {
         matrix.e,
         matrix.f,
       );
-      this.contexts[idx].globalAlpha = pnt[3];
+      this.contexts[idx].globalAlpha = opacity;
       this.contexts[idx].drawImage(buffer.canvas, 0, 0, oWidth, oHeight);
-      this.contexts[idx].resetTransform();
+      // this.contexts[idx].resetTransform();
     }
 
     this.fps.innerText = Date.now() - start;
-    // console.log(Date.now() - start);
+    // console.log(idx, Date.now() - start);
   }
 
   isInsideTriangle(P, p1, p2, p3) {
@@ -458,7 +529,9 @@ class Screen {
     this.drawPoints();
     this.tracePoints();
 
-    window.requestAnimationFrame(this.drawUI.bind(this));
+    if (this.uiOpacity !== 0) {
+      window.requestAnimationFrame(this.drawUI.bind(this));
+    }
   }
 
   tracePoints() {
@@ -466,7 +539,7 @@ class Screen {
 
     for (var i = 0; i < zoneCnt; i++) {
       let clr = this.zoneColors[this.layer][i];
-      this.ui.strokeStyle = `rgb(${clr[0]},${clr[1]},${clr[2]})`;
+      this.ui.strokeStyle = `rgba(${clr[0]},${clr[1]},${clr[2]},${this.uiOpacity})`;
 
       let zone = this.zones[i][this.layer];
       let pntCnt = zone.length;
@@ -502,7 +575,9 @@ class Screen {
     let offset = this.pointSize >> 1;
     let clr = this.zoneColors[this.layer][zoneIdx];
 
-    this.ui.fillStyle = `rgb(${clr[0]},${clr[1]},${clr[2]})`;
+    // console.log(this.uiOpacity);
+
+    this.ui.fillStyle = `rgba(${clr[0]},${clr[1]},${clr[2]},${this.uiOpacity})`;
     this.ui.fillRect(x - offset, y - offset, this.pointSize, this.pointSize);
 
     return true;
