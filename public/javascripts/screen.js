@@ -241,25 +241,25 @@ class Screen {
   //   // video.requestVideoFrameCallback(this.step.bind(this, idx));
   // }
 
-  // rgbToHsl(r, g, b) {
-  //   r /= 255;
-  //   g /= 255;
-  //   b /= 255;
-  //   const l = Math.max(r, g, b);
-  //   const s = l - Math.min(r, g, b);
-  //   const h = s
-  //     ? l === r
-  //       ? (g - b) / s
-  //       : l === g
-  //         ? 2 + (b - r) / s
-  //         : 4 + (r - g) / s
-  //     : 0;
-  //   return [
-  //     60 * h < 0 ? 60 * h + 360 : 60 * h,
-  //     100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
-  //     (100 * (2 * l - s)) / 2,
-  //   ];
-  // }
+  rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const l = Math.max(r, g, b);
+    const s = l - Math.min(r, g, b);
+    const h = s
+      ? l === r
+        ? (g - b) / s
+        : l === g
+          ? 2 + (b - r) / s
+          : 4 + (r - g) / s
+      : 0;
+    return [
+      60 * h < 0 ? 60 * h + 360 : 60 * h,
+      100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
+      (100 * (2 * l - s)) / 2,
+    ];
+  }
 
   drawFrame(idx) {
     let start = Date.now();
@@ -308,10 +308,10 @@ class Screen {
         continue;
       }
 
-      // let minX = originX;
-      // let maxX = originX;
-      // let minY = originY;
-      // let maxY = originY;
+      let minX = originX;
+      let maxX = originX;
+      let minY = originY;
+      let maxY = originY;
 
       buffer.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
       buffer.save();
@@ -593,10 +593,10 @@ class Screen {
     let mouseY = e.pageY * (this.contextHeight / window.innerHeight);
 
     if (
-      mouseX <= x + offset &&
-      mouseX >= x - offset &&
-      mouseY <= y + offset &&
-      mouseY >= y - offset
+      mouseX <= Math.max(x, 0) + offset &&
+      mouseX >= Math.max(x, 0) - offset &&
+      mouseY <= Math.max(y, 0) + offset &&
+      mouseY >= Math.max(y, 0) - offset
     ) {
       this.selectedZone = zoneIdx;
       this.selectedTri = quadIdx;

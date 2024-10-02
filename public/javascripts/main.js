@@ -25,7 +25,37 @@ class App {
     };
 
     this.groups = JSON.parse(localStorage.getItem("groups")) || [];
-    // this.convert();
+
+    this.midiAccess = null; // global MIDIAccess object
+    this.midiInput = null;
+    this.midiOutput = null;
+
+    const onMIDISuccess = (midiAccess) => {
+      this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
+
+      for (const entry of this.midiAccess.inputs) {
+        if (entry[1].id === "325563316") {
+          this.midiInput = entry[1];
+
+          entry[1].onmidimessage = (e) => {
+            console.log(e);
+          };
+        }
+      }
+
+      for (const entry of this.midiAccess.outputs) {
+        if (entry[1].id === "-173082528") {
+          this.midiOutput = entry[1];
+          this.midiOutput.send([0x90, 0x00, 0x03]);
+        }
+      }
+    };
+
+    const onMIDIFailure = (msg) => {
+      console.error(`Failed to get MIDI access - ${msg}`);
+    };
+
+    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
   }
 
   launch() {
