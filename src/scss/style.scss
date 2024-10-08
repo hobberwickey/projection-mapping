@@ -1,0 +1,127 @@
+:root {
+  --btn-color: #000;
+  --text-color: #000;
+  --fg-color: hsl(180deg 20.54% 90.41%);
+}
+
+body {
+  padding: 0px;
+  margin: 0px;
+
+  background-color: hsl(56.67deg 11.54% 69.41%);
+}
+
+.uk-card-default {
+  border-radius: 5px;
+  background-color: var(--fg-color);
+  color: white;
+}
+
+a {
+  color: var(--btn-color) !important;
+}
+
+h3 {
+  color: var(--btn-color);
+}
+
+a:hover {
+  color: var(--btn-color) !important;
+}
+
+.fancy {
+  font-family: "Handjet", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-size: 40px !important;
+}
+
+.fancy.small {
+  font-size: 30px !important;
+}
+
+.ui {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+#zone-select li a {
+  font-size: 150%;
+  padding: 5px 15px;
+}
+
+#quad-control {
+  padding: 5px 15px;
+}
+
+.fullscreen {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /*  background-color: #000;*/
+}
+
+canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  transform: translateZ(0);
+}
+
+label {
+  color: var(--text-color) !important;
+  padding: 0px 15px;
+}
+
+input[type="range"] {
+  padding-left: 10px;
+  padding-right: 15px;
+  padding-top: 15px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+input[type="range"]::before {
+  display: none;
+}
+
+#videos {
+  max-width: 1280px;
+  margin: 0px auto;
+  padding-top: 30px;
+}
+
+.videos,
+.buffers {
+  position: absolute;
+  display: none;
+}
+
+.contexts canvas {
+  /*  opacity: 0.3;*/
+}
+
+#fps {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+}
+
+.launch {
+  position: relative;
+  margin: 0px auto;
+  width: 200px;
+  top: 200px;
+  display: block;
+  cursor: pointer;
+}

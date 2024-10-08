@@ -13,15 +13,15 @@ class App {
     };
 
     this.videos = {
-      Clouds: "/videos/clouds.mp4",
-      Rain: "/videos/rain.mp4",
-      Snow: "/videos/snow.mp4",
-      Crabs: "/videos/bbc_crabs.mp4",
-      Rave: "/videos/crab_rave.mp4",
-      _Clouds: "/videos/clouds.mp4",
-      _Rain: "/videos/rain.mp4",
-      _Snow: "/videos/snow.mp4",
-      _Crabs: "/videos/bbc_crabs.mp4",
+      Crabs: "/videos/red_crabs.mp4",
+      Birds: "/videos/bird_dances.mp4",
+      Jellyfish: "/videos/jellyfish.mp4",
+      Kelp: "/videos/kelp.mp4",
+      Pines: "/videos/pines.mp4",
+      Pika: "/videos/pika.mp4",
+      Lines: "/videos/lines.mp4",
+      Trippy: "/videos/trippy.mp4",
+      Ink: "/videos/ink.mp4",
     };
 
     this.groups = JSON.parse(localStorage.getItem("groups")) || [];
@@ -34,21 +34,31 @@ class App {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
 
       for (const entry of this.midiAccess.inputs) {
+        console.log(entry[1]);
+
+        if (entry[1].id === "-1994529889") {
+          this.midiInput = entry[1];
+
+          entry[1].onmidimessage = (e) => {
+            console.log("Arduino", e);
+          };
+        }
+
         if (entry[1].id === "325563316") {
           this.midiInput = entry[1];
 
           entry[1].onmidimessage = (e) => {
-            console.log(e);
+            console.log("APK", e);
           };
         }
       }
 
-      for (const entry of this.midiAccess.outputs) {
-        if (entry[1].id === "-173082528") {
-          this.midiOutput = entry[1];
-          this.midiOutput.send([0x90, 0x00, 0x03]);
-        }
-      }
+      // for (const entry of this.midiAccess.outputs) {
+      //   if (entry[1].id === "-173082528") {
+      //     this.midiOutput = entry[1];
+      //     this.midiOutput.send([0x90, 0x00, 0x03]);
+      //   }
+      // }
     };
 
     const onMIDIFailure = (msg) => {
