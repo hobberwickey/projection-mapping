@@ -119,8 +119,7 @@ class App {
       video.appendChild(label);
       video.appendChild(controls);
 
-      for (var i = 0; i < this.groups[vIdx].length; i++) {
-        let group = this.groups[vIdx][i];
+      for (var i = 0; i < 1; i++) {
         let opacity = document.createElement("input");
 
         opacity.type = "range";
@@ -128,11 +127,8 @@ class App {
         opacity.max = 1;
         opacity.min = 0;
         opacity.step = 0.01;
-        opacity.value = group.opacity;
-        opacity.addEventListener(
-          "input",
-          this.updateOpacity.bind(this, vIdx, group),
-        );
+        opacity.value = 1;
+        opacity.addEventListener("input", this.updateOpacity.bind(this, vIdx));
 
         controls.appendChild(opacity);
       }
@@ -166,11 +162,8 @@ class App {
           opacity.max = 1;
           opacity.min = 0;
           opacity.step = 0.01;
-          opacity.value = 0.0;
-          opacity.addEventListener(
-            "input",
-            this.updateOpacity.bind(this, idx, group),
-          );
+          opacity.value = 1;
+          opacity.addEventListener("input", this.updateOpacity.bind(this, idx));
 
           controls.appendChild(opacity);
         },
@@ -180,18 +173,16 @@ class App {
     localStorage.setItem("groups", JSON.stringify(this.groups));
   }
 
-  updateOpacity(videoIdx, group, e) {
+  updateOpacity(videoIdx, e) {
     if (!this.screen) {
       return;
     }
 
-    group.opacity = e.target.value;
     this.screen.postMessage(
       JSON.stringify({
         action: "update_opacity",
         videoIdx: videoIdx,
-        groupIdx: group.idx,
-        opacity: group.opacity,
+        opacity: e.target.value,
       }),
     );
 
