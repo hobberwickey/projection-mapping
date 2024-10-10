@@ -1,7 +1,9 @@
-const defaultTriangles = [
-  [[0.2, 0.2], [0.5, 0.5], [0.2, 0.8], 0],
-  [[0.8, 0.2], [0.5, 0.5], [0.8, 0.8], 0],
+const defaultTriangle = [
+  [0.3, 0.3],
+  [0.7, 0.3],
+  [0.5, 0.7],
 ];
+
 class App {
   constructor() {
     this.screen = null;
@@ -13,18 +15,15 @@ class App {
     };
 
     this.videos = {
-      Crabs: "/videos/red_crabs.mp4",
-      Birds: "/videos/bird_dances.mp4",
       Jellyfish: "/videos/jellyfish.mp4",
-      Kelp: "/videos/kelp.mp4",
       Pines: "/videos/pines.mp4",
-      Pika: "/videos/pika.mp4",
       Lines: "/videos/lines.mp4",
       Trippy: "/videos/trippy.mp4",
       Ink: "/videos/ink.mp4",
+      Pika: "/videos/pika.mp4",
     };
 
-    this.groups = JSON.parse(localStorage.getItem("groups")) || [];
+    this.groups = [];
 
     this.midiAccess = null; // global MIDIAccess object
     this.midiInput = null;
@@ -78,7 +77,7 @@ class App {
 
     document
       .querySelector("#add_triangle")
-      .addEventListener("click", this.addGroup.bind(this));
+      .addEventListener("click", this.addTriangle.bind(this));
   }
 
   popout() {
@@ -127,7 +126,7 @@ class App {
         opacity.max = 1;
         opacity.min = 0;
         opacity.step = 0.01;
-        opacity.value = 1;
+        opacity.value = 0;
         opacity.addEventListener("input", this.updateOpacity.bind(this, vIdx));
 
         controls.appendChild(opacity);
@@ -137,40 +136,17 @@ class App {
     });
   }
 
-  addGroup() {
+  addTriangle() {
     if (!this.screen) {
       return;
     }
 
     this.screen.postMessage(
       JSON.stringify({
-        action: "add_triangles",
-        triangles: defaultTriangles,
+        action: "add_triangle",
+        triangle: defaultTriangle,
       }),
     );
-
-    Object.keys(this.videos).map((v, vIdx) => {
-      let group = { opacity: 0.0, idx: this.groups[vIdx].length };
-
-      this.groups[vIdx].push(group);
-      let videos = [...document.querySelectorAll("#videos .uk-list")].forEach(
-        (controls, idx) => {
-          let opacity = document.createElement("input");
-
-          opacity.type = "range";
-          opacity.className = "uk-range";
-          opacity.max = 1;
-          opacity.min = 0;
-          opacity.step = 0.01;
-          opacity.value = 1;
-          opacity.addEventListener("input", this.updateOpacity.bind(this, idx));
-
-          controls.appendChild(opacity);
-        },
-      );
-    });
-
-    localStorage.setItem("groups", JSON.stringify(this.groups));
   }
 
   updateOpacity(videoIdx, e) {
@@ -185,22 +161,7 @@ class App {
         opacity: e.target.value,
       }),
     );
-
-    localStorage.setItem("groups", JSON.stringify(this.groups));
   }
-
-  // convert() {
-  //   let realGroups = [];
-  //   Object.keys(this.videos).map((key) => {
-  //     let videoGroups = [];
-  //     this.groups.map((group) => {
-  //       videoGroups.push(JSON.parse(JSON.stringify(group)));
-  //     });
-  //     realGroups.push(videoGroups);
-  //   });
-
-  //   localStorage.setItem("groups", JSON.stringify(realGroups));
-  // }
 }
 
 let app = null;

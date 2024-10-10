@@ -63,7 +63,7 @@ const fragmentShaderSrc = `
   uniform vec4 u_opacity;
 
   void main() {
-    gl_FragColor = texture2D(u_texture, v_texcoord);
+    gl_FragColor = u_opacity * texture2D(u_texture, v_texcoord);
   }
 `;
 
@@ -94,34 +94,7 @@ class State {
       //   effect_b: 0,
       // },
     ];
-    this.objects = [
-      // input: [[x1, y1], [x2, y2], [x3, y3]],
-      // output: [[x1, y1], [x2, y2], [x3, y3]],
-      {
-        input: [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-        ],
-        output: [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-        ],
-      },
-      {
-        input: [
-          [0, 0],
-          [0, 1],
-          [1, 1],
-        ],
-        output: [
-          [0, 0],
-          [0, 1],
-          [1, 1],
-        ],
-      },
-    ];
+    this.objects = [];
     this.screen = {
       width: 1280,
       height: 800,
@@ -298,15 +271,36 @@ class Output {
     this.textures = [];
 
     this.glAttrs = [];
+
+    this.isPlaying = false;
+    // this.stepFn = null;
   }
 
-  step(idx) {
-    this.drawFrame(idx);
-    this.videos[idx].requestVideoFrameCallback(this.step.bind(this, idx));
+  play() {
+    if (this.isPlaying) {
+      return;
+    }
+
+    this.isPlaying = true;
+    this.step();
+  }
+
+  pause() {
+    this.isPlaying = false;
+  }
+
+  step() {
+    for (var i = 0; i < this.videos.length; i++) {
+      this.drawFrame(i);
+    }
+
+    // if (this.isPlaying) {
+    window.requestAnimationFrame(this.step.bind(this));
+    // this.videos[idx].requestVideoFrameCallback(this.step.bind(this, idx));
+    // }
   }
 
   drawFrame(idx) {
-    // console.log(idx);
     // for (var i = 0; i < this.videos.length; i++) {
     let { objects } = this.state;
 
@@ -314,6 +308,12 @@ class Output {
     let glAttrs = this.glAttrs[idx];
     let video = this.videos[idx];
     let values = this.state.values[idx];
+
+    if (values.opacity === 0) {
+      return;
+    }
+
+    // console.log(idx);
 
     this.updateTexture(gl, glAttrs.texture, video);
 
@@ -420,7 +420,7 @@ class Output {
   createVideo(video) {
     this.videos.push(video);
     this.state.values.push({
-      opacity: 1,
+      opacity: 0,
       effect_a: 0,
       effect_b: 0,
     });
@@ -521,7 +521,7 @@ class Output {
         0,
       );
 
-      gl.clearColor(0, 0, 0, 0);
+      gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
       glAttrs.texture = this.initTexture(gl);
@@ -544,6 +544,10 @@ class Output {
       );
 
       gl.uniform4fv(glAttrs.uniforms.opacity, [1, 1, 1, 1]);
+
+      gl.disable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     }
 
     this.glAttrs.push(glAttrs);
@@ -563,7 +567,7 @@ class Output {
     gl.canvas.height = video.videoHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    gl.clearColor(0, 0, 0, 0);
+    gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
@@ -652,6 +656,7 @@ class Output {
     if (idx === -1) {
       console.log("Couldn't find video:", video);
     }
+
     let widthI = video.videoWidth;
     let heightI = video.videoHeight;
 
@@ -669,6 +674,9 @@ class Output {
 
       let obj = objects[i];
       let { input, output } = obj;
+
+      console.log(input, output);
+
       let transformedI = input.map((pnt) => {
         return [(pnt[0] * widthI) | 0, (pnt[1] * heightI) | 0];
       });
@@ -798,6 +806,8 @@ class App {
   }
 
   setup() {
+    this.output.play();
+
     this.state.srcs.map((src, idx) => {
       let { srcs } = this.state;
       let {
@@ -806,7 +816,6 @@ class App {
         updateContext,
         calculateMatrix,
         createMatrix,
-        step,
       } = this.output;
       let { drawUI } = this.ui;
 
@@ -835,24 +844,25 @@ class App {
 
     window.addEventListener("mousedown", (e) => {
       let { checkPoints } = this.ui;
-      let { videos } = this.output;
+      let { videos, pause } = this.output;
 
       videos.map((video) => {
-        // video.pause();
+        video.pause();
       });
 
+      // pause.call(this.output);
       checkPoints.call(this.ui, e);
     });
 
     window.addEventListener("mouseup", () => {
-      let { videos, step } = this.output;
+      let { videos, play } = this.output;
       let { setSelectedPoint } = this.ui;
 
       videos.map((video, idx) => {
         video.play();
-        step.call(this.output, idx);
       });
 
+      // play.call(this.output);
       setSelectedPoint.call(this.ui, null);
     });
 
@@ -864,9 +874,9 @@ class App {
         movePoint.call(this.ui, e);
         calculateMatrices.call(this.output);
 
-        for (var i = 0; i < videos.length; i++) {
-          drawFrame.call(this.output, i);
-        }
+        // for (var i = 0; i < videos.length; i++) {
+        //   drawFrame.call(this.output, i);
+        // }
       }
     });
 
@@ -907,23 +917,19 @@ class App {
       "message",
       (event) => {
         let data = JSON.parse(event.data);
-        if (data.action === "add_triangles") {
-          //   for (var i = 0; i < data.triangles.length; i++) {
-          //     let triangle = data.triangles[i];
-          //     for (var j = 0; j < this.zones.length; j++) {
-          //       let zone = this.zones[j];
-          //       zone.input.push(JSON.parse(JSON.stringify(triangle)));
-          //       zone.output.push(JSON.parse(JSON.stringify(triangle)));
-          //     }
-          //   }
-          //   for (var i = 0; i < this.videos.length; i++) {
-          //     this.calculateMatrix(i);
-          //   }
+        if (data.action === "add_triangle") {
+          let { triangle } = data;
+          let { calculateMatrices } = this.output;
+
+          this.state.objects.push({
+            input: JSON.parse(JSON.stringify(triangle)),
+            output: JSON.parse(JSON.stringify(triangle)),
+          });
+
+          calculateMatrices.call(this.output);
         } else if (data.action === "update_opacity") {
           let { videoIdx, opacity } = data;
           this.state.values[videoIdx].opacity = parseFloat(opacity);
-          this.output.contexts[videoIdx].canvas.style.opacity =
-            this.state.values[videoIdx].opacity;
         }
 
         // localStorage.setItem("zones", JSON.stringify(this.zones));
