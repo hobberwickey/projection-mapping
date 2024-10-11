@@ -60,10 +60,35 @@ const fragmentShaderSrc = `
   uniform sampler2D u_texture;
 
   // Opacity
-  uniform vec4 u_opacity;
+  uniform vec3 u_effects;
+
+  vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) 
+  {
+    return a + b*cos( 6.28318*(c*t+d) );
+  }
+
+  vec3 rgb2hsv(vec3 c)
+  {
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+  }
 
   void main() {
-    gl_FragColor = u_opacity * texture2D(u_texture, v_texcoord);
+    vec4 color = texture2D(u_texture, v_texcoord);
+    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+    
+    vec3 effect = pal(hsv[2] + u_effects[2], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
+    vec3 weighted = vec3(
+      color[0] * (1.0 - u_effects[1]) + effect[0] * u_effects[1],
+      color[1] * (1.0 - u_effects[1]) + effect[1] * u_effects[1],
+      color[2] * (1.0 - u_effects[1]) + effect[2] * u_effects[1]
+    );
+    gl_FragColor =  vec4(weighted, u_effects[0]);
   }
 `;
 
@@ -211,7 +236,7 @@ class UI {
     let maxX = Math.max(Math.min(x + offset, width), this.pointSize);
     let maxY = Math.max(Math.min(y + offset, height), this.pointSize);
 
-    console.log(mouseX, mouseY, minX, minY, maxX, maxY);
+    // console.log(mouseX, mouseY, minX, minY, maxX, maxY);
 
     if (mouseX <= maxX && mouseX >= minX && mouseY <= maxY && mouseY >= minY) {
       this.selectedPoint = [objIdx, pntIdx];
@@ -309,12 +334,6 @@ class Output {
     let video = this.videos[idx];
     let values = this.state.values[idx];
 
-    if (values.opacity === 0) {
-      return;
-    }
-
-    // console.log(idx);
-
     this.updateTexture(gl, glAttrs.texture, video);
 
     for (var j = 0; j < objects.length; j++) {
@@ -378,7 +397,11 @@ class Output {
         0,
       );
 
-      gl.uniform4fv(glAttrs.uniforms.opacity, [1, 1, 1, values.opacity]);
+      gl.uniform3fv(glAttrs.uniforms.effects, [
+        values.opacity,
+        values.effect_a,
+        values.effect_b,
+      ]);
       gl.uniform1i(glAttrs.uniforms.sampler, 0);
 
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -445,7 +468,7 @@ class Output {
       uniforms: {
         sampler: null,
         matrix: null,
-        opacity: null,
+        effects: null,
       },
 
       positionBuffer: null,
@@ -538,12 +561,11 @@ class Output {
       let matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
       gl.uniformMatrix3fv(glAttrs.uniforms.matrix, false, matrix);
 
-      glAttrs.uniforms.opacity = gl.getUniformLocation(
+      glAttrs.uniforms.effects = gl.getUniformLocation(
         glAttrs.program,
-        "u_opacity",
+        "u_effects",
       );
-
-      gl.uniform4fv(glAttrs.uniforms.opacity, [1, 1, 1, 1]);
+      gl.uniform3fv(glAttrs.uniforms.effects, [1, 0, 0]);
 
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
@@ -610,6 +632,10 @@ class Output {
   }
 
   updateTexture(gl, texture, video) {
+    if (video.currentTime === 0) {
+      return;
+    }
+
     const level = 0;
     const internalFormat = gl.RGBA;
     const srcFormat = gl.RGBA;
@@ -635,8 +661,6 @@ class Output {
     while (this.matrices.length <= idx) {
       this.matrices.push([]);
     }
-
-    console.log(idx, this.matrices.length);
   }
 
   calculateMatrices() {
@@ -927,9 +951,12 @@ class App {
           });
 
           calculateMatrices.call(this.output);
-        } else if (data.action === "update_opacity") {
-          let { videoIdx, opacity } = data;
+        } else if (data.action === "update_effects") {
+          let { videoIdx, opacity, effect_a, effect_b } = data;
+
           this.state.values[videoIdx].opacity = parseFloat(opacity);
+          this.state.values[videoIdx].effect_a = parseFloat(effect_a);
+          this.state.values[videoIdx].effect_b = parseFloat(effect_b);
         }
 
         // localStorage.setItem("zones", JSON.stringify(this.zones));

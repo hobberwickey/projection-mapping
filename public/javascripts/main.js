@@ -24,6 +24,7 @@ class App {
     };
 
     this.groups = [];
+    this.values = [];
 
     this.midiAccess = null; // global MIDIAccess object
     this.midiInput = null;
@@ -109,6 +110,8 @@ class App {
       let label = document.createElement("label");
       let controls = document.createElement("ul");
 
+      this.values.push([0, 0, 0]);
+
       video.className = "uk-card uk-card-default uk-card-small uk-card-body";
       label.className = "uk-card-title";
       label.innerText = v;
@@ -118,7 +121,7 @@ class App {
       video.appendChild(label);
       video.appendChild(controls);
 
-      for (var i = 0; i < 1; i++) {
+      for (var i = 0; i < 3; i++) {
         let opacity = document.createElement("input");
 
         opacity.type = "range";
@@ -127,7 +130,10 @@ class App {
         opacity.min = 0;
         opacity.step = 0.01;
         opacity.value = 0;
-        opacity.addEventListener("input", this.updateOpacity.bind(this, vIdx));
+        opacity.addEventListener(
+          "input",
+          this.updateValues.bind(this, i, vIdx),
+        );
 
         controls.appendChild(opacity);
       }
@@ -149,16 +155,20 @@ class App {
     );
   }
 
-  updateOpacity(videoIdx, e) {
+  updateValues(valueIdx, videoIdx, e) {
     if (!this.screen) {
       return;
     }
 
+    this.values[videoIdx][valueIdx] = e.target.value;
+
     this.screen.postMessage(
       JSON.stringify({
-        action: "update_opacity",
+        action: "update_effects",
         videoIdx: videoIdx,
-        opacity: e.target.value,
+        opacity: this.values[videoIdx][0],
+        effect_a: this.values[videoIdx][1],
+        effect_b: this.values[videoIdx][2],
       }),
     );
   }
