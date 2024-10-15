@@ -14,11 +14,17 @@
     "express": "~4.16.1",
     "mini-css-extract-plugin": "^2.9.1",
     "morgan": "~1.9.1",
-    "webpack-cli": "^5.1.4",
-    "x-elements": "github:hobberwickey/x-elements"
+    "webpack-cli": "^5.1.4"
   },
   "main": "app.js",
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "sass": "^1.79.5",
+    "sass-loader": "^16.0.2",
+    "style-loader": "^4.0.0",
+    "webpack-fix-style-only-entries": "^0.6.1"
+  }
 }

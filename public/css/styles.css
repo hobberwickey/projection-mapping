@@ -1,0 +1,299 @@
+:root {
+  --btn-color: #212c5b;
+  --text-color: #000;
+  --fg-color: hsl(180deg 20.54% 90.41%);
+}
+
+body {
+  padding: 0px;
+  margin: 0px;
+  background-color: hsl(56.67, 11.54%, 69.41%);
+}
+
+nav {
+  z-index: 1;
+}
+
+.video-wrapper {
+  margin-top: 20px;
+}
+
+.uk-container {
+  padding-left: 20px;
+  padding-right: 20px;
+  max-width: none;
+}
+
+.uk-card-default {
+  color: black;
+  background-color: transparent;
+  box-shadow: none;
+}
+.uk-card-default > div {
+  background-color: var(--fg-color);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border-radius: 5px;
+  padding-right: 80px;
+  position: relative;
+}
+.uk-card-default > div .left {
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
+}
+.uk-card-default > div .right {
+  display: block;
+  vertical-align: top;
+  width: 80px;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  overflow: hidden;
+}
+.uk-card-default > div .right .inputs {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1/1;
+}
+.uk-card-default > div .right .inputs input {
+  transform: rotate(270deg);
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  margin-left: -50%;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.uk-card-default > div .right .inputs input:nth-child(1) {
+  left: 10px;
+}
+.uk-card-default > div .right .inputs input:nth-child(2) {
+  left: 35px;
+}
+.uk-card-default > div .right .inputs input:nth-child(3) {
+  left: 60px;
+}
+.uk-card-default .uk-card-header {
+  border-bottom: none;
+}
+.uk-card-default .uk-card-body {
+  padding-top: 0px;
+}
+.uk-card-default .uk-card-footer {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+.uk-card-default video {
+  margin-bottom: 20px;
+  width: 100%;
+  aspect-ratio: 2/1;
+  background-color: black;
+}
+.uk-card-default input[type=text] {
+  max-width: 100%;
+  border: none;
+  background-color: transparent;
+  text-align: left;
+}
+.uk-card-default input[type=range]::before {
+  display: none;
+}
+.uk-card-default .preview {
+  position: relative;
+}
+.uk-card-default .preview p {
+  display: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  margin: 26px 0px;
+  color: white;
+}
+.uk-card-default .preview.no-video p {
+  display: block;
+}
+.uk-card-default .upload-wrapper {
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+}
+.uk-card-default .upload-wrapper label {
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  color: white !important;
+  background-color: var(--btn-color);
+  cursor: pointer;
+}
+.uk-card-default .upload-wrapper input {
+  opacity: 0;
+  width: 100%;
+}
+
+#effects {
+  margin-top: 0px;
+}
+#effects select {
+  background-color: var(--fg-color);
+  color: white;
+}
+
+#shapes {
+  padding: 100px 0px 20px 20px;
+  min-height: 100vh;
+  margin-top: -100px;
+}
+#shapes .table-wrapper {
+  min-height: 604px;
+  max-height: 604px;
+  overflow: auto;
+  border: solid 1px;
+}
+#shapes .table-wrapper table tr {
+  height: 1px;
+}
+#shapes .table-wrapper table tr:last-child {
+  height: auto;
+}
+#shapes .table-wrapper table tr th,
+#shapes .table-wrapper table tr td {
+  border-bottom: solid 1px;
+}
+#shapes .table-wrapper table tr th:first-child,
+#shapes .table-wrapper table tr td:first-child {
+  border-right: solid 1px;
+}
+#shapes .table-wrapper table tr th.spacer,
+#shapes .table-wrapper table tr td.spacer {
+  border-right: none;
+  border-bottom: none;
+}
+#shapes .table-wrapper table th,
+#shapes .table-wrapper table td {
+  padding: 16px 12px;
+}
+#shapes .table-wrapper table td:first-child {
+  min-width: 60px;
+}
+#shapes .table-wrapper table td input {
+  border: solid 1px var(--text-color);
+}
+#shapes .table-wrapper table thead {
+  position: sticky;
+  top: 0px;
+}
+#shapes .table-wrapper table thead tr th {
+  padding: 0px;
+}
+#shapes .table-wrapper table thead tr th div {
+  min-height: 18px;
+  padding: 16px 12px;
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  background-color: var(--fg-color);
+}
+#shapes .table-wrapper table thead input[type=text],
+#shapes .table-wrapper table tbody input[type=text] {
+  background-color: transparent;
+  border: none;
+  width: 100%;
+}
+
+a {
+  color: var(--btn-color) !important;
+}
+
+h3 {
+  color: var(--btn-color);
+}
+
+a:hover {
+  color: var(--btn-color) !important;
+}
+
+.fancy {
+  font-family: "Handjet", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-size: 40px !important;
+}
+
+.fancy.small {
+  font-size: 30px !important;
+}
+
+.ui {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+#zone-select li a {
+  font-size: 150%;
+  padding: 5px 15px;
+}
+
+#quad-control {
+  padding: 5px 15px;
+}
+
+.fullscreen {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /*  background-color: #000;*/
+}
+
+canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  transform: translateZ(0);
+}
+
+label {
+  color: var(--text-color) !important;
+  padding: 0px 15px;
+}
+
+.videos,
+.buffers {
+  position: absolute;
+  display: none;
+}
+
+.contexts canvas {
+  /*  opacity: 0.3;*/
+}
+
+#fps {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+}
+
+.launch {
+  position: relative;
+  margin: 0px auto;
+  width: 200px;
+  top: 200px;
+  display: block;
+  cursor: pointer;
+}
+
+.content {
+  padding: 20px 20px;
+}

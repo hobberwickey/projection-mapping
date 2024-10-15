@@ -1,0 +1,14 @@
+{
+  "Config": {
+    "video_count": "INTEGER",
+    "effect_count": "INTEGER",
+    "group_count": "INTEGER"
+  },
+
+  "Video": {
+    "idx": "INTEGER",
+    "label": "TEXT",
+
+    "values": [{}]
+  }
+}

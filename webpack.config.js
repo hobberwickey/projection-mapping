@@ -1,13 +1,20 @@
 const path = require("path");
+
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const fs = require("fs");
 
 module.exports = {
-  entry: "/src/js/app.js",
+  entry: {
+    main: "/src/js/main.js",
+    styles: ["/src/scss/main.scss"],
+  },
+  watch: true,
+  mode: "production",
   output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "public/javascripts/app.js",
+    path: path.resolve(__dirname, "public"),
+    filename: "js/[name].js",
   },
   module: {
     rules: [
@@ -18,7 +25,23 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              sourceMap: false,
+            },
+          },
+          {
+            loader: "sass-loader",
+            options: {
+              sassOptions: {
+                style: "expanded",
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.(png|jpg|gif|woff|woff2|eot|ttf|svg)$/,
@@ -34,14 +57,13 @@ module.exports = {
       },
     ],
   },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
+    new FixStyleOnlyEntriesPlugin(),
     new MiniCssExtractPlugin({
-      filename: "css/style.min.css",
+      filename: "css/[name].css",
     }),
   ],
-  devServer: {
-    contentBase: path.join(__dirname, "dist"),
-    compress: true,
-    port: 3000,
-  },
 };
