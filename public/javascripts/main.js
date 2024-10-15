@@ -17,14 +17,15 @@ class App {
     this.videos = {
       Jellyfish: "/videos/jellyfish.mp4",
       Pines: "/videos/pines.mp4",
+      Pika: "/videos/pika.mp4",
       Lines: "/videos/lines.mp4",
       Trippy: "/videos/trippy.mp4",
       Ink: "/videos/ink.mp4",
-      Pika: "/videos/pika.mp4",
     };
 
     this.groups = [];
     this.values = [];
+    this.selectedVideo = 0;
 
     this.midiAccess = null; // global MIDIAccess object
     this.midiInput = null;
@@ -34,23 +35,61 @@ class App {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
 
       for (const entry of this.midiAccess.inputs) {
-        console.log(entry[1]);
+        // console.log(entry[1]);
 
         if (entry[1].id === "-1994529889") {
           this.midiInput = entry[1];
 
           entry[1].onmidimessage = (e) => {
-            console.log("Arduino", e);
+            let note = e.data[1];
+            let velocity = e.data[2];
+
+            console.log(note);
+
+            if (note === 48) {
+              this.selectedVideo = 0;
+            } else if (note === 53) {
+              this.selectedVideo = 1;
+            } else if (note === 50) {
+              this.selectedVideo = 2;
+            } else if (note === 51) {
+              this.selectedVideo = 3;
+            } else if (note === 49) {
+              this.selectedVideo = 4;
+            } else if (note === 52) {
+              this.selectedVideo = 5;
+            } else if (note === 56) {
+              let input = document
+                .querySelectorAll("#videos > div")
+                [this.selectedVideo].querySelectorAll("input")[0];
+
+              input.value = velocity / 127;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            } else if (note === 54) {
+              let input = document
+                .querySelectorAll("#videos > div")
+                [this.selectedVideo].querySelectorAll("input")[1];
+
+              input.value = velocity / 127;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            } else if (note === 55) {
+              let input = document
+                .querySelectorAll("#videos > div")
+                [this.selectedVideo].querySelectorAll("input")[2];
+
+              input.value = velocity / 127;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
           };
         }
 
-        if (entry[1].id === "325563316") {
-          this.midiInput = entry[1];
+        // if (entry[1].id === "325563316") {
+        //   this.midiInput = entry[1];
 
-          entry[1].onmidimessage = (e) => {
-            console.log("APK", e);
-          };
-        }
+        //   entry[1].onmidimessage = (e) => {
+        //     console.log("APK", e);
+        //   };
+        // }
       }
 
       // for (const entry of this.midiAccess.outputs) {
@@ -156,6 +195,7 @@ class App {
   }
 
   updateValues(valueIdx, videoIdx, e) {
+    console.log(valueIdx, videoIdx, e.target.value);
     if (!this.screen) {
       return;
     }

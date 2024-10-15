@@ -97,12 +97,7 @@ class State {
     // Get from local storage
 
     this.srcs = [
-      "/videos/jellyfish.mp4",
-      "/videos/pines.mp4",
-      "/videos/lines.mp4",
-      "/videos/trippy.mp4",
-      "/videos/ink.mp4",
-      "/videos/pika.mp4",
+      // video source or blob
     ];
     this.groups = [
       // {
@@ -292,12 +287,13 @@ class Output {
 
     this.videos = [];
     this.contexts = [];
-    this.matrices = []; // Nested array, videoIdx, objIdx
+    this.matrices = [];
     this.textures = [];
-
     this.glAttrs = [];
 
     this.isPlaying = false;
+
+    this.reset_video = null;
     // this.stepFn = null;
   }
 
@@ -319,10 +315,7 @@ class Output {
       this.drawFrame(i);
     }
 
-    // if (this.isPlaying) {
     window.requestAnimationFrame(this.step.bind(this));
-    // this.videos[idx].requestVideoFrameCallback(this.step.bind(this, idx));
-    // }
   }
 
   drawFrame(idx) {
@@ -333,6 +326,10 @@ class Output {
     let glAttrs = this.glAttrs[idx];
     let video = this.videos[idx];
     let values = this.state.values[idx];
+
+    if (video.currentTime === 0) {
+      return;
+    }
 
     this.updateTexture(gl, glAttrs.texture, video);
 
@@ -398,9 +395,9 @@ class Output {
       );
 
       gl.uniform3fv(glAttrs.uniforms.effects, [
-        values.opacity,
         values.effect_a,
         values.effect_b,
+        values.effect_c,
       ]);
       gl.uniform1i(glAttrs.uniforms.sampler, 0);
 
@@ -443,10 +440,11 @@ class Output {
   createVideo(video) {
     this.videos.push(video);
     this.state.values.push({
-      opacity: 0,
       effect_a: 0,
       effect_b: 0,
+      effect_c: 0,
     });
+
     this.createContext();
   }
 
@@ -818,6 +816,63 @@ class Output {
       matrix.b * point[0] + matrix.d * point[1] + matrix.f,
     ];
   }
+
+  resetVideo(idx) {
+    let video = this.videos[idx];
+    let gl = this.contexts[idx];
+
+    if (!!video) {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      this.videos.splice(idx, 1);
+      this.contexts.splice(idx, 1);
+      this.matrices.splice(idx, 1);
+      this.textures.splice(idx, 1);
+      this.glAttrs.splice(idx, 1);
+
+      this.state.values.splice(idx, 1);
+
+      gl.canvas.parentNode.removeChild(gl.canvas);
+      video.parentNode.removeChild(video);
+    }
+
+    this.reset_video = idx;
+  }
+
+  loadVideo(file) {
+    if (this.reset_video === null) {
+      return;
+    }
+
+    let { createVideo, updateContext, calculateMatrix, createMatrix } = this;
+
+    let vid = document.createElement("video");
+    document.querySelector(".videos").appendChild(vid);
+
+    vid.playsInline = true;
+    vid.loop = true;
+    vid.muted = true;
+    vid.addEventListener("loadedmetadata", (e) => {
+      setTimeout(() => {
+        this.calculateMatrix(e.target);
+        this.updateContext(e.target);
+
+        console.log(vid);
+        vid.play();
+      }, 100);
+    });
+    vid.src = URL.createObjectURL(file);
+
+    this.createVideo(vid);
+    this.createMatrix(vid);
+    this.reset_video = null;
+
+    console.log(this, this.state);
+  }
 }
 
 class App {
@@ -833,37 +888,33 @@ class App {
     this.output.play();
 
     this.state.srcs.map((src, idx) => {
-      let { srcs } = this.state;
-      let {
-        videos,
-        createVideo,
-        updateContext,
-        calculateMatrix,
-        createMatrix,
-      } = this.output;
-      let { drawUI } = this.ui;
-
-      let vid = document.createElement("video");
-      document.querySelector(".videos").appendChild(vid);
-
-      vid.playsInline = true;
-      vid.loop = true;
-      vid.muted = true;
-      vid.addEventListener("loadedmetadata", (e) => {
-        setTimeout(() => {
-          // this.calculatePointClouds();
-          // this.createContext(idx);
-          // this.createBuffers(idx);
-
-          calculateMatrix.call(this.output, e.target);
-          updateContext.call(this.output, e.target);
-          drawUI.call(this.ui);
-        }, 100);
-      });
-      vid.src = src;
-
-      createVideo.call(this.output, vid);
-      createMatrix.call(this.output, vid);
+      // let { srcs } = this.state;
+      // let {
+      //   videos,
+      //   createVideo,
+      //   updateContext,
+      //   calculateMatrix,
+      //   createMatrix,
+      // } = this.output;
+      // let { drawUI } = this.ui;
+      // let vid = document.createElement("video");
+      // document.querySelector(".videos").appendChild(vid);
+      // vid.playsInline = true;
+      // vid.loop = true;
+      // vid.muted = true;
+      // vid.addEventListener("loadedmetadata", (e) => {
+      //   setTimeout(() => {
+      //     // this.calculatePointClouds();
+      //     // this.createContext(idx);
+      //     // this.createBuffers(idx);
+      //     calculateMatrix.call(this.output, e.target);
+      //     updateContext.call(this.output, e.target);
+      //     drawUI.call(this.ui);
+      //   }, 100);
+      // });
+      // vid.src = src;
+      // createVideo.call(this.output, vid);
+      // createMatrix.call(this.output, vid);
     });
 
     window.addEventListener("mousedown", (e) => {
@@ -940,23 +991,38 @@ class App {
     window.addEventListener(
       "message",
       (event) => {
-        let data = JSON.parse(event.data);
-        if (data.action === "add_triangle") {
-          let { triangle } = data;
-          let { calculateMatrices } = this.output;
+        if (typeof event.data !== "object") {
+          let data = JSON.parse(event.data);
 
-          this.state.objects.push({
-            input: JSON.parse(JSON.stringify(triangle)),
-            output: JSON.parse(JSON.stringify(triangle)),
-          });
+          console.log(data.action);
+          if (data.action === "add_triangle") {
+            let { triangle } = data;
+            let { calculateMatrices } = this.output;
 
-          calculateMatrices.call(this.output);
-        } else if (data.action === "update_effects") {
-          let { videoIdx, opacity, effect_a, effect_b } = data;
+            this.state.objects.push({
+              input: JSON.parse(JSON.stringify(triangle)),
+              output: JSON.parse(JSON.stringify(triangle)),
+            });
 
-          this.state.values[videoIdx].opacity = parseFloat(opacity);
-          this.state.values[videoIdx].effect_a = parseFloat(effect_a);
-          this.state.values[videoIdx].effect_b = parseFloat(effect_b);
+            calculateMatrices.call(this.output);
+          } else if (data.action === "update_effects") {
+            let { videoIdx, effect_a, effect_b, effect_c } = data;
+
+            console.log(videoIdx, effect_a, effect_b, effect_c);
+
+            this.state.values[videoIdx].effect_a = parseFloat(effect_a);
+            this.state.values[videoIdx].effect_b = parseFloat(effect_b);
+            this.state.values[videoIdx].effect_c = parseFloat(effect_c);
+          } else if (data.action === "reset_video") {
+            let { videoIdx } = data;
+            let { resetVideo } = this.output;
+
+            resetVideo.call(this.output, videoIdx);
+          }
+        } else {
+          let { loadVideo } = this.output;
+
+          loadVideo.call(this.output, event.data);
         }
 
         // localStorage.setItem("zones", JSON.stringify(this.zones));
