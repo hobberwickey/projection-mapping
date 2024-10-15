@@ -5,10 +5,41 @@
     "group_count": "INTEGER"
   },
 
+  // Always contains {video_count} entries
   "Video": {
     "idx": "INTEGER",
     "label": "TEXT",
 
-    "values": [{}]
-  }
+    // number of values equal to `group_count`
+    "values": [
+      {
+        "effect_a": "INTEGER",
+        "effect_b": "INTEGER",
+        "effect_c": "INTEGER"
+      }
+    ]
+  },
+
+  // Always contains {group_count} entries
+  // The triangles property contains indexes of triangles,
+  // Group 0 always contains no triangles, as it just represents all
+  // triangles. No sense in storing them
+  "Groups": [
+    {
+      "label": "TEXT",
+      "triangles": ["INTEGERS"]
+    }
+    // Always contains {group_count} items
+  ],
+
+  // Any number of triangles is possible
+  "Triangles": [
+    {
+      "label": "TEXT"
+    }
+  ],
+
+  // Always contains {effect_count} entries
+  // Array of effect ids
+  "Effects": ["TEXT"]
 }
