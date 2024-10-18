@@ -7,7 +7,6 @@
 
   // Always contains {video_count} entries
   "Video": {
-    "idx": "INTEGER",
     "label": "TEXT",
 
     // number of values equal to `group_count`
@@ -27,6 +26,7 @@
   "Groups": [
     {
       "label": "TEXT",
+      "opacity": "FLOAT",
       "triangles": ["INTEGERS"]
     }
     // Always contains {group_count} items

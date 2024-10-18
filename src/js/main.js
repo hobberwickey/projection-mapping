@@ -1,7 +1,7 @@
 import { Config } from "./libs/config.js";
 import { Video } from "./libs/videos.js";
 import { Effect } from "./libs/effects.js";
-import { Shapes, Triangle, Group } from "./libs/shapes.js";
+import { Group, Shape, GroupToggle } from "./libs/shapes.js";
 
 const defaultTriangle = [
   [0.4, 0.4],
@@ -20,15 +20,12 @@ class App {
       hd: 200,
     };
 
-    this.triangles = [];
-    this.values = [];
-    this.videos = [];
-    this.groups = [];
-    this.effects = [];
+    this.state =
+      JSON.parse(localStorage.getItem("saves"))?.auto || this.defaultState();
 
-    this.selectedVideos = [];
-    this.selectedGroup = null;
-    this.selectedEffect = null;
+    this.selectedVideos = [0];
+    this.selectedGroup = 0;
+    this.selectedEffect = [0];
 
     this.midiAccess = null;
     this.midiInput = null;
@@ -38,9 +35,56 @@ class App {
     this.setupGroups();
     this.setupEffects();
     this.setupMidi();
-    this.setupValues();
 
     this.launch();
+  }
+
+  id() {
+    return (Math.random() * 1000000) | 0;
+  }
+
+  defaultState() {
+    let { config } = this;
+
+    return {
+      videos: new Array(config.video_count).fill().map((_, idx) => {
+        return {
+          id: this.id(),
+          label: `Video ${idx + 1}`,
+          values: new Array(config.effect_parameter_count).fill(0),
+        };
+      }),
+
+      effects: new Array(config.effect_count).fill().map((_, idx) => {
+        return idx === 0 ? "cosine_pallet" : null;
+      }),
+
+      groups: new Array(config.group_count).fill().map((_, idx) => {
+        return {
+          id: this.id(),
+          editable: idx !== 0,
+          label: idx === 0 ? "All" : `Group ${idx}`,
+          shapes: [],
+        };
+      }),
+
+      shapes: [
+        {
+          id: this.id(),
+          type: "triangle",
+          label: "Triangle 1",
+          opacity: 0,
+          points: JSON.parse(JSON.stringify(defaultTriangle)),
+        },
+        {
+          id: this.id(),
+          type: "triangle",
+          label: "Triangle 2",
+          opacity: 0,
+          points: JSON.parse(JSON.stringify(defaultTriangle)),
+        },
+      ],
+    };
   }
 
   setupMidi() {
@@ -106,31 +150,31 @@ class App {
     //   navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
   }
 
-  setupValues() {
-    let vidCnt = this.config.video_count;
-    let fxCnt = this.config.effect_count;
+  // setupValues() {
+  //   let vidCnt = this.config.video_count;
+  //   let fxCnt = this.config.effect_count;
 
-    for (var i = 0; i < vidCnt; i++) {
-      let vidEffects = [];
+  //   for (var i = 0; i < vidCnt; i++) {
+  //     let vidEffects = [];
 
-      for (var j = 0; j < fxCnt; j++) {
-        vidEffects.push({
-          effect_a: 0,
-          effect_b: 0,
-          effect_c: 0,
-        });
-      }
+  //     for (var j = 0; j < fxCnt; j++) {
+  //       vidEffects.push({
+  //         effect_a: 0,
+  //         effect_b: 0,
+  //         effect_c: 0,
+  //       });
+  //     }
 
-      this.values.push(vidEffects);
-    }
-  }
+  //     this.values.push(vidEffects);
+  //   }
+  // }
 
   launch() {
     if (!!this.screen) {
       return;
     }
 
-    // this.rotateColors();
+    this.rotateColors();
 
     document
       .querySelector("#launch")
@@ -138,11 +182,35 @@ class App {
 
     document
       .querySelector("#add_triangle")
-      .addEventListener("click", this.addTriangle.bind(this));
+      .addEventListener("click", this.addShape.bind(this));
+
+    document
+      .querySelector("#slideout-handle")
+      .addEventListener("click", this.toggleSlideout.bind(this));
   }
 
   popout() {
     this.screen = window.open("./screen.html");
+  }
+
+  toggleSlideout() {
+    let el = document.querySelector(".slideout");
+
+    console.log(el);
+
+    if (el.classList.contains("active")) {
+      el.classList.remove("active");
+      el.querySelector("#slideout-handle").setAttribute(
+        "uk-icon",
+        "chevron-double-left",
+      );
+    } else {
+      el.classList.add("active");
+      el.querySelector("#slideout-handle").setAttribute(
+        "uk-icon",
+        "chevron-double-right",
+      );
+    }
   }
 
   rotateColors() {
@@ -163,55 +231,96 @@ class App {
     window.requestAnimationFrame(this.rotateColors.bind(this));
   }
 
-  setupVideos() {
-    let { updateVideo, updateEffect } = this;
+  // setupData() {
+  //   // Pull from localStorage
 
-    for (var i = 0; i < this.config.video_count; i++) {
-      let video = new Video(i, updateVideo.bind(this), updateEffect.bind(this));
-      this.videos.push(video);
+  //   this.videos.push({
+  //     label: `Video ${i + 1}`,
+  //     values: new Array(this.config.group_count).fill(
+  //       new Array(this.config.effect_count).fill({
+  //         effect_a: 0,
+  //         effect_b: 0,
+  //         effect_c: 0,
+  //       }),
+  //     ),
+  //   });
+  // }
+
+  setupVideos() {
+    let { updateVideo, updateEffect, toggleVideo } = this;
+    let { videos } = this.state;
+
+    for (var i = 0; i < videos.length; i++) {
+      let video = new Video(
+        videos[i],
+        updateVideo.bind(this),
+        updateEffect.bind(this),
+        toggleVideo.bind(this),
+      );
       document.querySelector("#videos").appendChild(video.el);
     }
   }
 
   setupEffects() {
-    for (var i = 0; i < this.config.effect_count; i++) {
-      let effect = new Effect(i);
-      this.effects.push(effect);
+    let { effects } = this.state;
+
+    for (var i = 0; i < effects.length; i++) {
+      let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
       document.querySelector("#effects").appendChild(effect.el);
     }
   }
 
   setupGroups() {
-    for (var i = 0; i < this.config.group_count; i++) {
-      let shapes = new Shapes(i);
-      document.querySelector("#shapes thead tr").appendChild(shapes.el);
+    let { groups, shapes } = this.state;
 
-      let g = { triangles: [], values: [] };
-      for (var j = 0; j < this.config.effect_count; j++) {
-        g.values.push({ effect_a: 0, effect_b: 0, effect_c: 0 });
-      }
-      this.groups.push(g);
-    }
+    for (var i = 0; i < groups.length; i++) {
+      let group = new Group(i, groups[i]);
+      document.querySelector(".slideout .groups").appendChild(group.el);
 
-    for (var i = 0; i < this.triangles.length; i++) {
-      let shape = new Triangle(i);
-
-      let row = document.createElement("tr");
-      let body = document.querySelector("#shapes tbody");
-
-      row.className = "triangle-row";
-      body.appendChild(row);
-      row.appendChild(shape.el);
-
-      for (var j = 0; j < this.config.group_count; j++) {
-        let group = new Group(i, j);
-        this.groups.push(group);
-        row.appendChild(group.el);
+      if (i === this.selectedGroup) {
+        group.el.querySelector("input[type='radio']").checked = true;
       }
     }
+
+    for (var i = 0; i < shapes.length; i++) {
+      let column = document.createElement("div");
+      column.className = "column shape";
+
+      let shape = new Shape(i, shapes[i]);
+      column.appendChild(shape.el);
+
+      document.querySelector(".slideout .table").appendChild(column);
+
+      for (var j = 0; j < groups.length; j++) {
+        let toggle = new GroupToggle(j, i, this.toggleGroup.bind(this));
+        column.appendChild(toggle.el);
+      }
+    }
+    // for (var i = 0; i < shapes.length; i++) {
+    //   let shape = new Shape(i, shapes[i], this.selectShape.bind(this));
+    //   let head = document.querySelector("#shapes thead");
+    //   let last = [...head.querySelectorAll("th")].pop();
+    //   document.querySelector("#shapes thead tr").insertBefore(shape.el, last);
+    // }
+
+    // for (var i = 0; i < groups.length; i++) {
+    //   let group = new Group(i, groups[i]);
+
+    //   let row = document.createElement("tr");
+    //   let body = document.querySelector("#shapes tbody");
+
+    //   row.className = "group-row";
+    //   body.appendChild(row);
+    //   row.appendChild(group.el);
+
+    //   for (var j = 0; j < shapes.length; j++) {
+    //     let groupToggle = new GroupToggle(groups[i], shapes[j]);
+    //     row.appendChild(groupToggle.el);
+    //   }
+    // }
   }
 
-  addTriangle() {
+  addShape() {
     if (!this.screen) {
       return;
     }
@@ -223,24 +332,34 @@ class App {
       }),
     );
 
-    let idx = this.triangles.length;
-    this.triangles.push(JSON.parse(JSON.stringify(defaultTriangle)));
+    let { shapes, groups } = this.state;
 
-    let shape = new Triangle(idx);
-    let row = document.createElement("tr");
-    let body = document.querySelector("#shapes tbody");
-    let last = [...body.querySelectorAll("tr")].pop();
+    let idx = shapes.length;
+    let shape = {
+      id: this.id(),
+      type: "triangle",
+      label: `Triangle ${idx + 1}`,
+      opacity: 0,
+      points: JSON.parse(JSON.stringify(defaultTriangle)),
+    };
 
-    body.insertBefore(row, last);
-    row.appendChild(shape.el);
+    shapes.push(shape);
 
-    for (var j = 0; j < this.config.group_count; j++) {
-      let group = new Group(idx, j);
-      row.appendChild(group.el);
+    let column = document.createElement("div");
+    column.className = "column shape";
+
+    let shapeEl = new Shape(idx + 1, shapes[idx]);
+    column.appendChild(shapeEl.el);
+
+    document.querySelector(".slideout .table").appendChild(column);
+
+    for (var j = 0; j < groups.length; j++) {
+      let toggle = new GroupToggle(j, idx);
+      column.appendChild(toggle.el, this.toggleGroup.bind(this));
     }
   }
 
-  updateVideo(videoIdx, file) {
+  updateVideo(video, file) {
     if (!this.screen) {
       return;
     }
@@ -248,11 +367,9 @@ class App {
     this.screen.postMessage(
       JSON.stringify({
         action: "reset_video",
-        videoIdx: videoIdx,
+        videoId: video.id,
       }),
     );
-
-    console.log(file);
 
     this.screen.postMessage(file);
   }
@@ -260,6 +377,9 @@ class App {
   updateEffect(videoIdx, effect, value) {
     if (!this.screen) {
       return;
+    }
+
+    if (effect === "opacity") {
     }
 
     let effectIdx = this.selectedEffect || 0;
@@ -276,6 +396,36 @@ class App {
         effect_c: values.effect_c,
       }),
     );
+  }
+
+  toggleVideo(idx) {
+    if (this.selectedVideos.contains(idx)) {
+      this.selectedVideos.splice(this.selectedVideos.indexOf(idx), 1);
+    } else {
+      this.selectedVideo.push(idx);
+    }
+
+    //this.setValues();
+  }
+
+  toggleGroup(shapeIdx, groupIdx) {
+    console.log(shapeIdx, groupIdx);
+  }
+
+  selectEffect(idx) {
+    this.selectedEffect = idx;
+
+    // this.setValues();
+  }
+
+  selectGroup(idx) {
+    this.selectedGroup[0] = idx;
+
+    // this.setValues();
+  }
+
+  selectShape(idx) {
+    this.selectedShape = idx;
   }
 
   // updateValues(valueIdx, videoIdx, e) {

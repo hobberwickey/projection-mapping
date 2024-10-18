@@ -8,10 +8,23 @@ body {
   padding: 0px;
   margin: 0px;
   background-color: hsl(56.67, 11.54%, 69.41%);
+  overflow: hidden;
+}
+
+.uk-navbar-container {
+  position: relative;
 }
 
 nav {
   z-index: 1;
+}
+
+input[type=text] {
+  max-width: 100%;
+  max-height: 100%;
+  border: none;
+  background-color: transparent;
+  text-align: left;
 }
 
 .video-wrapper {
@@ -33,7 +46,6 @@ nav {
   background-color: var(--fg-color);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   border-radius: 5px;
-  padding-right: 80px;
   position: relative;
 }
 .uk-card-default > div .left {
@@ -41,41 +53,21 @@ nav {
   vertical-align: top;
   width: 100%;
 }
-.uk-card-default > div .right {
-  display: block;
-  vertical-align: top;
-  width: 80px;
-  height: 100%;
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  overflow: hidden;
-}
-.uk-card-default > div .right .inputs {
-  position: absolute;
-  height: 100%;
-  aspect-ratio: 1/1;
-}
-.uk-card-default > div .right .inputs input {
-  transform: rotate(270deg);
-  position: absolute;
-  width: 100%;
-  top: 50%;
-  margin-left: -50%;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-.uk-card-default > div .right .inputs input:nth-child(1) {
-  left: 10px;
-}
-.uk-card-default > div .right .inputs input:nth-child(2) {
-  left: 35px;
-}
-.uk-card-default > div .right .inputs input:nth-child(3) {
-  left: 60px;
-}
 .uk-card-default .uk-card-header {
   border-bottom: none;
+  padding: 13px 20px 13px 36px;
+}
+.uk-card-default .uk-card-header input {
+  display: inline-block;
+  vertical-align: middle;
+}
+.uk-card-default .uk-card-header input[type=radio] {
+  margin-left: -16px;
+  margin-top: 0px;
+  background-color: white;
+}
+.uk-card-default .uk-card-header input[type=text] {
+  padding-left: 10px;
 }
 .uk-card-default .uk-card-body {
   padding-top: 0px;
@@ -90,12 +82,6 @@ nav {
   aspect-ratio: 2/1;
   background-color: black;
 }
-.uk-card-default input[type=text] {
-  max-width: 100%;
-  border: none;
-  background-color: transparent;
-  text-align: left;
-}
 .uk-card-default input[type=range]::before {
   display: none;
 }
@@ -108,7 +94,6 @@ nav {
   top: 0;
   width: 100%;
   text-align: center;
-  margin: 26px 0px;
   color: white;
 }
 .uk-card-default .preview.no-video p {
@@ -125,33 +110,55 @@ nav {
   width: 100%;
   height: 100%;
   left: 0;
+  top: 0;
   color: white !important;
-  background-color: var(--btn-color);
+  background-color: transparent;
   cursor: pointer;
 }
 .uk-card-default .upload-wrapper input {
   opacity: 0;
   width: 100%;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
 }
 
 #effects {
   margin-top: 0px;
 }
 #effects select {
-  background-color: var(--fg-color);
   color: white;
+  background-color: var(--fg-color);
+}
+#effects li {
+  padding-left: 16px;
+  background-color: var(--fg-color);
+}
+#effects li input {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: -16px;
+  position: relative;
+  transform: translateX(8px);
+  margin-top: 0px;
+  background-color: white;
+}
+#effects li label {
+  display: inline-block;
+  vertical-align: middle;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 0px;
 }
 
-#shapes {
-  padding: 100px 0px 20px 20px;
-  min-height: 100vh;
-  margin-top: -100px;
-}
 #shapes .table-wrapper {
-  min-height: 604px;
-  max-height: 604px;
   overflow: auto;
-  border: solid 1px;
+}
+#shapes .table-wrapper table {
+  margin-bottom: 0px;
+  direction: rtl;
 }
 #shapes .table-wrapper table tr {
   height: 1px;
@@ -159,28 +166,34 @@ nav {
 #shapes .table-wrapper table tr:last-child {
   height: auto;
 }
-#shapes .table-wrapper table tr th,
-#shapes .table-wrapper table tr td {
+#shapes .table-wrapper table td {
+  min-height: 18px;
+  padding: 16px 6px 16px 6px;
+  border-top: solid 1px;
   border-bottom: solid 1px;
-}
-#shapes .table-wrapper table tr th:first-child,
-#shapes .table-wrapper table tr td:first-child {
   border-right: solid 1px;
 }
-#shapes .table-wrapper table tr th.spacer,
-#shapes .table-wrapper table tr td.spacer {
-  border-right: none;
-  border-bottom: none;
-}
-#shapes .table-wrapper table th,
-#shapes .table-wrapper table td {
-  padding: 16px 12px;
-}
 #shapes .table-wrapper table td:first-child {
-  min-width: 60px;
+  min-width: 50px;
+  padding: 16px 6px 16px 22px;
 }
-#shapes .table-wrapper table td input {
-  border: solid 1px var(--text-color);
+#shapes .table-wrapper table td:first-child input {
+  display: inline-block;
+  vertical-align: middle;
+}
+#shapes .table-wrapper table td:first-child input[type=radio] {
+  margin-left: -16px;
+  background-color: white;
+}
+#shapes .table-wrapper table td:first-child input[type=text] {
+  writing-mode: vertical-rl;
+  width: auto;
+}
+#shapes .table-wrapper table td input[type=checkbox] {
+  display: block;
+  margin: 0px auto;
+  font-size: 22px;
+  background-color: white;
 }
 #shapes .table-wrapper table thead {
   position: sticky;
@@ -188,13 +201,31 @@ nav {
 }
 #shapes .table-wrapper table thead tr th {
   padding: 0px;
+  width: 150px;
+}
+#shapes .table-wrapper table thead tr th:last-child {
+  width: auto;
 }
 #shapes .table-wrapper table thead tr th div {
   min-height: 18px;
-  padding: 16px 12px;
+  padding: 16px 16px 16px 28px;
   border-top: solid 1px;
   border-bottom: solid 1px;
   background-color: var(--fg-color);
+  border-right: solid 1px;
+}
+#shapes .table-wrapper table thead tr th div input {
+  display: inline-block;
+  vertical-align: middle;
+}
+#shapes .table-wrapper table thead tr th div input[type=radio] {
+  margin-left: -16px;
+  background-color: white;
+  margin-top: 0px;
+}
+#shapes .table-wrapper table thead tr th div input[type=text] {
+  padding-left: 10px;
+  padding-right: 0px;
 }
 #shapes .table-wrapper table thead input[type=text],
 #shapes .table-wrapper table tbody input[type=text] {
@@ -252,7 +283,6 @@ a:hover {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  /*  background-color: #000;*/
 }
 
 canvas {
@@ -295,5 +325,217 @@ label {
 }
 
 .content {
-  padding: 20px 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 150px;
+  box-sizing: border-box;
+}
+.content .left {
+  width: 175px;
+  transition: width 100ms ease-out;
+  position: relative;
+}
+.content .left.expanded {
+  max-width: 475px;
+  width: 300px;
+  overflow: auto;
+}
+.content .right {
+  flex: 1;
+  padding-left: 20px;
+  padding-right: 300px;
+  position: relative;
+}
+.content .right > div:last-child {
+  display: block;
+  vertical-align: top;
+  width: 300px;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  overflow: hidden;
+}
+.content .right > div:last-child .inputs {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1/1;
+}
+.content .right > div:last-child .inputs input {
+  transform: rotate(270deg);
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  margin-left: -50%;
+  padding-left: 15px;
+  padding-right: 40px;
+}
+.content .right > div:last-child .inputs input:before {
+  display: none;
+}
+.content .right > div:last-child .inputs input:nth-child(1) {
+  left: 50px;
+}
+.content .right > div:last-child .inputs input:nth-child(2) {
+  left: 150px;
+}
+.content .right > div:last-child .inputs input:nth-child(3) {
+  left: 250px;
+}
+
+.slideout {
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.1);
+  position: absolute;
+  right: 150px;
+  transform: translateX(100%);
+  transition: background-color 150ms ease, right 150ms ease;
+  top: 0px;
+  height: 100vh;
+  width: 100vw;
+  padding-top: 80px;
+}
+.slideout.active {
+  right: 600px;
+  background-color: rgb(255, 255, 255);
+}
+.slideout div {
+  box-sizing: border-box;
+}
+.slideout .slideout-content {
+  height: 100%;
+  position: relative;
+  width: 600px;
+  overflow: auto;
+}
+.slideout .slideout-content input[type=text] {
+  text-align: center;
+  padding: 6px;
+  font-size: 16px;
+}
+.slideout .slideout-content .table {
+  position: relative;
+  height: 100%;
+  white-space: nowrap;
+  overflow: auto;
+}
+.slideout .slideout-content .table .column {
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  height: 100%;
+  width: 125px;
+}
+.slideout .slideout-content .table .column .row {
+  position: relative;
+  height: 15%;
+  padding: 5px;
+}
+.slideout .slideout-content .table .column .row a svg {
+  width: 50px;
+  height: 50px;
+}
+.slideout .slideout-content .table .column .row.header div {
+  padding-left: 27px;
+  padding-top: 19px;
+}
+.slideout .slideout-content .table .column .row.header div input {
+  display: inline-block;
+  vertical-align: middle;
+}
+.slideout .slideout-content .table .column .row.header div input[type=radio] {
+  margin-left: -20px;
+}
+.slideout .slideout-content .table .column .row:first-child {
+  height: 10%;
+}
+.slideout .slideout-content .table .column .row > div {
+  background-color: rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.slideout .slideout-content .table .column .row.group > div {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+.slideout .slideout-content .table .column .row.group input {
+  writing-mode: vertical-rl;
+}
+.slideout .slideout-content .table .row.toggle input[type=checkbox],
+.slideout .slideout-content .table .row.toggle input[type=radio],
+.slideout .slideout-content .table .row.group input[type=checkbox],
+.slideout .slideout-content .table .row.group input[type=radio] {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -10px;
+  margin-left: -10px;
+}
+/*********** Baseline, reset styles ***********/
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 25rem;
+}
+
+/* Removes default focus */
+input[type=range]:focus {
+  outline: none;
+}
+
+/******** Chrome, Safari, Opera and Edge Chromium styles ********/
+/* slider track */
+input[type=range]::-webkit-slider-runnable-track {
+  background-color: #000000;
+  border-radius: 0.5rem;
+  height: 30px;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background-color: #000000;
+  border-radius: 0.5rem;
+  height: 30px;
+}
+
+/* slider thumb */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  margin-top: -10px; /* Centers thumb on the track */
+  background-color: #9e9e9e;
+  border-radius: 75rem;
+  height: 50px;
+  width: 50px;
+}
+
+input[type=range]:focus::-webkit-slider-thumb {
+  outline: 3px solid #9e9e9e;
+  outline-offset: 0.125rem;
+}
+
+/*********** Firefox styles ***********/
+/* slider track */
+input[type=range]::-moz-range-track {
+  background-color: #000000;
+  border-radius: 0.5rem;
+  height: 30px;
+}
+
+/* slider thumb */
+input[type=range]::-moz-range-thumb {
+  background-color: #9e9e9e;
+  border: none; /*Removes extra border that FF applies*/
+  border-radius: 75rem;
+  height: 50px;
+  width: 50px;
+}
+
+input[type=range]:focus::-moz-range-thumb {
+  outline: 3px solid #9e9e9e;
+  outline-offset: 0.125rem;
 }

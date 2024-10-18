@@ -6,21 +6,21 @@ const Config = {
   default: {
     video_count: 6,
     effect_count: 6,
-    group_count: 6
+    group_count: 6,
+    effect_parameter_count: 2
   }
 };
 ;// ./src/js/libs/videos.js
 class Video {
-  constructor(idx, onChange, onEffect, onSelect) {
-    this.idx = idx;
+  constructor(video, onChange, onEffect, onSelect) {
     this.onChange = e => {
       this.el.querySelector("video").src = URL.createObjectURL(e.target.files[0]);
       this.el.querySelector("video").currentTime = 50;
       this.el.querySelector(".preview").classList.remove("no-video");
-      onChange(idx, e.target.files[0]);
+      onChange(video, e.target.files[0]);
     };
     this.onEffect = (effect, e) => {
-      onEffect(idx, effect, e.target.value);
+      onEffect(video, effect, e.target.value);
     };
     this.onSelect = e => {
       console.log(e);
@@ -30,150 +30,170 @@ class Video {
     this.el.innerHTML = `
 			<div>
 				<div class='left'>
-					<div id='video-${this.idx}' class="uk-card-header">
-		        <input type='text' class="uk-card-title" value='Video ${this.idx + 1}'></input>
+					<div id='video-${video.id}' class="uk-card-header">
+						<input type='radio' name='video' class='uk-radio' 
+		        /><input type='text' class="uk-card-title" value='${video.label}'></input>
 		    	</div>
 					<div class="uk-card-body">
-						<div class='preview no-video'>
+						<div class='preview no-video upload-wrapper'>
 							<video></video>
 							<p>
 								No Video
 							</p>
-						</div>
-						<div class='upload-wrapper'>
-							<label class='uk-label' for='video-${this.idx}-input'>Upload</label>
-							<input id='video-${this.idx}-input' type='file' />
+							<label class='uk-label' for='video-${video.id}-input'></label>
+							<input id='video-${video.id}-input' type='file' />
 						</div>
 					</div>
 				</div>
-				<div class='right'>
-					<div class='inputs'>
-						<input type='range' min="0" max="1" step="0.01" value="0" class='uk-range effect-a' />
-						<input type='range' min="0" max="1" step="0.01" value="0" class='uk-range effect-b' />
-						<input type='range' min="0" max="1" step="0.01" value="0" class='uk-range effect-c' />
-					</div>
-				</div>
+				
 			</div>
 		`;
     this.el.querySelector(".upload-wrapper input").addEventListener("change", this.onChange.bind(this));
-    this.el.querySelector(".effect-a").addEventListener("input", this.onEffect.bind(this, "effect_a"));
-    this.el.querySelector(".effect-b").addEventListener("input", this.onEffect.bind(this, "effect_b"));
-    this.el.querySelector(".effect-c").addEventListener("input", this.onEffect.bind(this, "effect_c"));
+
+    // this.el
+    // 	.querySelector(".opacity")
+    // 	.addEventListener("input", this.onEffect.bind(this, "opacity"));
+
+    // this.el
+    // 	.querySelector(".effect-b")
+    // 	.addEventListener("input", this.onEffect.bind(this, "effect_b"));
+
+    // this.el
+    // 	.querySelector(".effect-c")
+    // 	.addEventListener("input", this.onEffect.bind(this, "effect_c"));
   }
 }
 ;// ./src/js/libs/effects.js
 const effects = [{
   id: "default",
   label: "Video Controls",
-  effect_a: "Opacity",
-  effect_b: "Playback",
-  effect_c: "Position"
+  opacity: "Opacity",
+  effect_a: "Playback",
+  effect_b: "Position"
 }, {
   id: "cosine_pallet",
   label: "Cosine Pallet",
-  effect_a: "Opacity",
-  effect_b: "Intensity",
-  effect_c: "Shift"
+  opacity: "Opacity",
+  effect_a: "Intensity",
+  effect_b: "Shift"
 }, {
   id: "rgb_opacity",
   label: "RGB Opacity",
-  effect_a: "R Opacity",
-  effect_b: "B Opacity",
-  effect_c: "G Opacity"
+  opacity: "R Opacity",
+  effect_a: "B Opacity",
+  effect_b: "G Opacity"
 }, {
   id: "sine_distort",
   label: "Sine Distort",
-  effect_a: "Opacity",
-  effect_b: "Horizontal",
-  effect_c: "Vertical"
+  opacity: "Opacity",
+  effect_a: "Horizontal",
+  effect_b: "Vertical"
 }, {
   id: "prism",
   label: "Prism",
-  effect_a: "Opacity",
-  effect_b: "Horizontal",
-  effect_c: "Vertical"
+  opacity: "Opacity",
+  effect_a: "Horizontal",
+  effect_b: "Vertical"
 }, {
   id: "pixelate",
   label: "Pixelate",
-  effect_a: "Opacity",
+  opacity: "Opacity",
+  effect_a: "Pixel Size",
   effect_b: "Pallete Depth"
 }];
 class Effect {
-  constructor(idx) {
+  constructor(idx, effect) {
     this.idx = idx;
     this.onChange = e => {
-      this.el.querySelector("video").src = URL.createObjectURL(e.target.files[0]);
-      this.el.querySelector(".preview").classList.remove("no-video");
+      console.log(idx, effect, e.target.value);
     };
     this.onSelect = e => {
-      console.log(e);
+      console.log(idx, effect);
     };
     this.el = document.createElement("div");
     this.el.className = "effect";
     this.el.innerHTML = `
 			<ul class='uk-list'>
 				<li>
-					<select class='uk-select'>
-						<option value=''>No Effect</option>
-					</select>
-
-					<div class='uk-flex uk-flex-inline'>
-						<div class='effect-a'></div>
-						<div class='effect-b'></div>
-						<div class='effect-c'></div>
+					<div>
+						<input name='effect' class='uk-radio' type='radio' value='${effect}' 
+						/><label>
+							<select class='uk-select'>
+								<option value=''>No Effect</option>
+							</select>
+						</label>
 					</div>
 				</li>
 			</ul>
 		`;
-    effects.map(effect => {
+    effects.map(e => {
       let option = document.createElement("option");
-      option.value = effect.label;
-      option.innerText = effect.label;
+      option.value = e.id;
+      option.innerText = e.label;
+      option.checked = e.id === effect;
       this.el.querySelector("select").appendChild(option);
-      this.el.querySelector("select").addEventListener("change", this.onChange.bind(this));
     });
+    this.el.querySelector("select").addEventListener("change", this.onChange.bind(this));
+    this.el.querySelector("input").addEventListener("change", this.onSelect.bind(this));
   }
 }
 ;// ./src/js/libs/shapes.js
-class Shapes {
-  constructor(idx) {
-    this.updateLabel = e => {
-      console.log(idx, e.target.value);
+class Shape {
+  constructor(idx, shape, onSelect, onUpdate) {
+    this.onUpdate = e => {
+      console.log(idx, shape.id, e.target.value);
     };
-    this.el = document.createElement("th");
+    this.onSelect = e => {
+      console.log(idx, shape.id, e.target.value);
+    };
+    this.el = document.createElement("div");
+    this.el.className = "row header";
     this.el.innerHTML = `
 			<div>
-				<input type='text' value="${idx === 0 ? "All" : "Group " + idx}" />
+				<input type='radio' name='shape' class='uk-radio' 
+				/><input type='text' value="${shape.label}" />
 			</div>
 		`;
-    this.el.querySelector("input").addEventListener("input", this.updateLabel.bind(this));
-  }
-}
-class Triangle {
-  constructor(idx) {
-    this.updateLabel = e => {
-      console.log(idx, e.target.value);
-    };
-    this.el = document.createElement("td");
-    this.el.innerHTML = `
-			<input type='text' value="Triangle ${idx + 1}" />
-		`;
-    this.el.querySelector("input").addEventListener("input", this.updateLabel.bind(this));
+    this.el.querySelector("input").addEventListener("input", this.onUpdate.bind(this));
   }
 }
 class Group {
-  constructor(triangleIdx, groupIdx) {
-    this.toggleGroup = () => {
-      console.log(triangleIdx, groupIdx);
+  constructor(idx, group) {
+    this.onUpdate = e => {
+      console.log(idx, group.id, e.target.value);
     };
-    this.el = document.createElement("td");
-    if (groupIdx === 0) {
+    this.onSelect = e => {
+      console.log(idx, group.id, e.target.value);
+    };
+    this.el = document.createElement("div");
+    this.el.className = "row group";
+    this.el.innerHTML = `
+			<div>
+				<input type='text' value="${group.label}" />
+				<input class='uk-radio' name='group' type='radio' value="${group.id}"  />
+			</div>
+		`;
+    this.el.querySelector("input[type='text']").addEventListener("input", this.onUpdate.bind(this));
+  }
+}
+class GroupToggle {
+  constructor(groupIdx, shapeIdx, onToggle) {
+    this.toggleGroup = () => {
+      console.log(shapeIdx, groupIdx);
+    };
+    this.el = document.createElement("div");
+    this.el.className = "row toggle";
+    if (groupIdx !== 0) {
       this.el.innerHTML = `
-				<input class='uk-checkbox' type='checkbox' checked disabled value="${groupIdx}"  />
+				<div>
+					<input class='uk-checkbox' type='checkbox' value="${groupIdx}"  />
+				</div>
 			`;
     } else {
       this.el.innerHTML = `
-				<input class='uk-checkbox' type='checkbox' value="${groupIdx}"  />
+				<div>
+					<input class='uk-checkbox' type='checkbox' checked disabled value="${groupIdx}"  />
+				</div>
 			`;
     }
     this.el.querySelector("input").addEventListener("input", this.toggleGroup.bind(this));
@@ -194,14 +214,10 @@ class App {
       fg: 186,
       hd: 200
     };
-    this.triangles = [];
-    this.values = [];
-    this.videos = [];
-    this.groups = [];
-    this.effects = [];
-    this.selectedVideos = [];
-    this.selectedGroup = null;
-    this.selectedEffect = null;
+    this.state = JSON.parse(localStorage.getItem("saves"))?.auto || this.defaultState();
+    this.selectedVideos = [0];
+    this.selectedGroup = 0;
+    this.selectedEffect = [0];
     this.midiAccess = null;
     this.midiInput = null;
     this.midiOutput = null;
@@ -209,8 +225,48 @@ class App {
     this.setupGroups();
     this.setupEffects();
     this.setupMidi();
-    this.setupValues();
     this.launch();
+  }
+  id() {
+    return Math.random() * 1000000 | 0;
+  }
+  defaultState() {
+    let {
+      config
+    } = this;
+    return {
+      videos: new Array(config.video_count).fill().map((_, idx) => {
+        return {
+          id: this.id(),
+          label: `Video ${idx + 1}`,
+          values: new Array(config.effect_parameter_count).fill(0)
+        };
+      }),
+      effects: new Array(config.effect_count).fill().map((_, idx) => {
+        return idx === 0 ? "cosine_pallet" : null;
+      }),
+      groups: new Array(config.group_count).fill().map((_, idx) => {
+        return {
+          id: this.id(),
+          editable: idx !== 0,
+          label: idx === 0 ? "All" : `Group ${idx}`,
+          shapes: []
+        };
+      }),
+      shapes: [{
+        id: this.id(),
+        type: "triangle",
+        label: "Triangle 1",
+        opacity: 0,
+        points: JSON.parse(JSON.stringify(defaultTriangle))
+      }, {
+        id: this.id(),
+        type: "triangle",
+        label: "Triangle 2",
+        opacity: 0,
+        points: JSON.parse(JSON.stringify(defaultTriangle))
+      }]
+    };
   }
   setupMidi() {
     //   const onMIDISuccess = (midiAccess) => {
@@ -274,33 +330,48 @@ class App {
     //   };
     //   navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
   }
-  setupValues() {
-    let vidCnt = this.config.video_count;
-    let fxCnt = this.config.effect_count;
-    for (var i = 0; i < vidCnt; i++) {
-      let vidEffects = [];
-      for (var j = 0; j < fxCnt; j++) {
-        vidEffects.push({
-          effect_a: 0,
-          effect_b: 0,
-          effect_c: 0
-        });
-      }
-      this.values.push(vidEffects);
-    }
-  }
+
+  // setupValues() {
+  //   let vidCnt = this.config.video_count;
+  //   let fxCnt = this.config.effect_count;
+
+  //   for (var i = 0; i < vidCnt; i++) {
+  //     let vidEffects = [];
+
+  //     for (var j = 0; j < fxCnt; j++) {
+  //       vidEffects.push({
+  //         effect_a: 0,
+  //         effect_b: 0,
+  //         effect_c: 0,
+  //       });
+  //     }
+
+  //     this.values.push(vidEffects);
+  //   }
+  // }
+
   launch() {
     if (!!this.screen) {
       return;
     }
-
-    // this.rotateColors();
-
+    this.rotateColors();
     document.querySelector("#launch").addEventListener("click", this.popout.bind(this));
-    document.querySelector("#add_triangle").addEventListener("click", this.addTriangle.bind(this));
+    document.querySelector("#add_triangle").addEventListener("click", this.addShape.bind(this));
+    document.querySelector("#slideout-handle").addEventListener("click", this.toggleSlideout.bind(this));
   }
   popout() {
     this.screen = window.open("./screen.html");
+  }
+  toggleSlideout() {
+    let el = document.querySelector(".slideout");
+    console.log(el);
+    if (el.classList.contains("active")) {
+      el.classList.remove("active");
+      el.querySelector("#slideout-handle").setAttribute("uk-icon", "chevron-double-left");
+    } else {
+      el.classList.add("active");
+      el.querySelector("#slideout-handle").setAttribute("uk-icon", "chevron-double-right");
+    }
   }
   rotateColors() {
     this.colors.bg = (this.colors.bg + 0.05) % 360;
@@ -311,56 +382,92 @@ class App {
     document.querySelector(":root").style.setProperty("--fg-color", `hsl(${this.colors.fg}deg 20.54% 50.41%)`);
     window.requestAnimationFrame(this.rotateColors.bind(this));
   }
+
+  // setupData() {
+  //   // Pull from localStorage
+
+  //   this.videos.push({
+  //     label: `Video ${i + 1}`,
+  //     values: new Array(this.config.group_count).fill(
+  //       new Array(this.config.effect_count).fill({
+  //         effect_a: 0,
+  //         effect_b: 0,
+  //         effect_c: 0,
+  //       }),
+  //     ),
+  //   });
+  // }
+
   setupVideos() {
     let {
       updateVideo,
-      updateEffect
+      updateEffect,
+      toggleVideo
     } = this;
-    for (var i = 0; i < this.config.video_count; i++) {
-      let video = new Video(i, updateVideo.bind(this), updateEffect.bind(this));
-      this.videos.push(video);
+    let {
+      videos
+    } = this.state;
+    for (var i = 0; i < videos.length; i++) {
+      let video = new Video(videos[i], updateVideo.bind(this), updateEffect.bind(this), toggleVideo.bind(this));
       document.querySelector("#videos").appendChild(video.el);
     }
   }
   setupEffects() {
-    for (var i = 0; i < this.config.effect_count; i++) {
-      let effect = new Effect(i);
-      this.effects.push(effect);
+    let {
+      effects
+    } = this.state;
+    for (var i = 0; i < effects.length; i++) {
+      let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
       document.querySelector("#effects").appendChild(effect.el);
     }
   }
   setupGroups() {
-    for (var i = 0; i < this.config.group_count; i++) {
-      let shapes = new Shapes(i);
-      document.querySelector("#shapes thead tr").appendChild(shapes.el);
-      let g = {
-        triangles: [],
-        values: []
-      };
-      for (var j = 0; j < this.config.effect_count; j++) {
-        g.values.push({
-          effect_a: 0,
-          effect_b: 0,
-          effect_c: 0
-        });
-      }
-      this.groups.push(g);
-    }
-    for (var i = 0; i < this.triangles.length; i++) {
-      let shape = new Triangle(i);
-      let row = document.createElement("tr");
-      let body = document.querySelector("#shapes tbody");
-      row.className = "triangle-row";
-      body.appendChild(row);
-      row.appendChild(shape.el);
-      for (var j = 0; j < this.config.group_count; j++) {
-        let group = new Group(i, j);
-        this.groups.push(group);
-        row.appendChild(group.el);
+    let {
+      groups,
+      shapes
+    } = this.state;
+    for (var i = 0; i < groups.length; i++) {
+      let group = new Group(i, groups[i]);
+      document.querySelector(".slideout .groups").appendChild(group.el);
+      if (i === this.selectedGroup) {
+        group.el.querySelector("input[type='radio']").checked = true;
       }
     }
+    for (var i = 0; i < shapes.length; i++) {
+      let column = document.createElement("div");
+      column.className = "column shape";
+      let shape = new Shape(i, shapes[i]);
+      column.appendChild(shape.el);
+      document.querySelector(".slideout .table").appendChild(column);
+      for (var j = 0; j < groups.length; j++) {
+        let toggle = new GroupToggle(j, i, this.toggleGroup.bind(this));
+        column.appendChild(toggle.el);
+      }
+    }
+    // for (var i = 0; i < shapes.length; i++) {
+    //   let shape = new Shape(i, shapes[i], this.selectShape.bind(this));
+    //   let head = document.querySelector("#shapes thead");
+    //   let last = [...head.querySelectorAll("th")].pop();
+    //   document.querySelector("#shapes thead tr").insertBefore(shape.el, last);
+    // }
+
+    // for (var i = 0; i < groups.length; i++) {
+    //   let group = new Group(i, groups[i]);
+
+    //   let row = document.createElement("tr");
+    //   let body = document.querySelector("#shapes tbody");
+
+    //   row.className = "group-row";
+    //   body.appendChild(row);
+    //   row.appendChild(group.el);
+
+    //   for (var j = 0; j < shapes.length; j++) {
+    //     let groupToggle = new GroupToggle(groups[i], shapes[j]);
+    //     row.appendChild(groupToggle.el);
+    //   }
+    // }
   }
-  addTriangle() {
+  addShape() {
     if (!this.screen) {
       return;
     }
@@ -368,34 +475,44 @@ class App {
       action: "add_triangle",
       triangle: defaultTriangle
     }));
-    let idx = this.triangles.length;
-    this.triangles.push(JSON.parse(JSON.stringify(defaultTriangle)));
-    let shape = new Triangle(idx);
-    let row = document.createElement("tr");
-    let body = document.querySelector("#shapes tbody");
-    let last = [...body.querySelectorAll("tr")].pop();
-    body.insertBefore(row, last);
-    row.appendChild(shape.el);
-    for (var j = 0; j < this.config.group_count; j++) {
-      let group = new Group(idx, j);
-      row.appendChild(group.el);
+    let {
+      shapes,
+      groups
+    } = this.state;
+    let idx = shapes.length;
+    let shape = {
+      id: this.id(),
+      type: "triangle",
+      label: `Triangle ${idx + 1}`,
+      opacity: 0,
+      points: JSON.parse(JSON.stringify(defaultTriangle))
+    };
+    shapes.push(shape);
+    let column = document.createElement("div");
+    column.className = "column shape";
+    let shapeEl = new Shape(idx + 1, shapes[idx]);
+    column.appendChild(shapeEl.el);
+    document.querySelector(".slideout .table").appendChild(column);
+    for (var j = 0; j < groups.length; j++) {
+      let toggle = new GroupToggle(j, idx);
+      column.appendChild(toggle.el, this.toggleGroup.bind(this));
     }
   }
-  updateVideo(videoIdx, file) {
+  updateVideo(video, file) {
     if (!this.screen) {
       return;
     }
     this.screen.postMessage(JSON.stringify({
       action: "reset_video",
-      videoIdx: videoIdx
+      videoId: video.id
     }));
-    console.log(file);
     this.screen.postMessage(file);
   }
   updateEffect(videoIdx, effect, value) {
     if (!this.screen) {
       return;
     }
+    if (effect === "opacity") {}
     let effectIdx = this.selectedEffect || 0;
     let values = this.values[videoIdx][effectIdx];
     values[effect] = value;
@@ -407,6 +524,31 @@ class App {
       effect_b: values.effect_b,
       effect_c: values.effect_c
     }));
+  }
+  toggleVideo(idx) {
+    if (this.selectedVideos.contains(idx)) {
+      this.selectedVideos.splice(this.selectedVideos.indexOf(idx), 1);
+    } else {
+      this.selectedVideo.push(idx);
+    }
+
+    //this.setValues();
+  }
+  toggleGroup(shapeIdx, groupIdx) {
+    console.log(shapeIdx, groupIdx);
+  }
+  selectEffect(idx) {
+    this.selectedEffect = idx;
+
+    // this.setValues();
+  }
+  selectGroup(idx) {
+    this.selectedGroup[0] = idx;
+
+    // this.setValues();
+  }
+  selectShape(idx) {
+    this.selectedShape = idx;
   }
 
   // updateValues(valueIdx, videoIdx, e) {

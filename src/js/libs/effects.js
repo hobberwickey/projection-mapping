@@ -2,60 +2,57 @@ const effects = [
 	{
 		id: "default",
 		label: "Video Controls",
-		effect_a: "Opacity",
-		effect_b: "Playback",
-		effect_c: "Position",
+		opacity: "Opacity",
+		effect_a: "Playback",
+		effect_b: "Position",
 	},
 	{
 		id: "cosine_pallet",
 		label: "Cosine Pallet",
-		effect_a: "Opacity",
-		effect_b: "Intensity",
-		effect_c: "Shift",
+		opacity: "Opacity",
+		effect_a: "Intensity",
+		effect_b: "Shift",
 	},
 	{
 		id: "rgb_opacity",
 		label: "RGB Opacity",
-		effect_a: "R Opacity",
-		effect_b: "B Opacity",
-		effect_c: "G Opacity",
+		opacity: "R Opacity",
+		effect_a: "B Opacity",
+		effect_b: "G Opacity",
 	},
 	{
 		id: "sine_distort",
 		label: "Sine Distort",
-		effect_a: "Opacity",
-		effect_b: "Horizontal",
-		effect_c: "Vertical",
+		opacity: "Opacity",
+		effect_a: "Horizontal",
+		effect_b: "Vertical",
 	},
 	{
 		id: "prism",
 		label: "Prism",
-		effect_a: "Opacity",
-		effect_b: "Horizontal",
-		effect_c: "Vertical",
+		opacity: "Opacity",
+		effect_a: "Horizontal",
+		effect_b: "Vertical",
 	},
 	{
 		id: "pixelate",
 		label: "Pixelate",
-		effect_a: "Opacity",
+		opacity: "Opacity",
+		effect_a: "Pixel Size",
 		effect_b: "Pallete Depth",
 	},
 ];
 
 export class Effect {
-	constructor(idx) {
+	constructor(idx, effect) {
 		this.idx = idx;
 
 		this.onChange = (e) => {
-			this.el.querySelector("video").src = URL.createObjectURL(
-				e.target.files[0],
-			);
-
-			this.el.querySelector(".preview").classList.remove("no-video");
+			console.log(idx, effect, e.target.value);
 		};
 
 		this.onSelect = (e) => {
-			console.log(e);
+			console.log(idx, effect);
 		};
 
 		this.el = document.createElement("div");
@@ -63,28 +60,33 @@ export class Effect {
 		this.el.innerHTML = `
 			<ul class='uk-list'>
 				<li>
-					<select class='uk-select'>
-						<option value=''>No Effect</option>
-					</select>
-
-					<div class='uk-flex uk-flex-inline'>
-						<div class='effect-a'></div>
-						<div class='effect-b'></div>
-						<div class='effect-c'></div>
+					<div>
+						<input name='effect' class='uk-radio' type='radio' value='${effect}' 
+						/><label>
+							<select class='uk-select'>
+								<option value=''>No Effect</option>
+							</select>
+						</label>
 					</div>
 				</li>
 			</ul>
 		`;
 
-		effects.map((effect) => {
+		effects.map((e) => {
 			let option = document.createElement("option");
-			option.value = effect.label;
-			option.innerText = effect.label;
+			option.value = e.id;
+			option.innerText = e.label;
+			option.checked = e.id === effect;
 
 			this.el.querySelector("select").appendChild(option);
-			this.el
-				.querySelector("select")
-				.addEventListener("change", this.onChange.bind(this));
 		});
+
+		this.el
+			.querySelector("select")
+			.addEventListener("change", this.onChange.bind(this));
+
+		this.el
+			.querySelector("input")
+			.addEventListener("change", this.onSelect.bind(this));
 	}
 }

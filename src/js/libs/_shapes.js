@@ -8,11 +8,10 @@ export class Shape {
 			console.log(idx, shape.id, e.target.value);
 		};
 
-		this.el = document.createElement("div");
-		this.el.className = "row header";
+		this.el = document.createElement("th");
 		this.el.innerHTML = `
 			<div>
-				<input type='radio' name='shape' class='uk-radio' 
+				<input type='radio' name='group' class='uk-radio' 
 				/><input type='text' value="${shape.label}" />
 			</div>
 		`;
@@ -33,40 +32,36 @@ export class Group {
 			console.log(idx, group.id, e.target.value);
 		};
 
-		this.el = document.createElement("div");
-		this.el.className = "row group";
+		this.el = document.createElement("td");
 		this.el.innerHTML = `
 			<div>
+				<div class='selector'></div>
 				<input type='text' value="${group.label}" />
-				<input class='uk-radio' name='group' type='radio' value="${group.id}"  />
+			
 			</div>
 		`;
 
 		this.el
-			.querySelector("input[type='text']")
+			.querySelector("input")
 			.addEventListener("input", this.onUpdate.bind(this));
 	}
 }
 
 export class GroupToggle {
-	constructor(groupIdx, shapeIdx, onToggle) {
+	constructor(group, shape) {
 		this.toggleGroup = () => {
-			console.log(shapeIdx, groupIdx);
+			console.log(shape.id, group.id);
 		};
 
-		this.el = document.createElement("div");
-		this.el.className = "row toggle";
-
-		if (groupIdx !== 0) {
+		this.el = document.createElement("td");
+		if (group.editable) {
 			this.el.innerHTML = `
-				<div>
-					<input class='uk-checkbox' type='checkbox' value="${groupIdx}"  />
-				</div>
+				<input class='uk-checkbox' type='checkbox' value="${group.id}"  />
 			`;
 		} else {
 			this.el.innerHTML = `
 				<div>
-					<input class='uk-checkbox' type='checkbox' checked disabled value="${groupIdx}"  />
+					<input class='uk-checkbox' type='checkbox' checked disabled value="${group.id}"  />
 				</div>
 			`;
 		}

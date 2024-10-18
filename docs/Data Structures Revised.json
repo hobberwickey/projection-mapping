@@ -1,0 +1,57 @@
+// config: {
+// 	video_count: 6,
+// 	group_count: 6,
+// 	effect_count: 6
+//  effect_parameters: 2
+// }
+
+{
+	// Array of video objects {video_count} in length
+	"videos": {
+		// Just an ID
+		"id": "INTEGER",
+		// Editable Name
+		"label": "TEXT",
+		// Array of effect parameter values {effect_count} in length
+		"values": [
+			// Array of 0-1 floats {effect_parmeters} in length
+			["FLOAT", "FLOAT"]
+		]
+	},
+
+	// Array of effects {effect_count} in length
+	"effects": [
+		"EFFECT_ID" //May be null if effect slot is unassigned
+	],
+
+	// Array of group objects {group_count} in length
+	// First group is fixed, label = "All", triangles is always
+	// empty since it just represents all triangles
+	"groups": [
+		{
+			// Editable name for group,
+			"label": "TEXT",
+			// Array of triangles ids
+			"shapes": ["SHAPE_ID"]
+		}
+	],
+
+	// Array of shape objects, always triangles for now. Varying length
+	"shapes": [
+		{
+			"id": "INTEGER",
+			// Shape type: 0=triangle, 1=quad, 2=circle
+			"type": "INTEGER",
+			// human editable name
+			"label": "TEXT",
+			// 0-1 Float
+			"opacity": "FLOAT",
+			// The verticies, x/y arrays 0-1 Floats
+			"points": [
+				["FLOAT", "FLOAT"],
+				["FLOAT", "FLOAT"],
+				["FLOAT", "FLOAT"]
+			]
+		}
+	]
+}
