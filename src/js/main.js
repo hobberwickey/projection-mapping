@@ -63,6 +63,7 @@ class App {
         return {
           id: this.id(),
           editable: idx !== 0,
+          opacity: new Array(config.video_count).fill(0),
           label: idx === 0 ? "All" : `Group ${idx}`,
           shapes: [],
         };
@@ -73,15 +74,23 @@ class App {
           id: this.id(),
           type: "triangle",
           label: "Triangle 1",
-          opacity: 0,
-          points: JSON.parse(JSON.stringify(defaultTriangle)),
+          opacity: new Array(config.video_count).fill(0),
+          points: [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+          ],
         },
         {
           id: this.id(),
           type: "triangle",
           label: "Triangle 2",
-          opacity: 0,
-          points: JSON.parse(JSON.stringify(defaultTriangle)),
+          opacity: new Array(config.video_count).fill(0),
+          points: [
+            [0, 0],
+            [0, 1],
+            [1, 1],
+          ],
         },
       ],
     };
@@ -187,10 +196,28 @@ class App {
     document
       .querySelector("#slideout-handle")
       .addEventListener("click", this.toggleSlideout.bind(this));
+
+    let inputs = document.querySelectorAll(".inputs input[type='range']");
+    inputs[0].addEventListener(
+      "input",
+      this.updateEffect.bind(this, "opacity"),
+    );
+    inputs[1].addEventListener(
+      "input",
+      this.updateEffect.bind(this, "effect_a"),
+    );
+    inputs[2].addEventListener(
+      "input",
+      this.updateEffect.bind(this, "effect_b"),
+    );
   }
 
   popout() {
     this.screen = window.open("./screen.html");
+    this.screen.blur();
+    window.focus();
+
+    document.querySelector(".launch-overlay").style.display = "none";
   }
 
   toggleSlideout() {
@@ -228,7 +255,7 @@ class App {
         `hsl(${this.colors.fg}deg 20.54% 50.41%)`,
       );
 
-    window.requestAnimationFrame(this.rotateColors.bind(this));
+    // window.requestAnimationFrame(this.rotateColors.bind(this));
   }
 
   // setupData() {
@@ -247,17 +274,20 @@ class App {
   // }
 
   setupVideos() {
-    let { updateVideo, updateEffect, toggleVideo } = this;
+    let { updateVideo, toggleVideo, selectedVideos } = this;
     let { videos } = this.state;
 
     for (var i = 0; i < videos.length; i++) {
       let video = new Video(
         videos[i],
         updateVideo.bind(this),
-        updateEffect.bind(this),
         toggleVideo.bind(this),
       );
       document.querySelector("#videos").appendChild(video.el);
+
+      if (selectedVideos.includes(i)) {
+        video.el.querySelector("input[type='radio']").checked = true;
+      }
     }
   }
 
@@ -266,15 +296,25 @@ class App {
 
     for (var i = 0; i < effects.length; i++) {
       let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
+
+      console.log(this.selectedEffect);
+      if (this.selectedEffect.includes(i)) {
+        console.log(i);
+        effect.el
+          .querySelector("input[type='radio']")
+          .setAttribute("checked", true);
+      }
+
       document.querySelector("#effects").appendChild(effect.el);
     }
   }
 
   setupGroups() {
     let { groups, shapes } = this.state;
+    let { selectGroup } = this;
 
     for (var i = 0; i < groups.length; i++) {
-      let group = new Group(i, groups[i]);
+      let group = new Group(i, groups[i], selectGroup.bind(this));
       document.querySelector(".slideout .groups").appendChild(group.el);
 
       if (i === this.selectedGroup) {
@@ -374,28 +414,55 @@ class App {
     this.screen.postMessage(file);
   }
 
-  updateEffect(videoIdx, effect, value) {
+  updateEffect(effect, e) {
     if (!this.screen) {
       return;
     }
 
+    let { shapes, groups } = this.state;
+    let { selectedVideos, selectedGroup, selectedEffect } = this;
+    let { value } = e.target;
+
+    let group = groups[selectedGroup];
+    let ids = selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
+
     if (effect === "opacity") {
+      for (var i = 0; i < selectedVideos.length; i++) {
+        let videoIdx = selectedVideos[i];
+        let opacity = group.opacity[videoIdx];
+        let diff = value - opacity;
+
+        for (var j = 0; j < ids.length; j++) {
+          let shape = shapes[ids[j]];
+          let oldValue = shape.opacity[videoIdx];
+          let shapeDiff = value - oldValue;
+          let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
+
+          console.log(ids[j], oldValue, newValue);
+
+          shape.opacity[videoIdx] = newValue;
+        }
+
+        group.opacity[videoIdx] = opacity + diff;
+      }
+
+      // console.log(this.state);
     }
 
-    let effectIdx = this.selectedEffect || 0;
-    let values = this.values[videoIdx][effectIdx];
+    // let effectIdx = this.selectedEffect || 0;
+    // let values = this.values[videoIdx][effectIdx];
 
-    values[effect] = value;
-    this.screen.postMessage(
-      JSON.stringify({
-        action: "update_effects",
-        videoIdx: videoIdx,
-        effectIdx: effectIdx,
-        effect_a: values.effect_a,
-        effect_b: values.effect_b,
-        effect_c: values.effect_c,
-      }),
-    );
+    // values[effect] = value;
+    // this.screen.postMessage(
+    //   JSON.stringify({
+    //     action: "update_effects",
+    //     videoIdx: videoIdx,
+    //     effectIdx: effectIdx,
+    //     effect_a: values.effect_a,
+    //     effect_b: values.effect_b,
+    //     effect_c: values.effect_c,
+    //   }),
+    // );
   }
 
   toggleVideo(idx) {
@@ -409,7 +476,14 @@ class App {
   }
 
   toggleGroup(shapeIdx, groupIdx) {
-    console.log(shapeIdx, groupIdx);
+    let group = this.state.groups[groupIdx];
+    let existingIdx = group.shapes.indexOf(shapeIdx);
+
+    if (existingIdx === -1) {
+      group.shapes.push(shapeIdx);
+    } else {
+      group.shapes.splice(existingIdx, 1);
+    }
   }
 
   selectEffect(idx) {
@@ -419,13 +493,27 @@ class App {
   }
 
   selectGroup(idx) {
-    this.selectedGroup[0] = idx;
-
-    // this.setValues();
+    this.selectedGroup = idx;
+    this.setValues();
   }
 
   selectShape(idx) {
     this.selectedShape = idx;
+  }
+
+  setValues() {
+    let selectedVideo = this.selectedVideos[0];
+    let selectedGroup = this.selectedGroup;
+    let selectedEffect = this.selectedEffect;
+
+    document.querySelectorAll(".inputs input")[0].value =
+      this.state.groups[selectedGroup].opacity[selectedVideo];
+
+    document.querySelectorAll(".inputs input")[1].value =
+      this.state.videos[selectedVideo].values[selectedEffect][0];
+
+    document.querySelectorAll(".inputs input")[2].value =
+      this.state.videos[selectedVideo].values[selectedEffect][1];
   }
 
   // updateValues(valueIdx, videoIdx, e) {

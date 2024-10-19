@@ -76,7 +76,7 @@ export class Effect {
 			let option = document.createElement("option");
 			option.value = e.id;
 			option.innerText = e.label;
-			option.checked = e.id === effect;
+			option.selected = e.id === effect;
 
 			this.el.querySelector("select").appendChild(option);
 		});

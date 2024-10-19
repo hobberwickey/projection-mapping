@@ -27,6 +27,56 @@ input[type="text"] {
   text-align: left;
 }
 
+.launch-overlay {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1;
+
+  h1 {
+    width: 100%;
+    text-align: center;
+    color: white;
+
+    font-family: "Handjet", sans-serif !important;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-size: 80px;
+    padding-top: 100px;
+  }
+
+  #launch {
+    text-align: center;
+
+    a {
+      font-family: "Handjet", sans-serif !important;
+      font-optical-sizing: auto;
+      font-style: normal;
+      font-size: 40px;
+    }
+
+    svg {
+      width: 100px;
+      height: 100px;
+    }
+
+    p {
+      max-width: 400px;
+      margin: 50px auto;
+    }
+
+    svg,
+    p,
+    h3,
+    a {
+      color: white !important;
+    }
+  }
+}
+
 .video-wrapper {
   margin-top: 20px;
 }
@@ -68,6 +118,10 @@ input[type="text"] {
         margin-left: -16px;
         margin-top: 0px;
         background-color: white;
+
+        &:checked {
+          background-color: #34383d !important;
+        }
       }
 
       &[type="text"] {
@@ -164,6 +218,10 @@ input[type="text"] {
       transform: translateX(8px);
       margin-top: 0px;
       background-color: white;
+
+      &:checked {
+        background-color: #34383d !important;
+      }
     }
 
     label {
@@ -225,6 +283,10 @@ input[type="text"] {
           margin: 0px auto;
           font-size: 22px;
           background-color: white;
+
+          &:checked {
+            background-color: #34383d !important;
+          }
         }
       }
 
@@ -581,6 +643,10 @@ label {
           left: 50%;
           margin-top: -10px;
           margin-left: -10px;
+
+          &:checked {
+            background-color: #34383d !important;
+          }
         }
       }
     }

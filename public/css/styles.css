@@ -27,6 +27,49 @@ input[type=text] {
   text-align: left;
 }
 
+.launch-overlay {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1;
+}
+.launch-overlay h1 {
+  width: 100%;
+  text-align: center;
+  color: white;
+  font-family: "Handjet", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-size: 80px;
+  padding-top: 100px;
+}
+.launch-overlay #launch {
+  text-align: center;
+}
+.launch-overlay #launch a {
+  font-family: "Handjet", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-size: 40px;
+}
+.launch-overlay #launch svg {
+  width: 100px;
+  height: 100px;
+}
+.launch-overlay #launch p {
+  max-width: 400px;
+  margin: 50px auto;
+}
+.launch-overlay #launch svg,
+.launch-overlay #launch p,
+.launch-overlay #launch h3,
+.launch-overlay #launch a {
+  color: white !important;
+}
+
 .video-wrapper {
   margin-top: 20px;
 }
@@ -65,6 +108,9 @@ input[type=text] {
   margin-left: -16px;
   margin-top: 0px;
   background-color: white;
+}
+.uk-card-default .uk-card-header input[type=radio]:checked {
+  background-color: #34383d !important;
 }
 .uk-card-default .uk-card-header input[type=text] {
   padding-left: 10px;
@@ -145,6 +191,9 @@ input[type=text] {
   margin-top: 0px;
   background-color: white;
 }
+#effects li input:checked {
+  background-color: #34383d !important;
+}
 #effects li label {
   display: inline-block;
   vertical-align: middle;
@@ -194,6 +243,9 @@ input[type=text] {
   margin: 0px auto;
   font-size: 22px;
   background-color: white;
+}
+#shapes .table-wrapper table td input[type=checkbox]:checked {
+  background-color: #34383d !important;
 }
 #shapes .table-wrapper table thead {
   position: sticky;
@@ -473,6 +525,12 @@ label {
   left: 50%;
   margin-top: -10px;
   margin-left: -10px;
+}
+.slideout .slideout-content .table .row.toggle input[type=checkbox]:checked,
+.slideout .slideout-content .table .row.toggle input[type=radio]:checked,
+.slideout .slideout-content .table .row.group input[type=checkbox]:checked,
+.slideout .slideout-content .table .row.group input[type=radio]:checked {
+  background-color: #34383d !important;
 }
 /*********** Baseline, reset styles ***********/
 input[type=range] {

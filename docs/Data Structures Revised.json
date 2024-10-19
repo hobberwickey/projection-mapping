@@ -31,6 +31,8 @@
 		{
 			// Editable name for group,
 			"label": "TEXT",
+			// Array of {video_count} length 0-1 Float
+			"opacity": ["FLOAT"],
 			// Array of triangles ids
 			"shapes": ["SHAPE_ID"]
 		}
@@ -44,8 +46,8 @@
 			"type": "INTEGER",
 			// human editable name
 			"label": "TEXT",
-			// 0-1 Float
-			"opacity": "FLOAT",
+			// Array of {video_count} length 0-1 Float
+			"opacity": ["FLOAT"],
 			// The verticies, x/y arrays 0-1 Floats
 			"points": [
 				["FLOAT", "FLOAT"],

@@ -12,15 +12,12 @@ const Config = {
 };
 ;// ./src/js/libs/videos.js
 class Video {
-  constructor(video, onChange, onEffect, onSelect) {
+  constructor(video, onChange, onSelect) {
     this.onChange = e => {
       this.el.querySelector("video").src = URL.createObjectURL(e.target.files[0]);
       this.el.querySelector("video").currentTime = 50;
       this.el.querySelector(".preview").classList.remove("no-video");
       onChange(video, e.target.files[0]);
-    };
-    this.onEffect = (effect, e) => {
-      onEffect(video, effect, e.target.value);
     };
     this.onSelect = e => {
       console.log(e);
@@ -49,18 +46,6 @@ class Video {
 			</div>
 		`;
     this.el.querySelector(".upload-wrapper input").addEventListener("change", this.onChange.bind(this));
-
-    // this.el
-    // 	.querySelector(".opacity")
-    // 	.addEventListener("input", this.onEffect.bind(this, "opacity"));
-
-    // this.el
-    // 	.querySelector(".effect-b")
-    // 	.addEventListener("input", this.onEffect.bind(this, "effect_b"));
-
-    // this.el
-    // 	.querySelector(".effect-c")
-    // 	.addEventListener("input", this.onEffect.bind(this, "effect_c"));
   }
 }
 ;// ./src/js/libs/effects.js
@@ -130,7 +115,7 @@ class Effect {
       let option = document.createElement("option");
       option.value = e.id;
       option.innerText = e.label;
-      option.checked = e.id === effect;
+      option.selected = e.id === effect;
       this.el.querySelector("select").appendChild(option);
     });
     this.el.querySelector("select").addEventListener("change", this.onChange.bind(this));
@@ -158,12 +143,12 @@ class Shape {
   }
 }
 class Group {
-  constructor(idx, group) {
+  constructor(idx, group, onSelect) {
     this.onUpdate = e => {
       console.log(idx, group.id, e.target.value);
     };
     this.onSelect = e => {
-      console.log(idx, group.id, e.target.value);
+      onSelect(idx);
     };
     this.el = document.createElement("div");
     this.el.className = "row group";
@@ -174,12 +159,13 @@ class Group {
 			</div>
 		`;
     this.el.querySelector("input[type='text']").addEventListener("input", this.onUpdate.bind(this));
+    this.el.querySelector("input[type='radio']").addEventListener("input", this.onSelect.bind(this));
   }
 }
 class GroupToggle {
   constructor(groupIdx, shapeIdx, onToggle) {
     this.toggleGroup = () => {
-      console.log(shapeIdx, groupIdx);
+      onToggle(shapeIdx, groupIdx);
     };
     this.el = document.createElement("div");
     this.el.className = "row toggle";
@@ -249,6 +235,7 @@ class App {
         return {
           id: this.id(),
           editable: idx !== 0,
+          opacity: new Array(config.video_count).fill(0),
           label: idx === 0 ? "All" : `Group ${idx}`,
           shapes: []
         };
@@ -257,14 +244,14 @@ class App {
         id: this.id(),
         type: "triangle",
         label: "Triangle 1",
-        opacity: 0,
-        points: JSON.parse(JSON.stringify(defaultTriangle))
+        opacity: new Array(config.video_count).fill(0),
+        points: [[0, 0], [1, 0], [1, 1]]
       }, {
         id: this.id(),
         type: "triangle",
         label: "Triangle 2",
-        opacity: 0,
-        points: JSON.parse(JSON.stringify(defaultTriangle))
+        opacity: new Array(config.video_count).fill(0),
+        points: [[0, 0], [0, 1], [1, 1]]
       }]
     };
   }
@@ -358,9 +345,16 @@ class App {
     document.querySelector("#launch").addEventListener("click", this.popout.bind(this));
     document.querySelector("#add_triangle").addEventListener("click", this.addShape.bind(this));
     document.querySelector("#slideout-handle").addEventListener("click", this.toggleSlideout.bind(this));
+    let inputs = document.querySelectorAll(".inputs input[type='range']");
+    inputs[0].addEventListener("input", this.updateEffect.bind(this, "opacity"));
+    inputs[1].addEventListener("input", this.updateEffect.bind(this, "effect_a"));
+    inputs[2].addEventListener("input", this.updateEffect.bind(this, "effect_b"));
   }
   popout() {
     this.screen = window.open("./screen.html");
+    this.screen.blur();
+    window.focus();
+    document.querySelector(".launch-overlay").style.display = "none";
   }
   toggleSlideout() {
     let el = document.querySelector(".slideout");
@@ -380,7 +374,8 @@ class App {
     document.body.style.backgroundColor = `hsl(${this.colors.bg}deg 20.54% 90.41%)`;
     document.querySelector("nav").style.backgroundColor = `hsl(${this.colors.hd}deg 20.54% 90.41%)`;
     document.querySelector(":root").style.setProperty("--fg-color", `hsl(${this.colors.fg}deg 20.54% 50.41%)`);
-    window.requestAnimationFrame(this.rotateColors.bind(this));
+
+    // window.requestAnimationFrame(this.rotateColors.bind(this));
   }
 
   // setupData() {
@@ -401,15 +396,18 @@ class App {
   setupVideos() {
     let {
       updateVideo,
-      updateEffect,
-      toggleVideo
+      toggleVideo,
+      selectedVideos
     } = this;
     let {
       videos
     } = this.state;
     for (var i = 0; i < videos.length; i++) {
-      let video = new Video(videos[i], updateVideo.bind(this), updateEffect.bind(this), toggleVideo.bind(this));
+      let video = new Video(videos[i], updateVideo.bind(this), toggleVideo.bind(this));
       document.querySelector("#videos").appendChild(video.el);
+      if (selectedVideos.includes(i)) {
+        video.el.querySelector("input[type='radio']").checked = true;
+      }
     }
   }
   setupEffects() {
@@ -418,6 +416,11 @@ class App {
     } = this.state;
     for (var i = 0; i < effects.length; i++) {
       let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
+      console.log(this.selectedEffect);
+      if (this.selectedEffect.includes(i)) {
+        console.log(i);
+        effect.el.querySelector("input[type='radio']").setAttribute("checked", true);
+      }
       document.querySelector("#effects").appendChild(effect.el);
     }
   }
@@ -426,8 +429,11 @@ class App {
       groups,
       shapes
     } = this.state;
+    let {
+      selectGroup
+    } = this;
     for (var i = 0; i < groups.length; i++) {
-      let group = new Group(i, groups[i]);
+      let group = new Group(i, groups[i], selectGroup.bind(this));
       document.querySelector(".slideout .groups").appendChild(group.el);
       if (i === this.selectedGroup) {
         group.el.querySelector("input[type='radio']").checked = true;
@@ -508,22 +514,57 @@ class App {
     }));
     this.screen.postMessage(file);
   }
-  updateEffect(videoIdx, effect, value) {
+  updateEffect(effect, e) {
     if (!this.screen) {
       return;
     }
-    if (effect === "opacity") {}
-    let effectIdx = this.selectedEffect || 0;
-    let values = this.values[videoIdx][effectIdx];
-    values[effect] = value;
-    this.screen.postMessage(JSON.stringify({
-      action: "update_effects",
-      videoIdx: videoIdx,
-      effectIdx: effectIdx,
-      effect_a: values.effect_a,
-      effect_b: values.effect_b,
-      effect_c: values.effect_c
-    }));
+    let {
+      shapes,
+      groups
+    } = this.state;
+    let {
+      selectedVideos,
+      selectedGroup,
+      selectedEffect
+    } = this;
+    let {
+      value
+    } = e.target;
+    let group = groups[selectedGroup];
+    let ids = selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
+    if (effect === "opacity") {
+      for (var i = 0; i < selectedVideos.length; i++) {
+        let videoIdx = selectedVideos[i];
+        let opacity = group.opacity[videoIdx];
+        let diff = value - opacity;
+        for (var j = 0; j < ids.length; j++) {
+          let shape = shapes[ids[j]];
+          let oldValue = shape.opacity[videoIdx];
+          let shapeDiff = value - oldValue;
+          let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
+          console.log(ids[j], oldValue, newValue);
+          shape.opacity[videoIdx] = newValue;
+        }
+        group.opacity[videoIdx] = opacity + diff;
+      }
+
+      // console.log(this.state);
+    }
+
+    // let effectIdx = this.selectedEffect || 0;
+    // let values = this.values[videoIdx][effectIdx];
+
+    // values[effect] = value;
+    // this.screen.postMessage(
+    //   JSON.stringify({
+    //     action: "update_effects",
+    //     videoIdx: videoIdx,
+    //     effectIdx: effectIdx,
+    //     effect_a: values.effect_a,
+    //     effect_b: values.effect_b,
+    //     effect_c: values.effect_c,
+    //   }),
+    // );
   }
   toggleVideo(idx) {
     if (this.selectedVideos.contains(idx)) {
@@ -535,7 +576,13 @@ class App {
     //this.setValues();
   }
   toggleGroup(shapeIdx, groupIdx) {
-    console.log(shapeIdx, groupIdx);
+    let group = this.state.groups[groupIdx];
+    let existingIdx = group.shapes.indexOf(shapeIdx);
+    if (existingIdx === -1) {
+      group.shapes.push(shapeIdx);
+    } else {
+      group.shapes.splice(existingIdx, 1);
+    }
   }
   selectEffect(idx) {
     this.selectedEffect = idx;
@@ -543,12 +590,19 @@ class App {
     // this.setValues();
   }
   selectGroup(idx) {
-    this.selectedGroup[0] = idx;
-
-    // this.setValues();
+    this.selectedGroup = idx;
+    this.setValues();
   }
   selectShape(idx) {
     this.selectedShape = idx;
+  }
+  setValues() {
+    let selectedVideo = this.selectedVideos[0];
+    let selectedGroup = this.selectedGroup;
+    let selectedEffect = this.selectedEffect;
+    document.querySelectorAll(".inputs input")[0].value = this.state.groups[selectedGroup].opacity[selectedVideo];
+    document.querySelectorAll(".inputs input")[1].value = this.state.videos[selectedVideo].values[selectedEffect][0];
+    document.querySelectorAll(".inputs input")[2].value = this.state.videos[selectedVideo].values[selectedEffect][1];
   }
 
   // updateValues(valueIdx, videoIdx, e) {

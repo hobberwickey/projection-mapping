@@ -440,7 +440,7 @@ class Output {
   createVideo(video) {
     this.videos.push(video);
     this.state.values.push({
-      effect_a: 0,
+      effect_a: 0.5,
       effect_b: 0,
       effect_c: 0,
     });

@@ -24,13 +24,13 @@ export class Shape {
 }
 
 export class Group {
-	constructor(idx, group) {
+	constructor(idx, group, onSelect) {
 		this.onUpdate = (e) => {
 			console.log(idx, group.id, e.target.value);
 		};
 
 		this.onSelect = (e) => {
-			console.log(idx, group.id, e.target.value);
+			onSelect(idx);
 		};
 
 		this.el = document.createElement("div");
@@ -45,13 +45,17 @@ export class Group {
 		this.el
 			.querySelector("input[type='text']")
 			.addEventListener("input", this.onUpdate.bind(this));
+
+		this.el
+			.querySelector("input[type='radio']")
+			.addEventListener("input", this.onSelect.bind(this));
 	}
 }
 
 export class GroupToggle {
 	constructor(groupIdx, shapeIdx, onToggle) {
 		this.toggleGroup = () => {
-			console.log(shapeIdx, groupIdx);
+			onToggle(shapeIdx, groupIdx);
 		};
 
 		this.el = document.createElement("div");
