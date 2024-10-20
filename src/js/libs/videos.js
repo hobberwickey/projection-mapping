@@ -1,5 +1,5 @@
 export class Video {
-	constructor(video, onChange, onSelect) {
+	constructor(idx, video, onChange, onSelect) {
 		this.onChange = (e) => {
 			this.el.querySelector("video").src = URL.createObjectURL(
 				e.target.files[0],
@@ -8,11 +8,11 @@ export class Video {
 			this.el.querySelector("video").currentTime = 50;
 			this.el.querySelector(".preview").classList.remove("no-video");
 
-			onChange(video, e.target.files[0]);
+			onChange(idx, video, e.target.files[0]);
 		};
 
 		this.onSelect = (e) => {
-			console.log(e);
+			onSelect(idx);
 		};
 
 		this.el = document.createElement("div");
@@ -35,12 +35,15 @@ export class Video {
 						</div>
 					</div>
 				</div>
-				
 			</div>
 		`;
 
 		this.el
 			.querySelector(".upload-wrapper input")
 			.addEventListener("change", this.onChange.bind(this));
+
+		this.el
+			.querySelector("input[type='radio']")
+			.addEventListener("change", this.onSelect.bind(this));
 	}
 }

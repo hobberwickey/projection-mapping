@@ -8,9 +8,10 @@ const fs = require("fs");
 module.exports = {
   entry: {
     main: "/src/js/main.js",
+    screen: "/src/js/screen.js",
     styles: ["/src/scss/main.scss"],
   },
-  watch: true,
+  // watch: true,
   mode: "production",
   output: {
     path: path.resolve(__dirname, "public"),
