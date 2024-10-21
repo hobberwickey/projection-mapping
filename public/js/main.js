@@ -486,10 +486,6 @@ class App {
     if (!this.screen) {
       return;
     }
-    this.screen.postMessage(JSON.stringify({
-      action: "add_triangle",
-      triangle: defaultTriangle
-    }));
     let {
       shapes,
       groups
@@ -500,7 +496,10 @@ class App {
       type: "triangle",
       label: `Triangle ${idx + 1}`,
       opacity: 0,
-      points: JSON.parse(JSON.stringify(defaultTriangle))
+      points: {
+        input: JSON.parse(JSON.stringify(defaultTriangle)),
+        output: JSON.parse(JSON.stringify(defaultTriangle))
+      }
     };
     shapes.push(shape);
     let column = document.createElement("div");
@@ -512,6 +511,10 @@ class App {
       let toggle = new GroupToggle(j, idx);
       column.appendChild(toggle.el, this.toggleGroup.bind(this));
     }
+    this.screen.postMessage(JSON.stringify({
+      action: "update_state",
+      state: this.state
+    }));
   }
   updateVideo(idx, video, file) {
     if (!this.screen) {
