@@ -110,70 +110,108 @@ class App {
           },
         },
       ],
+
+      // TODO: this shouldn't be hardcoded. Build a learn setting
+      notes: {
+        buttons: {
+          48: 0,
+          53: 1,
+          50: 2,
+          51: 3,
+          49: 4,
+          52: 5,
+        },
+        knobs: {
+          56: 0,
+          54: 1,
+          55: 2,
+        },
+      },
     };
   }
 
   setupMidi() {
-    //   const onMIDISuccess = (midiAccess) => {
-    //     this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
-    //     for (const entry of this.midiAccess.inputs) {
-    //       if (entry[1].id === "-1994529889") {
-    //         this.midiInput = entry[1];
-    //         entry[1].onmidimessage = (e) => {
-    //           let note = e.data[1];
-    //           let velocity = e.data[2];
-    //           console.log(note);
-    //           if (note === 48) {
-    //             this.selectedVideo = 0;
-    //           } else if (note === 53) {
-    //             this.selectedVideo = 1;
-    //           } else if (note === 50) {
-    //             this.selectedVideo = 2;
-    //           } else if (note === 51) {
-    //             this.selectedVideo = 3;
-    //           } else if (note === 49) {
-    //             this.selectedVideo = 4;
-    //           } else if (note === 52) {
-    //             this.selectedVideo = 5;
-    //           } else if (note === 56) {
-    //             let input = document
-    //               .querySelectorAll("#videos > div")
-    //               [this.selectedVideo].querySelectorAll("input")[0];
-    //             input.value = velocity / 127;
-    //             input.dispatchEvent(new Event("input", { bubbles: true }));
-    //           } else if (note === 54) {
-    //             let input = document
-    //               .querySelectorAll("#videos > div")
-    //               [this.selectedVideo].querySelectorAll("input")[1];
-    //             input.value = velocity / 127;
-    //             input.dispatchEvent(new Event("input", { bubbles: true }));
-    //           } else if (note === 55) {
-    //             let input = document
-    //               .querySelectorAll("#videos > div")
-    //               [this.selectedVideo].querySelectorAll("input")[2];
-    //             input.value = velocity / 127;
-    //             input.dispatchEvent(new Event("input", { bubbles: true }));
-    //           }
-    //         };
-    //       }
-    //       // if (entry[1].id === "325563316") {
-    //       //   this.midiInput = entry[1];
-    //       //   entry[1].onmidimessage = (e) => {
-    //       //     console.log("APK", e);
-    //       //   };
-    //       // }
-    //     }
-    //     // for (const entry of this.midiAccess.outputs) {
-    //     //   if (entry[1].id === "-173082528") {
-    //     //     this.midiOutput = entry[1];
-    //     //     this.midiOutput.send([0x90, 0x00, 0x03]);
-    //     //   }
-    //     // }
-    //   };
-    //   const onMIDIFailure = (msg) => {
-    //     console.error(`Failed to get MIDI access - ${msg}`);
-    //   };
-    //   navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+    let { buttons, knobs } = this.state.notes;
+
+    const onMIDISuccess = (midiAccess) => {
+      this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
+      for (const entry of this.midiAccess.inputs) {
+        if (entry[1].id === "-1994529889") {
+          this.midiInput = entry[1];
+          entry[1].onmidimessage = (e) => {
+            let note = e.data[1];
+            let velocity = e.data[2];
+
+            if (buttons.hasOwnProperty(note)) {
+              let idx = buttons[note];
+
+              let inputs = document.querySelectorAll("#videos .video");
+              let input = inputs[idx].querySelector("input[type='radio']");
+
+              input.checked = true;
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+            } else if (knobs.hasOwnProperty(note)) {
+              let idx = knobs[note];
+              let inputs = document.querySelectorAll(
+                ".inputs input[type='range']",
+              );
+              let input = inputs[idx];
+
+              input.value = velocity / 127;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+
+            // if (note === 48) {
+            //   this.selectedVideo = 0;
+            // } else if (note === 53) {
+            //   this.selectedVideo = 1;
+            // } else if (note === 50) {
+            //   this.selectedVideo = 2;
+            // } else if (note === 51) {
+            //   this.selectedVideo = 3;
+            // } else if (note === 49) {
+            //   this.selectedVideo = 4;
+            // } else if (note === 52) {
+            //   this.selectedVideo = 5;
+            // } else if (note === 56) {
+            //   let input = document.querySelectorAll(
+            //     ".inputs input[type='range']",
+            //   )[0];
+            //   input.value = velocity / 127;
+            //   input.dispatchEvent(new Event("input", { bubbles: true }));
+            // } else if (note === 54) {
+            //   let input = document.querySelectorAll(
+            //     ".inputs input[type='range']",
+            //   )[1];
+            //   input.value = velocity / 127;
+            //   input.dispatchEvent(new Event("input", { bubbles: true }));
+            // } else if (note === 55) {
+            //   let input = document.querySelectorAll(
+            //     ".inputs input[type='range']",
+            //   )[2];
+            //   input.value = velocity / 127;
+            //   input.dispatchEvent(new Event("input", { bubbles: true }));
+            // }
+          };
+        }
+        // if (entry[1].id === "325563316") {
+        //   this.midiInput = entry[1];
+        //   entry[1].onmidimessage = (e) => {
+        //     console.log("APK", e);
+        //   };
+        // }
+      }
+      // for (const entry of this.midiAccess.outputs) {
+      //   if (entry[1].id === "-173082528") {
+      //     this.midiOutput = entry[1];
+      //     this.midiOutput.send([0x90, 0x00, 0x03]);
+      //   }
+      // }
+    };
+    const onMIDIFailure = (msg) => {
+      console.error(`Failed to get MIDI access - ${msg}`);
+    };
+    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
   }
 
   // setupValues() {
@@ -521,6 +559,7 @@ class App {
   }
 
   toggleVideo(idx) {
+    console.log(idx);
     this.selectedVideos[0] = idx;
     // console.log(idx);
 
