@@ -31,7 +31,7 @@ export class Video {
 								No Video
 							</p>
 							<label class='uk-label' for='video-${video.id}-input'></label>
-							<input id='video-${video.id}-input' type='file' />
+							<input id='video-${video.id}-input' type='file' accept="video/mp4,video/x-m4v,video/*" />
 						</div>
 					</div>
 				</div>
