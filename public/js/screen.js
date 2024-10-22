@@ -195,6 +195,12 @@ class UI {
     let point = selectedObject[selectedPoint[1]];
     point[0] = x;
     point[1] = y;
+    if (!!window.parent) {
+      window.opener.postMessage(JSON.stringify({
+        action: "update_state",
+        state: this.state
+      }));
+    }
 
     // localStorage.setItem("zones", JSON.stringify(this.zones));
   }
@@ -266,7 +272,6 @@ class Output {
     // TODO: When multiple effects are implemented all the
     // appropriate values should be set before the shape loop
     let values = video.values[0];
-    console.log(values);
 
     // Skip if video isn't playing
     if (videoEl.currentTime === 0) {
@@ -726,7 +731,6 @@ class App {
       }
     });
     window.addEventListener("message", event => {
-      console.log(event);
       if (typeof event.data !== "object") {
         let data = JSON.parse(event.data);
         if (data.action === "update_state") {
@@ -739,6 +743,10 @@ class App {
           } else {
             this.output.updateState.call(this.output, this.state);
             this.ui.updateState.call(this.ui, this.state);
+            if (oldState.shapes.length !== this.state.shapes.length) {
+              console.log("Calculating Matrices");
+              this.output.calculateMatrices.call(this.output);
+            }
           }
         } else if (data.action === "reset_video") {
           let {

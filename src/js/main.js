@@ -227,6 +227,13 @@ class App {
       "input",
       this.updateEffect.bind(this, "effect_b"),
     );
+
+    window.addEventListener("message", (e) => {
+      let data = JSON.parse(event.data);
+      if (data.action === "update_state") {
+        this.state = data.state;
+      }
+    });
   }
 
   popout() {
@@ -394,7 +401,7 @@ class App {
       id: this.id(),
       type: "triangle",
       label: `Triangle ${idx + 1}`,
-      opacity: 0,
+      opacity: new Array(this.config.video_count).fill(0.5),
       points: {
         input: JSON.parse(JSON.stringify(defaultTriangle)),
         output: JSON.parse(JSON.stringify(defaultTriangle)),
