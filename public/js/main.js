@@ -21,9 +21,11 @@ class Video {
     };
     this.onSelect = e => {
       onSelect(idx);
+      document.querySelector(".video.selected").classList.remove("selected");
+      this.el.classList.add("selected");
     };
     this.el = document.createElement("div");
-    this.el.className = "video uk-card uk-card-small uk-card-default";
+    this.el.className = `video uk-card uk-card-small uk-card-default`;
     this.el.innerHTML = `
 			<div>
 				<div class='left'>
@@ -87,18 +89,20 @@ const effects = [{
   effect_b: "Pallete Depth"
 }];
 class Effect {
-  constructor(idx, effect) {
+  constructor(idx, effect, onSelect, onChange) {
     this.idx = idx;
     this.onChange = e => {
       console.log(idx, effect, e.target.value);
+      onChange(idx, e.target.value);
     };
     this.onSelect = e => {
       console.log(idx, effect);
+      onSelect(idx);
     };
     this.el = document.createElement("div");
     this.el.className = "effect";
     this.el.innerHTML = `
-			<ul class='uk-list'>
+			<ul class='uk-list fx-clr-${idx}'>
 				<li>
 					<div>
 						<input name='effect' class='uk-radio' type='radio' value='${effect}' 
@@ -151,7 +155,7 @@ class Group {
       onSelect(idx);
     };
     this.el = document.createElement("div");
-    this.el.className = "row group";
+    this.el.className = `row group grp-clr-${idx}`;
     this.el.innerHTML = `
 			<div>
 				<input type='text' value="${group.label}" />
@@ -385,7 +389,9 @@ class App {
     if (!!this.screen) {
       return;
     }
-    this.rotateColors();
+
+    // this.rotateColors();
+
     document.querySelector("#launch").addEventListener("click", this.popout.bind(this));
     document.querySelector("#add_triangle").addEventListener("click", this.addShape.bind(this));
     document.querySelector("#slideout-handle").addEventListener("click", this.toggleSlideout.bind(this));
@@ -459,6 +465,9 @@ class App {
     for (var i = 0; i < videos.length; i++) {
       let video = new Video(i, videos[i], updateVideo.bind(this), toggleVideo.bind(this));
       document.querySelector("#videos").appendChild(video.el);
+      if (i === selectedVideos[0]) {
+        video.el.classList.add("selected");
+      }
       if (selectedVideos.includes(i)) {
         video.el.querySelector("input[type='radio']").checked = true;
       }
@@ -469,7 +478,7 @@ class App {
       effects
     } = this.state;
     for (var i = 0; i < effects.length; i++) {
-      let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
+      let effect = new Effect(i, effects[i], this.selectEffect.bind(this), this.setEffect.bind(this));
       if (this.selectedEffect === i) {
         effect.el.querySelector("input[type='radio']").setAttribute("checked", true);
       }
@@ -663,13 +672,19 @@ class App {
   selectEffect(idx) {
     this.selectedEffect = idx;
     this.setValues();
+    document.querySelector(":root").style.setProperty("--selected-fx-clr", `var(--fx-clr-${idx}`);
   }
   selectGroup(idx) {
     this.selectedGroup = idx;
     this.setValues();
+    document.querySelector(":root").style.setProperty("--selected-grp-clr", `var(--grp-clr-${idx}`);
   }
   selectShape(idx) {
     this.selectedShape = idx;
+  }
+  setEffect(idx, effect) {
+    console.log(idx, effect, this.state.effects);
+    // this.state.effects[idx] = effect;
   }
   setValues() {
     let selectedVideo = this.selectedVideos[0];

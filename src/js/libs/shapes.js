@@ -34,7 +34,7 @@ export class Group {
 		};
 
 		this.el = document.createElement("div");
-		this.el.className = "row group";
+		this.el.className = `row group grp-clr-${idx}`;
 		this.el.innerHTML = `
 			<div>
 				<input type='text' value="${group.label}" />

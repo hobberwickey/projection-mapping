@@ -44,21 +44,23 @@ const effects = [
 ];
 
 export class Effect {
-	constructor(idx, effect) {
+	constructor(idx, effect, onSelect, onChange) {
 		this.idx = idx;
 
 		this.onChange = (e) => {
 			console.log(idx, effect, e.target.value);
+			onChange(idx, e.target.value);
 		};
 
 		this.onSelect = (e) => {
 			console.log(idx, effect);
+			onSelect(idx);
 		};
 
 		this.el = document.createElement("div");
 		this.el.className = "effect";
 		this.el.innerHTML = `
-			<ul class='uk-list'>
+			<ul class='uk-list fx-clr-${idx}'>
 				<li>
 					<div>
 						<input name='effect' class='uk-radio' type='radio' value='${effect}' 

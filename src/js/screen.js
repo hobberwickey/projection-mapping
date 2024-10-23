@@ -31,6 +31,9 @@ const fragmentShaderSrc = `
   // The texture.
   uniform sampler2D u_texture;
 
+  // Prism Effect
+  uniform vec2 u_prism;
+
   // Opacity
   uniform vec3 u_effects;
 
@@ -51,7 +54,9 @@ const fragmentShaderSrc = `
   }
 
   void main() {
-    vec4 color = texture2D(u_texture, v_texcoord);
+    vec2 prism_coords = vec2(fract(v_texcoord[0] * 10.0), fract(v_texcoord[1] * 10.0));
+
+    vec4 color = texture2D(u_texture, prism_coords);
     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
     
     vec3 effect = pal(hsv[2] + u_effects[2], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
@@ -605,6 +610,9 @@ class Output {
       srcType,
       video,
     );
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     // gl.activeTexture(gl.TEXTURE0);
   }
 

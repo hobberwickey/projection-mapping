@@ -13,10 +13,13 @@ export class Video {
 
 		this.onSelect = (e) => {
 			onSelect(idx);
+
+			document.querySelector(".video.selected").classList.remove("selected");
+			this.el.classList.add("selected");
 		};
 
 		this.el = document.createElement("div");
-		this.el.className = "video uk-card uk-card-small uk-card-default";
+		this.el.className = `video uk-card uk-card-small uk-card-default`;
 		this.el.innerHTML = `
 			<div>
 				<div class='left'>

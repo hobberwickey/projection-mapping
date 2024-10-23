@@ -238,7 +238,7 @@ class App {
       return;
     }
 
-    this.rotateColors();
+    // this.rotateColors();
 
     document
       .querySelector("#launch")
@@ -354,6 +354,10 @@ class App {
       );
       document.querySelector("#videos").appendChild(video.el);
 
+      if (i === selectedVideos[0]) {
+        video.el.classList.add("selected");
+      }
+
       if (selectedVideos.includes(i)) {
         video.el.querySelector("input[type='radio']").checked = true;
       }
@@ -364,7 +368,12 @@ class App {
     let { effects } = this.state;
 
     for (var i = 0; i < effects.length; i++) {
-      let effect = new Effect(i, effects[i], this.selectEffect.bind(this));
+      let effect = new Effect(
+        i,
+        effects[i],
+        this.selectEffect.bind(this),
+        this.setEffect.bind(this),
+      );
 
       if (this.selectedEffect === i) {
         effect.el
@@ -586,15 +595,28 @@ class App {
   selectEffect(idx) {
     this.selectedEffect = idx;
     this.setValues();
+
+    document
+      .querySelector(":root")
+      .style.setProperty("--selected-fx-clr", `var(--fx-clr-${idx}`);
   }
 
   selectGroup(idx) {
     this.selectedGroup = idx;
     this.setValues();
+
+    document
+      .querySelector(":root")
+      .style.setProperty("--selected-grp-clr", `var(--grp-clr-${idx}`);
   }
 
   selectShape(idx) {
     this.selectedShape = idx;
+  }
+
+  setEffect(idx, effect) {
+    console.log(idx, effect, this.state.effects);
+    // this.state.effects[idx] = effect;
   }
 
   setValues() {
