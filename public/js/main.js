@@ -58,20 +58,20 @@ const effects = [{
   effect_a: "Playback",
   effect_b: "Position"
 }, {
-  id: "cosine_pallet",
-  label: "Cosine Pallet",
+  id: "cosine_palette",
+  label: "Cosine Palette",
   opacity: "Opacity",
   effect_a: "Intensity",
   effect_b: "Shift"
 }, {
-  id: "rgb_opacity",
-  label: "RGB Opacity",
-  opacity: "R Opacity",
-  effect_a: "B Opacity",
-  effect_b: "G Opacity"
+  id: "color_opacity",
+  label: "Color Opacity",
+  opacity: "Opacity",
+  effect_a: "Hue",
+  effect_b: "Sensitivity"
 }, {
-  id: "sine_distort",
-  label: "Sine Distort",
+  id: "cosine_distort",
+  label: "Cosine Distort",
   opacity: "Opacity",
   effect_a: "Horizontal",
   effect_b: "Vertical"
@@ -230,7 +230,9 @@ class App {
         return {
           id: this.id(),
           label: `Video ${idx + 1}`,
-          values: new Array(config.effect_count).fill(new Array(config.effect_parameter_count).fill(0))
+          values: new Array(config.effect_count).fill().map(() => {
+            return new Array(config.effect_parameter_count).fill(0);
+          })
         };
       }),
       effects: new Array(config.effect_count).fill().map((_, idx) => {
@@ -622,8 +624,7 @@ class App {
           diff = +value - oldValue;
         }
         let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-        console.log(newValue, value, oldValue);
-        video.values[selectedEffect];
+        console.log(video.values);
         video.values[selectedEffect][effectIdx] = newValue;
       }
     }
@@ -684,7 +685,7 @@ class App {
   }
   setEffect(idx, effect) {
     console.log(idx, effect, this.state.effects);
-    // this.state.effects[idx] = effect;
+    this.state.effects[idx] = effect;
   }
   setValues() {
     let selectedVideo = this.selectedVideos[0];

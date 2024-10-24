@@ -52,9 +52,9 @@ class App {
         return {
           id: this.id(),
           label: `Video ${idx + 1}`,
-          values: new Array(config.effect_count).fill(
-            new Array(config.effect_parameter_count).fill(0),
-          ),
+          values: new Array(config.effect_count).fill().map(() => {
+            return new Array(config.effect_parameter_count).fill(0);
+          }),
         };
       }),
 
@@ -537,9 +537,7 @@ class App {
 
         let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
 
-        console.log(newValue, value, oldValue);
-        video.values[selectedEffect];
-
+        console.log(video.values);
         video.values[selectedEffect][effectIdx] = newValue;
       }
     }
@@ -616,7 +614,7 @@ class App {
 
   setEffect(idx, effect) {
     console.log(idx, effect, this.state.effects);
-    // this.state.effects[idx] = effect;
+    this.state.effects[idx] = effect;
   }
 
   setValues() {
