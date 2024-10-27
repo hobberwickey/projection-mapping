@@ -160,78 +160,15 @@ class App {
               input.value = velocity / 127;
               input.dispatchEvent(new Event("input", { bubbles: true }));
             }
-
-            // if (note === 48) {
-            //   this.selectedVideo = 0;
-            // } else if (note === 53) {
-            //   this.selectedVideo = 1;
-            // } else if (note === 50) {
-            //   this.selectedVideo = 2;
-            // } else if (note === 51) {
-            //   this.selectedVideo = 3;
-            // } else if (note === 49) {
-            //   this.selectedVideo = 4;
-            // } else if (note === 52) {
-            //   this.selectedVideo = 5;
-            // } else if (note === 56) {
-            //   let input = document.querySelectorAll(
-            //     ".inputs input[type='range']",
-            //   )[0];
-            //   input.value = velocity / 127;
-            //   input.dispatchEvent(new Event("input", { bubbles: true }));
-            // } else if (note === 54) {
-            //   let input = document.querySelectorAll(
-            //     ".inputs input[type='range']",
-            //   )[1];
-            //   input.value = velocity / 127;
-            //   input.dispatchEvent(new Event("input", { bubbles: true }));
-            // } else if (note === 55) {
-            //   let input = document.querySelectorAll(
-            //     ".inputs input[type='range']",
-            //   )[2];
-            //   input.value = velocity / 127;
-            //   input.dispatchEvent(new Event("input", { bubbles: true }));
-            // }
           };
         }
-        // if (entry[1].id === "325563316") {
-        //   this.midiInput = entry[1];
-        //   entry[1].onmidimessage = (e) => {
-        //     console.log("APK", e);
-        //   };
-        // }
       }
-      // for (const entry of this.midiAccess.outputs) {
-      //   if (entry[1].id === "-173082528") {
-      //     this.midiOutput = entry[1];
-      //     this.midiOutput.send([0x90, 0x00, 0x03]);
-      //   }
-      // }
     };
     const onMIDIFailure = (msg) => {
       console.error(`Failed to get MIDI access - ${msg}`);
     };
     navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
   }
-
-  // setupValues() {
-  //   let vidCnt = this.config.video_count;
-  //   let fxCnt = this.config.effect_count;
-
-  //   for (var i = 0; i < vidCnt; i++) {
-  //     let vidEffects = [];
-
-  //     for (var j = 0; j < fxCnt; j++) {
-  //       vidEffects.push({
-  //         effect_a: 0,
-  //         effect_b: 0,
-  //         effect_c: 0,
-  //       });
-  //     }
-
-  //     this.values.push(vidEffects);
-  //   }
-  // }
 
   launch() {
     if (!!this.screen) {

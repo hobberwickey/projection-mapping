@@ -25,6 +25,8 @@ const vertexShaderSrc = `
 const fragmentShaderSrc = ` 
   precision mediump float;
 
+  float PI = 3.14159265358;
+
   // Passed in from the vertex shader
   varying vec2 v_texcoord;
    
@@ -47,8 +49,10 @@ const fragmentShaderSrc = `
   uniform vec2 u_pixelate;
 
   // Opacity
-  uniform highp float u_opacity;
+  uniform mediump float u_opacity;
 
+  // Texture Dimensions
+  uniform vec2 u_dimensions; 
 
   // Old Opacity
   uniform vec3 u_effects;
@@ -70,9 +74,19 @@ const fragmentShaderSrc = `
   }
 
   void main() {
-    vec2 prism_values = vec2(floor(u_prism[0] * 9.0) + 1.0, floor(u_prism[1] * 9.0) + 1.0);
-    vec2 prism_coords = vec2(fract(v_texcoord[0] * prism_values[0]), fract(v_texcoord[1] * prism_values[1]));
+    // Pixellate
+    float pixelateX = u_dimensions[0] * floor(max(u_pixelate[0] * 30.0, 1.0));
+    float pixelateY = u_dimensions[1] * floor(max(u_pixelate[0] * 30.0, 1.0));
+    vec2 pixellated = vec2(
+      v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
+      v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
+    );
 
+    // Prism Effect
+    vec2 prism_values = vec2(floor(u_prism[0] * 9.0) + 1.0, floor(u_prism[1] * 9.0) + 1.0);
+    vec2 prism_coords = vec2(fract(pixellated[0] * prism_values[0]), fract(pixellated[1] * prism_values[1]));
+
+    // Cosine Palette
     vec4 color = texture2D(u_texture, prism_coords);
     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
     
@@ -82,7 +96,13 @@ const fragmentShaderSrc = `
       color[1] * (1.0 - u_cosine_palette[0]) + effect[1] * u_cosine_palette[0],
       color[2] * (1.0 - u_cosine_palette[0]) + effect[2] * u_cosine_palette[0]
     );
-    gl_FragColor =  vec4(weighted, u_effects[0]);
+    
+    // RGB Opacity
+    float hue_target = u_color_opacity[0];
+    float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
+    float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
+    
+    gl_FragColor =  vec4(weighted, max(0.0, u_opacity - (hue_opacity * u_color_opacity[1])));
   }
 `;
 
@@ -323,6 +343,12 @@ class Output {
 
     this.updateTexture(gl, glAttrs.texture, videoEl);
 
+    console.log(1 / gl.canvas.width);
+
+    gl.uniform2fv(glAttrs.uniforms.dimensions, [
+      1 / gl.canvas.width,
+      1 / gl.canvas.height,
+    ]);
     for (var j = 0; j < shapes.length; j++) {
       let pnts = shapes[j].points.input;
       let opacity = shapes[j].opacity[idx];
@@ -386,14 +412,15 @@ class Output {
         0,
       );
       // Old Effects
-      gl.uniform3fv(glAttrs.uniforms.effects, [opacity, 0, 0]);
-
+      // gl.uniform3fv(glAttrs.uniforms.effects, [opacity, 0, 0]);
       // New Effects
+
+      gl.uniform1f(glAttrs.uniforms.opacity, opacity);
       for (var i = 0; i < effects.length; i++) {
         let effect = effects[i];
 
         if (glAttrs.effects.hasOwnProperty(effect)) {
-          console.log(effect, video.values[i]);
+          console.log(idx, effect, video.values);
           gl.uniform2fv(glAttrs.effects[effect], video.values[i]);
         }
       }
@@ -456,6 +483,8 @@ class Output {
         sampler: null,
         matrix: null,
         effects: null,
+        opacity: null,
+        dimensions: null,
       },
 
       effects: {
@@ -561,6 +590,18 @@ class Output {
         "u_effects",
       );
       gl.uniform3fv(glAttrs.uniforms.effects, [1, 0, 0]);
+
+      glAttrs.uniforms.opacity = gl.getUniformLocation(
+        glAttrs.program,
+        "u_opacity",
+      );
+      gl.uniform1f(glAttrs.uniforms.opacity, 0);
+
+      glAttrs.uniforms.dimensions = gl.getUniformLocation(
+        glAttrs.program,
+        "u_dimensions",
+      );
+      gl.uniform2fv(glAttrs.uniforms.dimensions, [1, 1]);
 
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
