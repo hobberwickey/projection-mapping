@@ -251,7 +251,7 @@ class App {
         id: this.id(),
         type: "triangle",
         label: "Triangle 1",
-        opacity: new Array(config.video_count).fill(0.5),
+        opacity: new Array(config.video_count).fill(0),
         points: {
           input: [[0, 0], [1, 0], [1, 1]],
           output: [[0, 0], [1, 0], [1, 1]]
@@ -260,7 +260,7 @@ class App {
         id: this.id(),
         type: "triangle",
         label: "Triangle 2",
-        opacity: new Array(config.video_count).fill(0.5),
+        opacity: new Array(config.video_count).fill(0),
         points: {
           input: [[0, 0], [0, 1], [1, 1]],
           output: [[0, 0], [0, 1], [1, 1]]
@@ -277,9 +277,21 @@ class App {
           52: 5
         },
         knobs: {
-          56: 0,
-          54: 1,
-          55: 2
+          // 56: 0,
+          // 54: 1,
+          // 55: 2,
+        },
+        sliders: {
+          input: {
+            56: 1,
+            54: 0,
+            55: 2
+          },
+          output: {
+            45: 0,
+            46: 1,
+            47: 2
+          }
         }
       }
     };
@@ -287,7 +299,7 @@ class App {
   setupMidi() {
     let {
       buttons,
-      knobs
+      sliders
     } = this.state.notes;
     const onMIDISuccess = midiAccess => {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
@@ -305,9 +317,10 @@ class App {
               input.dispatchEvent(new Event("change", {
                 bubbles: true
               }));
-            } else if (knobs.hasOwnProperty(note)) {
-              let idx = knobs[note];
+            } else if (sliders.input.hasOwnProperty(note)) {
+              let idx = sliders.input[note];
               let inputs = document.querySelectorAll(".inputs input[type='range']");
+              console.log("velocity", velocity);
               let input = inputs[idx];
               input.value = velocity / 127;
               input.dispatchEvent(new Event("input", {
@@ -315,6 +328,11 @@ class App {
               }));
             }
           };
+        }
+      }
+      for (const entry of this.midiAccess.outputs) {
+        if (entry[1].id === "987282012") {
+          this.midiOutput = entry[1];
         }
       }
     };
@@ -375,22 +393,6 @@ class App {
 
     // window.requestAnimationFrame(this.rotateColors.bind(this));
   }
-
-  // setupData() {
-  //   // Pull from localStorage
-
-  //   this.videos.push({
-  //     label: `Video ${i + 1}`,
-  //     values: new Array(this.config.group_count).fill(
-  //       new Array(this.config.effect_count).fill({
-  //         effect_a: 0,
-  //         effect_b: 0,
-  //         effect_c: 0,
-  //       }),
-  //     ),
-  //   });
-  // }
-
   setupVideos() {
     let {
       updateVideo,
@@ -449,28 +451,6 @@ class App {
         column.appendChild(toggle.el);
       }
     }
-    // for (var i = 0; i < shapes.length; i++) {
-    //   let shape = new Shape(i, shapes[i], this.selectShape.bind(this));
-    //   let head = document.querySelector("#shapes thead");
-    //   let last = [...head.querySelectorAll("th")].pop();
-    //   document.querySelector("#shapes thead tr").insertBefore(shape.el, last);
-    // }
-
-    // for (var i = 0; i < groups.length; i++) {
-    //   let group = new Group(i, groups[i]);
-
-    //   let row = document.createElement("tr");
-    //   let body = document.querySelector("#shapes tbody");
-
-    //   row.className = "group-row";
-    //   body.appendChild(row);
-    //   row.appendChild(group.el);
-
-    //   for (var j = 0; j < shapes.length; j++) {
-    //     let groupToggle = new GroupToggle(groups[i], shapes[j]);
-    //     row.appendChild(groupToggle.el);
-    //   }
-    // }
   }
   addShape() {
     if (!this.screen) {
@@ -545,7 +525,6 @@ class App {
           let oldValue = shape.opacity[videoIdx];
           let shapeDiff = +value - oldValue;
           let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
-          console.log(ids[j], oldValue, newValue);
           shape.opacity[videoIdx] = newValue;
         }
         group.opacity[videoIdx] = opacity + diff;
@@ -568,24 +547,8 @@ class App {
       action: "update_state",
       state: this.state
     }));
-
-    // let effectIdx = this.selectedEffect || 0;
-    // let values = this.values[videoIdx][effectIdx];
-
-    // values[effect] = value;
-    // this.screen.postMessage(
-    //   JSON.stringify({
-    //     action: "update_effects",
-    //     videoIdx: videoIdx,
-    //     effectIdx: effectIdx,
-    //     effect_a: values.effect_a,
-    //     effect_b: values.effect_b,
-    //     effect_c: values.effect_c,
-    //   }),
-    // );
   }
   toggleVideo(idx) {
-    console.log(idx);
     this.selectedVideos[0] = idx;
     // console.log(idx);
 
@@ -627,9 +590,37 @@ class App {
     let selectedVideo = this.selectedVideos[0];
     let selectedGroup = this.selectedGroup;
     let selectedEffect = this.selectedEffect;
-    document.querySelectorAll(".inputs input")[0].value = this.state.groups[selectedGroup].opacity[selectedVideo];
-    document.querySelectorAll(".inputs input")[1].value = this.state.videos[selectedVideo].values[selectedEffect][0];
-    document.querySelectorAll(".inputs input")[2].value = this.state.videos[selectedVideo].values[selectedEffect][1];
+    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
+    let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
+    let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    document.querySelectorAll(".inputs input")[0].value = opacity;
+    document.querySelectorAll(".inputs input")[1].value = effect_a;
+    document.querySelectorAll(".inputs input")[2].value = effect_b;
+    console.log("opacity", opacity * 128);
+    this.setMidi();
+  }
+  setMidi() {
+    let selectedVideo = this.selectedVideos[0];
+    let selectedGroup = this.selectedGroup;
+    let selectedEffect = this.selectedEffect;
+    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
+    let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
+    let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    let {
+      sliders
+    } = this.state.notes;
+    let notes = Object.keys(sliders.output);
+    if (!!this.midiOutput) {
+      //   this.debounce(() => {
+      this.midiOutput.send([144, notes[0], opacity * 127 | 0]); // sends the message.
+      //   }, 100);
+    }
+  }
+  debounce(callback, wait) {
+    window.clearTimeout(this.timeoutId);
+    this.timeoutId = window.setTimeout(() => {
+      callback();
+    }, wait);
   }
 
   // updateValues(valueIdx, videoIdx, e) {

@@ -33,14 +33,18 @@ const fragmentShaderSrc = `
   // The texture.
   uniform sampler2D u_texture;
 
+  // 128 pixel buffer to hold a running palette
+  uniform sampler2D u_palette;
+  uniform sampler2D u_palette_buffer;
+
   // Prism Effect
   uniform vec2 u_prism;
 
+  // Color Values
+  uniform vec2 u_color_values;
+
   // Cosine Palette
   uniform vec2 u_cosine_palette;
-
-  // Sine Distort
-  uniform vec2 u_cosine_distort;
 
   // Color Opacity
   uniform vec2 u_color_opacity;
@@ -74,6 +78,8 @@ const fragmentShaderSrc = `
   }
 
   void main() {
+    //////////////// Coordinate Effects /////////////////
+    
     // Pixellate
     float pixelateX = u_dimensions[0] * floor(max(u_pixelate[0] * 30.0, 1.0));
     float pixelateY = u_dimensions[1] * floor(max(u_pixelate[0] * 30.0, 1.0));
@@ -86,17 +92,20 @@ const fragmentShaderSrc = `
     vec2 prism_values = vec2(floor(u_prism[0] * 9.0) + 1.0, floor(u_prism[1] * 9.0) + 1.0);
     vec2 prism_coords = vec2(fract(pixellated[0] * prism_values[0]), fract(pixellated[1] * prism_values[1]));
 
-    // Cosine Palette
+    ///////////////// Color Effects ////////////////////////
+
+    // Get the texture color
     vec4 color = texture2D(u_texture, prism_coords);
+
+    // Cosine Palette
     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
-    
     vec3 effect = pal(hsv[2] + u_cosine_palette[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
     vec3 weighted = vec3(
       color[0] * (1.0 - u_cosine_palette[0]) + effect[0] * u_cosine_palette[0],
       color[1] * (1.0 - u_cosine_palette[0]) + effect[1] * u_cosine_palette[0],
       color[2] * (1.0 - u_cosine_palette[0]) + effect[2] * u_cosine_palette[0]
     );
-    
+
     // RGB Opacity
     float hue_target = u_color_opacity[0];
     float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
@@ -343,8 +352,6 @@ class Output {
 
     this.updateTexture(gl, glAttrs.texture, videoEl);
 
-    console.log(1 / gl.canvas.width);
-
     gl.uniform2fv(glAttrs.uniforms.dimensions, [
       1 / gl.canvas.width,
       1 / gl.canvas.height,
@@ -481,6 +488,8 @@ class Output {
 
       uniforms: {
         sampler: null,
+        palette: null,
+        palette_buffer: null,
         matrix: null,
         effects: null,
         opacity: null,
@@ -498,6 +507,8 @@ class Output {
       positionBuffer: null,
       textureBuffer: null,
       texture: null,
+      palette: null,
+      palette_buffer: null,
     };
 
     glAttrs.vertexShader = this.createShader(
@@ -572,10 +583,22 @@ class Output {
       gl.clear(gl.COLOR_BUFFER_BIT);
 
       glAttrs.texture = this.initTexture(gl);
-
       glAttrs.uniforms.sampler = gl.getUniformLocation(
         glAttrs.program,
         "u_texture",
+      );
+
+      let [palette, palette_buffer] = this.initPalette(gl);
+      glAttrs.palette = palette;
+      glAttrs.uniforms.palette = gl.getUniformLocation(
+        glAttrs.program,
+        "u_palette",
+      );
+
+      glAttrs.palette_buffer = palette_buffer;
+      glAttrs.uniforms.palette_buffer = gl.getUniformLocation(
+        glAttrs.program,
+        "u_palette_buffer",
       );
 
       glAttrs.uniforms.matrix = gl.getUniformLocation(
@@ -673,6 +696,64 @@ class Output {
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+
+  initPalette(gl) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = 128;
+    const height = 1;
+    const border = 0;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+    const pixels = new Uint8Array(
+      new Array(128).fill(null).map(() => {
+        return [0, 0, 0, 255];
+      }),
+    );
+
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      internalFormat,
+      width,
+      height,
+      border,
+      srcFormat,
+      srcType,
+      pixels,
+    );
+
+    const texture_buffer = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    const buffer_pixels = new Uint8Array(
+      new Array(128).fill(null).map(() => {
+        return [0, 0, 0, 255];
+      }),
+    );
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      internalFormat,
+      width,
+      height,
+      border,
+      srcFormat,
+      srcType,
+      buffer_pixels,
+    );
+
+    // Turn off mips and set wrapping to clamp to edge so it
+    // will work regardless of the dimensions of the video.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    return [texture, texture_buffer];
   }
 
   initTexture(gl) {
