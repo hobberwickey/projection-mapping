@@ -1,6 +1,25 @@
 /******/ (() => { // webpackBootstrap
 // Matrix math from https://github.com/chrvadala/transformation-matrix/blob/main/src/fromTriangles.js
+const shaderMethods = {
+  pal: `
+    vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) 
+    {
+      return a + b*cos( 6.28318*(c*t+d) );
+    }
+  `,
+  rgb2hsv: `
+    vec3 rgb2hsv(vec3 c)
+    {
+      vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+      vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+      vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
 
+      float d = q.x - min(q.w, q.y);
+      float e = 1.0e-10;
+      return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+    }
+  `
+};
 const vertexShaderSrc = `
   // attribute vec4 a_position;
   attribute vec2 a_position;
@@ -22,7 +41,93 @@ const vertexShaderSrc = `
     v_texcoord = a_texcoord;
   }
 `;
-const fragmentShaderSrc = ` 
+const fragmentShader = `
+  varying vec2 v_texcoord;
+
+  uniform sampler2D u_texture;
+
+  uniform mediump float u_opacity;
+  uniform vec2 u_effect;
+  
+  void main() {
+    vec4 color = texture2D(u_texture, v_texcoord);
+
+    gl_FragColor = vec4(color[0], color[1], color[2], u_opacity - color[3]);
+  }
+`;
+const pixelateShader = `
+  varying vec2 v_texcoord;
+
+  uniform mediump float u_opacity;
+  uniform vec2 u_effect;
+
+  void main() {
+    float pixelateX = u_dimensions[0] * floor(max(u_effect[0] * 30.0, 1.0));
+    float pixelateY = u_dimensions[1] * floor(max(u_effect[1] * 30.0, 1.0));
+    vec2 pixel_coords = vec2(
+      v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
+      v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
+    );
+
+    gl_FragColor = texture2D(u_texture, pixel_coords);
+  }
+`;
+const prismShader = `
+  varying vec2 v_texcoord;
+
+  uniform mediump float u_opacity;
+  uniform vec2 u_effect;
+
+  void main() {
+    vec2 prism_values = vec2(floor(u_effect[0] * 9.0) + 1.0, floor(u_effect[1] * 9.0) + 1.0);
+    vec2 prism_coords = vec2(fract(v_texcoord[0] * prism_values[0]), fract(v_texcoord[1] * prism_values[1]));
+
+    gl_FragColor = texture2D(u_texture, prism_coords);
+  }
+`;
+const cosinePaletteShader = `
+  varying vec2 v_texcoord;
+
+  uniform mediump float u_opacity;
+  uniform vec2 u_effect;
+
+  ${shaderMethods["pal"]}
+  ${shaderMethods["rgb2hsv"]}
+
+  void main() {
+    vec4 color = texture2D(u_texture, v_texcoord);
+    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+    vec3 effect = pal(hsv[2] + u_effect[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
+    vec3 weighted = vec3(
+      color[0] * (1.0 - u_effect[0]) + effect[0] * u_effect[0],
+      color[1] * (1.0 - u_effect[0]) + effect[1] * u_effect[0],
+      color[2] * (1.0 - u_effect[0]) + effect[2] * u_effect[0]
+    );
+
+    gl_FragColor = texture2D(vec4(weighted, color[3]), v_texcoord);
+  }
+`;
+const colorOpacityShader = `
+  varying vec2 v_texcoord;
+
+  uniform mediump float u_opacity;
+  uniform vec2 u_effect;
+
+  ${shaderMethods["pal"]}
+  ${shaderMethods["rgb2hsv"]}
+
+  void main() {
+    vec4 color = texture2D(u_texture, v_texcoord);
+    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+
+    float hue_target = u_effect[0];
+    float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
+    float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
+
+    gl_FragColor = texture2D(vec4(color[0], color[1], color[2], hue_opacity * u_effect[1]), v_texcoord);
+  }
+`;
+const fragmentShaderSrc = (/* unused pure expression or super */ null && (` 
   precision mediump float;
 
   float PI = 3.14159265358;
@@ -113,7 +218,15 @@ const fragmentShaderSrc = `
     
     gl_FragColor =  vec4(weighted, max(0.0, u_opacity - (hue_opacity * u_color_opacity[1])));
   }
-`;
+`));
+const shaders = {
+  default: null,
+  cosine_palette: cosinePaletteShader,
+  color_opacity: colorOpacityShader,
+  cosine_distort: null,
+  prism: prismShader,
+  pixelate: pixelateShader
+};
 class UI {
   constructor(state) {
     this.state = state;
@@ -313,6 +426,72 @@ class Output {
     // for (var i = 0; i < this.videos.length; i++) {
     let {
       videos,
+      shapes
+    } = this.state;
+    let gl = this.contexts[idx];
+    let glAttrs = this.glAttrs[idx];
+    let effects = glAttrs.effects;
+    let video = videos[idx];
+    let videoEl = this.videos[idx];
+
+    // Skip if video isn't playing
+    if (videoEl.currentTime === 0) {
+      return;
+    }
+
+    // Draw the video frame for a frame buffer
+    // Loop through the effects and draw each to a frame buffer
+    // Draw to the screen
+
+    this.updateTexture(gl, glAttrs.texture, videoEl);
+    for (var i = 0; i < effects.length; i++) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[i % 2]);
+      this.drawShapes(gl, effects[i], shapes);
+      gl.bindTexture(gl.TEXTURE_2D, glAttrs.textures[i % 2]);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.drawShapes(gl, glAttrs.main, shapes);
+  }
+  drawShapes(gl, attrs, shapes) {
+    gl.useProgram(attrs.program);
+    gl.uniform2fv(attrs.uniforms.effects, video.values[i]);
+    for (var j = 0; j < shapes.length; j++) {
+      let pnts = shapes[j].points.input;
+      let opacity = shapes[j].opacity[idx];
+      let transformed = pnts.map(pnt => {
+        let absolute = [gl.canvas.width * pnt[0], gl.canvas.height * pnt[1]];
+        let transformed = this.applyToPoint(this.matrices[idx][j], absolute);
+        let relative = [transformed[0] / gl.canvas.width, transformed[1] / gl.canvas.height];
+        return relative;
+      });
+      let positions = [transformed[0][0] * 2 - 1, transformed[0][1] * -2 + 1, transformed[1][0] * 2 - 1, transformed[1][1] * -2 + 1, transformed[2][0] * 2 - 1, transformed[2][1] * -2 + 1];
+      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.position);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+      gl.vertexAttribPointer(attrs.locations.position, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.texture);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([pnts[0][0], pnts[0][1], pnts[1][0], pnts[1][1], pnts[2][0], pnts[2][1]]), gl.DYNAMIC_DRAW);
+      gl.vertexAttribPointer(attrs.locations.texture, 2, gl.FLOAT, false, 0, 0);
+      // Old Effects
+      // gl.uniform3fv(glAttrs.uniforms.effects, [opacity, 0, 0]);
+      // New Effects
+
+      gl.uniform1f(attrs.uniforms.opacity, opacity);
+      // for (var i = 0; i < effects.length; i++) {
+      //   let effect = effects[i];
+
+      //   if (glAttrs.effects.hasOwnProperty(effect)) {
+      //     console.log(idx, effect, video.values);
+      //     gl.uniform2fv(glAttrs.effects[effect], video.values[i]);
+      //   }
+      // }
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+  }
+  _drawFrame(idx) {
+    // for (var i = 0; i < this.videos.length; i++) {
+    let {
+      videos,
       shapes,
       effects
     } = this.state;
@@ -355,7 +534,7 @@ class Output {
       for (var i = 0; i < effects.length; i++) {
         let effect = effects[i];
         if (glAttrs.effects.hasOwnProperty(effect)) {
-          console.log(idx, effect, video.values);
+          // console.log(idx, effect, video.values);
           gl.uniform2fv(glAttrs.effects[effect], video.values[i]);
         }
       }
@@ -372,14 +551,46 @@ class Output {
     }
     gl.deleteShader(shader);
   }
-  createProgram(gl, vertexShader, fragmentShader) {
+  createProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
+    let vShader = this.createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
+    let fShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
     let program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+    gl.attachShader(program, vShader);
+    gl.attachShader(program, fShader);
     gl.linkProgram(program);
     let success = gl.getProgramParameter(program, gl.LINK_STATUS);
     if (success) {
-      return program;
+      let positionLocation = gl.getAttribLocation(program, "a_position");
+      let positionBuffer = gl.createBuffer();
+      gl.enableVertexAttribArray(positionLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+      let textureLocation = gl.getAttribLocation(glAttrs.program, "a_texcoord");
+      let textureBuffer = gl.createBuffer();
+      gl.enableVertexAttribArray(textureLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, glAttrs.textureBuffer);
+      gl.vertexAttribPointer(textureLocation, 2, gl.FLOAT, false, 0, 0);
+      let attrs = {
+        program: program,
+        locations: {
+          position: positionLocation,
+          texture: textureLocation
+        },
+        buffers: {
+          position: positionBuffer,
+          texture: textureBuffer
+        },
+        uniforms: {
+          sampler: gl.getUniformLocation(glAttrs.program, "u_texture"),
+          matrix: gl.getUniformLocation(glAttrs.program, "u_matrix"),
+          opacity: gl.getUniformLocation(glAttrs.program, "u_opacity"),
+          effects: gl.getUniformLocation(glAttrs.program, "u_effects")
+        }
+      };
+      gl.uniformMatrix3fv(attrs.uniforms.matrix, false, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+      gl.uniform1f(attrs.uniforms.opacity, 0);
+      gl.uniform2fv(attrs.uniforms.effects, [1, 0, 0]);
+      return attrs;
     } else {
       gl.deleteProgram(program);
       return null;
@@ -395,107 +606,38 @@ class Output {
     contextsEl.appendChild(canvas);
     let gl = canvas.getContext("webgl");
     let glAttrs = {
-      vertexShader: null,
-      fragmentShader: null,
-      program: null,
-      locations: {
-        position: null,
-        texture: null
-      },
+      main: null,
+      effects: [],
+      texture: this.initTexture(gl),
+      textures: [],
+      buffers: [],
       uniforms: {
         sampler: null,
-        palette: null,
-        palette_buffer: null,
         matrix: null,
-        effects: null,
         opacity: null,
-        dimensions: null
-      },
-      effects: {
-        prism: [0, 0],
-        cosine_palette: [0, 0],
-        cosine_distort: [0, 0],
-        color_opacity: [0, 0],
-        pixelate: [0, 0]
-      },
-      positionBuffer: null,
-      textureBuffer: null,
-      texture: null,
-      palette: null,
-      palette_buffer: null
+        effects: null
+      }
     };
-    glAttrs.vertexShader = this.createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
-    glAttrs.fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
-    glAttrs.program = this.createProgram(gl, glAttrs.vertexShader, glAttrs.fragmentShader);
-    if (glAttrs.program !== null) {
-      gl.useProgram(glAttrs.program);
-
-      // Setup position buffer
-      glAttrs.locations.position = gl.getAttribLocation(glAttrs.program, "a_position");
-      glAttrs.positionBuffer = gl.createBuffer();
-      gl.enableVertexAttribArray(glAttrs.locations.position);
-      gl.bindBuffer(gl.ARRAY_BUFFER, glAttrs.positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 1, 1, -1]), gl.DYNAMIC_DRAW);
-      gl.vertexAttribPointer(glAttrs.locations.position, 2, gl.FLOAT, false, 0, 0);
-
-      // Setup texture buffer
-      glAttrs.locations.texture = gl.getAttribLocation(glAttrs.program, "a_texcoord");
-      glAttrs.textureBuffer = gl.createBuffer();
-      gl.enableVertexAttribArray(glAttrs.locations.texture);
-      gl.bindBuffer(gl.ARRAY_BUFFER, glAttrs.textureBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.5, 0.5, 1, 0, 1, 1]), gl.DYNAMIC_DRAW);
-      gl.vertexAttribPointer(glAttrs.locations.texture, 2, gl.FLOAT, false, 0, 0);
+    glAttrs.main = this.createProgram(gl, vertexShaderSrc, fragmentShader);
+    if (glAttrs.main !== null) {
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      glAttrs.texture = this.initTexture(gl);
-      glAttrs.uniforms.sampler = gl.getUniformLocation(glAttrs.program, "u_texture");
-      let [palette, palette_buffer] = this.initPalette(gl);
-      glAttrs.palette = palette;
-      glAttrs.uniforms.palette = gl.getUniformLocation(glAttrs.program, "u_palette");
-      glAttrs.palette_buffer = palette_buffer;
-      glAttrs.uniforms.palette_buffer = gl.getUniformLocation(glAttrs.program, "u_palette_buffer");
-      glAttrs.uniforms.matrix = gl.getUniformLocation(glAttrs.program, "u_matrix");
-      let matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-      gl.uniformMatrix3fv(glAttrs.uniforms.matrix, false, matrix);
-      glAttrs.uniforms.effects = gl.getUniformLocation(glAttrs.program, "u_effects");
-      gl.uniform3fv(glAttrs.uniforms.effects, [1, 0, 0]);
-      glAttrs.uniforms.opacity = gl.getUniformLocation(glAttrs.program, "u_opacity");
-      gl.uniform1f(glAttrs.uniforms.opacity, 0);
-      glAttrs.uniforms.dimensions = gl.getUniformLocation(glAttrs.program, "u_dimensions");
-      gl.uniform2fv(glAttrs.uniforms.dimensions, [1, 1]);
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-      // // Prism Effect
-      // uniform vec2 u_prism;
-
-      // // Cosine Palette
-      // uniform vec2 u_cosine_palette;
-
-      // // Sine Distort
-      // uniform vec2 u_cosine_distort;
-
-      // // Color Opacity
-      // uniform vec2 u_color_opacity;
-
-      // // Pixelate
-      // uniform vec2 u_pixelate;
-
-      // // Opacity
-      // uniform highp u_opacity;
-
-      // Effects
-      glAttrs.effects.prism = gl.getUniformLocation(glAttrs.program, "u_prism");
-      gl.uniform2fv(glAttrs.effects.prism, [0, 0]);
-      glAttrs.effects.cosine_palette = gl.getUniformLocation(glAttrs.program, "u_cosine_palette");
-      gl.uniform2fv(glAttrs.effects.prism, [0, 0]);
-      glAttrs.effects.cosine_distort = gl.getUniformLocation(glAttrs.program, "u_cosine_distort");
-      gl.uniform2fv(glAttrs.effects.cosine_distort, [0, 0]);
-      glAttrs.effects.color_opacity = gl.getUniformLocation(glAttrs.program, "u_color_opacity");
-      gl.uniform2fv(glAttrs.effects.color_opacity, [0, 0]);
-      glAttrs.effects.pixelate = gl.getUniformLocation(glAttrs.program, "u_pixelate");
-      gl.uniform2fv(glAttrs.effects.pixelate, [0, 0]);
+      let effects = this.state.effects;
+      for (var i = 0; i < effects.length; i++) {
+        let effect = effects[i];
+        if (!!effect && !!shaders[effect]) {
+          glAttrs.effects.push(createProgram(gl, vertexShaderSrc, shaders[effect]));
+        }
+      }
+    }
+    for (let i = 0; i < 2; i++) {
+      let texture = this.initTexture(gl);
+      let frameBuffer = this.initFrameBuffer();
+      glAttrs.textures.push(texture);
+      glAttrs.buffers.push(frameBuffer);
     }
     this.glAttrs.push(glAttrs);
     this.contexts.push(gl);
@@ -512,34 +654,6 @@ class Output {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-  }
-  initPalette(gl) {
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const width = 128;
-    const height = 1;
-    const border = 0;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
-    const pixels = new Uint8Array(new Array(128).fill(null).map(() => {
-      return [0, 0, 0, 255];
-    }));
-    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixels);
-    const texture_buffer = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    const buffer_pixels = new Uint8Array(new Array(128).fill(null).map(() => {
-      return [0, 0, 0, 255];
-    }));
-    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, buffer_pixels);
-
-    // Turn off mips and set wrapping to clamp to edge so it
-    // will work regardless of the dimensions of the video.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    return [texture, texture_buffer];
   }
   initTexture(gl) {
     const texture = gl.createTexture();
@@ -581,6 +695,12 @@ class Output {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     // gl.activeTexture(gl.TEXTURE0);
+  }
+  initFrameBuffer(texture) {
+    let frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    return frameBuffer;
   }
   createMatrix(video) {
     let idx = this.videos.indexOf(video);

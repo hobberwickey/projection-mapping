@@ -59,7 +59,7 @@ class App {
       }),
 
       effects: new Array(config.effect_count).fill().map((_, idx) => {
-        return idx === 0 ? "cosine_pallet" : null;
+        return null;
       }),
 
       groups: new Array(config.group_count).fill().map((_, idx) => {
