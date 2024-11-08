@@ -596,7 +596,6 @@ class App {
     document.querySelectorAll(".inputs input")[0].value = opacity;
     document.querySelectorAll(".inputs input")[1].value = effect_a;
     document.querySelectorAll(".inputs input")[2].value = effect_b;
-    console.log("opacity", opacity * 128);
     this.setMidi();
   }
   setMidi() {
@@ -611,9 +610,7 @@ class App {
     } = this.state.notes;
     let notes = Object.keys(sliders.output);
     if (!!this.midiOutput) {
-      //   this.debounce(() => {
-      this.midiOutput.send([144, notes[0], opacity * 127 | 0]); // sends the message.
-      //   }, 100);
+      this.midiOutput.send([144, notes[0], opacity * 127 | 0]);
     }
   }
   debounce(callback, wait) {
