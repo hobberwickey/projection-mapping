@@ -22,26 +22,15 @@ const shaderMethods = {
 };
 
 const vertexShaderSrc = `
-  // attribute vec4 a_position;
   attribute vec2 a_position;
   attribute vec2 a_texcoord;
 
   uniform float u_flipY;
-   
-  // uniform mat4 u_matrix;
-  // uniform mat3 u_matrix;
-   
+    
   varying vec2 v_texcoord;
    
   void main() {
-    // mat3 matrix = mat3(1.0, 0.0, 0.0,  
-    //                    0.0, 1.0, 0.0,  
-    //                    0.0, 0.0, 1.0);
-
-    // vec3 transformedCoords = matrix * vec3(a_position,1.0);
     gl_Position = vec4(a_position * vec2(1, u_flipY), 0.0, 1.0);
-    
-    // Pass the texcoord to the fragment shader.
     v_texcoord = a_texcoord;
   }
 `;
@@ -435,13 +424,10 @@ class Output {
     this.videos = [];
     this.contexts = [];
     this.matrices = [];
-    this.textures = [];
     this.glAttrs = [];
 
     this.isPlaying = false;
-
     this.reset_video = null;
-    // this.stepFn = null;
   }
 
   updateState(state) {
@@ -470,14 +456,22 @@ class Output {
   }
 
   drawFrame(idx) {
-    // for (var i = 0; i < this.videos.length; i++) {
     let { videos, shapes } = this.state;
 
+    // Get the context
     let gl = this.contexts[idx];
+    // Get the attributes
     let glAttrs = this.glAttrs[idx];
 
-    let effects = glAttrs.effects;
+    // Get the active effect programs
+    let effects = [];
+    for (var i = 0; i < glAttrs.effects.length; i++) {
+      if (glAttrs.effects[i] !== null) {
+        effects.push(glAttrs.effects[i]);
+      }
+    }
 
+    // Get the video and it's HTML element
     let video = videos[idx];
     let videoEl = this.videos[idx];
 
@@ -487,11 +481,10 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    // Loop through the effects and draw each to a frame buffer
-    // Draw to the screen
-
     this.updateTexture(gl, glAttrs, glAttrs.texture, videoEl);
     let flip = 1;
+
+    // Loop through the effects and draw each to a frame buffer
     for (var i = 0; i < effects.length; i++) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[i % 2]);
 
@@ -502,9 +495,8 @@ class Output {
       flip = flip * -1;
     }
 
+    // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    console.log(flip);
     this.drawShapes(gl, idx, glAttrs.main, shapes, [0, 0], flip);
   }
 
@@ -580,111 +572,6 @@ class Output {
     }
   }
 
-  // _drawFrame(idx) {
-  //   // for (var i = 0; i < this.videos.length; i++) {
-  //   let { videos, shapes, effects } = this.state;
-
-  //   let gl = this.contexts[idx];
-  //   let glAttrs = this.glAttrs[idx];
-
-  //   let video = videos[idx];
-  //   let videoEl = this.videos[idx];
-
-  //   // TODO: When multiple effects are implemented all the
-  //   // appropriate values should be set before the shape loop
-  //   let values = video.values[0];
-
-  //   // Skip if video isn't playing
-  //   if (videoEl.currentTime === 0) {
-  //     return;
-  //   }
-
-  //   this.updateTexture(gl, glAttrs.texture, videoEl);
-
-  //   gl.uniform2fv(glAttrs.uniforms.dimensions, [
-  //     1 / gl.canvas.width,
-  //     1 / gl.canvas.height,
-  //   ]);
-  //   for (var j = 0; j < shapes.length; j++) {
-  //     let pnts = shapes[j].points.input;
-  //     let opacity = shapes[j].opacity[idx];
-
-  //     let transformed = pnts.map((pnt) => {
-  //       let absolute = [gl.canvas.width * pnt[0], gl.canvas.height * pnt[1]];
-  //       let transformed = this.applyToPoint(this.matrices[idx][j], absolute);
-  //       let relative = [
-  //         transformed[0] / gl.canvas.width,
-  //         transformed[1] / gl.canvas.height,
-  //       ];
-
-  //       return relative;
-  //     });
-
-  //     let positions = [
-  //       transformed[0][0] * 2 - 1,
-  //       transformed[0][1] * -2 + 1,
-  //       transformed[1][0] * 2 - 1,
-  //       transformed[1][1] * -2 + 1,
-  //       transformed[2][0] * 2 - 1,
-  //       transformed[2][1] * -2 + 1,
-  //     ];
-
-  //     gl.bindBuffer(gl.ARRAY_BUFFER, glAttrs.positionBuffer);
-  //     gl.bufferData(
-  //       gl.ARRAY_BUFFER,
-  //       new Float32Array(positions),
-  //       gl.DYNAMIC_DRAW,
-  //     );
-
-  //     gl.vertexAttribPointer(
-  //       glAttrs.locations.position,
-  //       2,
-  //       gl.FLOAT,
-  //       false,
-  //       0,
-  //       0,
-  //     );
-
-  //     gl.bindBuffer(gl.ARRAY_BUFFER, glAttrs.textureBuffer);
-  //     gl.bufferData(
-  //       gl.ARRAY_BUFFER,
-  //       new Float32Array([
-  //         pnts[0][0],
-  //         pnts[0][1],
-  //         pnts[1][0],
-  //         pnts[1][1],
-  //         pnts[2][0],
-  //         pnts[2][1],
-  //       ]),
-  //       gl.DYNAMIC_DRAW,
-  //     );
-
-  //     gl.vertexAttribPointer(
-  //       glAttrs.locations.texture,
-  //       2,
-  //       gl.FLOAT,
-  //       false,
-  //       0,
-  //       0,
-  //     );
-  //     // Old Effects
-  //     // gl.uniform3fv(glAttrs.uniforms.effects, [opacity, 0, 0]);
-  //     // New Effects
-
-  //     gl.uniform1f(glAttrs.uniforms.opacity, opacity);
-  //     for (var i = 0; i < effects.length; i++) {
-  //       let effect = effects[i];
-
-  //       if (glAttrs.effects.hasOwnProperty(effect)) {
-  //         // console.log(idx, effect, video.values);
-  //         gl.uniform2fv(glAttrs.effects[effect], video.values[i]);
-  //       }
-  //     }
-
-  //     gl.drawArrays(gl.TRIANGLES, 0, 3);
-  //   }
-  // }
-
   createShader(gl, type, source) {
     let shader = gl.createShader(type);
 
@@ -694,10 +581,9 @@ class Output {
     let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (success) {
       return shader;
-    } else {
-      console.log(success, source);
     }
 
+    console.log(success, source);
     gl.deleteShader(shader);
   }
 
@@ -744,15 +630,6 @@ class Output {
         },
       };
 
-      // gl.uniformMatrix3fv(
-      //   attrs.uniforms.matrix,
-      //   false,
-      //   [1, 0, 0, 0, 1, 0, 0, 0, 1],
-      // );
-
-      // gl.uniform1f(attrs.uniforms.opacity, 0);
-      // gl.uniform2fv(attrs.uniforms.effects, [0, 0]);
-
       return attrs;
     } else {
       gl.deleteProgram(program);
@@ -797,17 +674,11 @@ class Output {
           glAttrs.effects.push(
             this.createProgram(gl, vertexShaderSrc, shaders[effect]),
           );
+        } else {
+          glAttrs.effects.push(null);
         }
       }
     }
-
-    // for (let i = 0; i < 2; i++) {
-    //   let texture = this.initTexture(gl);
-    //   let frameBuffer = this.initFrameBuffer(gl, texture);
-
-    //   glAttrs.textures.push(texture);
-    //   glAttrs.buffers.push(frameBuffer);
-    // }
 
     this.glAttrs.push(glAttrs);
     this.contexts.push(gl);
@@ -1147,6 +1018,30 @@ class Output {
     this.createMatrix(vid);
     this.reset_video = null;
   }
+
+  setEffect(idx, effect) {
+    for (var i = 0; i < this.glAttrs.length; i++) {
+      let attrs = this.glAttrs[i];
+      let gl = this.contexts[i];
+
+      if (!!attrs.effects[idx]) {
+        // TODO: if there starts to be weird things, then this
+        // is not enough to clean up old programs, but it
+        // should be
+        attrs.effects[idx] = null;
+      }
+
+      if (!!effect && !!shaders[effect]) {
+        attrs.effects[idx] = this.createProgram(
+          gl,
+          vertexShaderSrc,
+          shaders[effect],
+        );
+      } else {
+        glAttrs.effects[idx] = null;
+      }
+    }
+  }
 }
 
 class App {
@@ -1160,6 +1055,24 @@ class App {
 
   setup() {
     this.output.play();
+  }
+
+  setState(state) {
+    let oldState = this.state;
+
+    this.state = state;
+    if (oldState === null) {
+      this.output = new Output(this.state);
+      this.ui = new UI(this.state);
+      this.setup();
+    } else {
+      this.output.updateState.call(this.output, this.state);
+      this.ui.updateState.call(this.ui, this.state);
+
+      if (oldState.shapes.length !== this.state.shapes.length) {
+        this.output.calculateMatrices.call(this.output);
+      }
+    }
   }
 
   setupListeners() {
@@ -1255,28 +1168,15 @@ class App {
         let data = JSON.parse(event.data);
 
         if (data.action === "update_state") {
-          let oldState = this.state;
-
-          console.log(data.state);
-          this.state = data.state;
-          if (oldState === null) {
-            this.output = new Output(this.state);
-            this.ui = new UI(this.state);
-            this.setup();
-          } else {
-            this.output.updateState.call(this.output, this.state);
-            this.ui.updateState.call(this.ui, this.state);
-
-            if (oldState.shapes.length !== this.state.shapes.length) {
-              console.log("Calculating Matrices");
-              this.output.calculateMatrices.call(this.output);
-            }
-          }
+          this.setState(data.state);
         } else if (data.action === "reset_video") {
           let { videoIdx } = data;
           let { resetVideo } = this.output;
 
           resetVideo.call(this.output, videoIdx);
+        } else if (data.action === "set_effect") {
+          this.output.setEffect.call(this.output, data.effectIdx, data.effect);
+          this.setState(data.state);
         }
       } else {
         let { loadVideo } = this.output;

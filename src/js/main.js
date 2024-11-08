@@ -516,8 +516,16 @@ class App {
   }
 
   setEffect(idx, effect) {
-    console.log(idx, effect, this.state.effects);
     this.state.effects[idx] = effect;
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "set_effect",
+        effectIdx: idx,
+        effect: effect,
+        state: this.state,
+      }),
+    );
   }
 
   setValues() {
