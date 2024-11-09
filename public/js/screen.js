@@ -25,11 +25,13 @@ const vertexShaderSrc = `
   attribute vec2 a_texcoord;
 
   uniform float u_flipY;
+  uniform mat3 u_matrix;
     
   varying vec2 v_texcoord;
    
   void main() {
     gl_Position = vec4(a_position * vec2(1, u_flipY), 0.0, 1.0);
+    // gl_Position = vec4(a_position, 0.0, 1.0);
     v_texcoord = a_texcoord;
   }
 `;
@@ -340,9 +342,6 @@ class UI {
     let minY = Math.min(Math.max(y - offset, 0), height - this.pointSize);
     let maxX = Math.max(Math.min(x + offset, width), this.pointSize);
     let maxY = Math.max(Math.min(y + offset, height), this.pointSize);
-
-    // console.log(mouseX, mouseY, minX, minY, maxX, maxY);
-
     if (mouseX <= maxX && mouseX >= minX && mouseY <= maxY && mouseY >= minY) {
       this.selectedPoint = [objIdx, pntIdx];
       return false;
@@ -456,19 +455,16 @@ class Output {
 
     // Draw the video frame for a frame buffer
     this.updateTexture(gl, glAttrs, glAttrs.texture, videoEl);
-    let flip = 1;
-
-    // Loop through the effects and draw each to a frame buffer
     for (var i = 0; i < effects.length; i++) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[i % 2]);
-      this.drawShapes(gl, idx, effects[i], shapes, video.values[i], 1);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      this.drawShapes(gl, idx, effects[i], shapes, video.values[i], -1);
       gl.bindTexture(gl.TEXTURE_2D, glAttrs.textures[i % 2]);
-      flip = flip * -1;
     }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    this.drawShapes(gl, idx, glAttrs.main, shapes, [0, 0], flip);
+    this.drawShapes(gl, idx, glAttrs.main, shapes, [0, 0], 1);
   }
   drawShapes(gl, idx, attrs, shapes, values, flip) {
     gl.useProgram(attrs.program);
@@ -476,18 +472,18 @@ class Output {
     gl.uniform1f(attrs.uniforms.flip, flip);
     gl.uniform2fv(attrs.uniforms.dimensions, [1 / gl.canvas.width, 1 / gl.canvas.height]);
     for (var j = 0; j < shapes.length; j++) {
+      // If we're rendering an effect to a frame buffer,
+      // use the same points for the input and output
       let pnts = shapes[j].points.input;
+      let oPnts = shapes[j].points.input;
+      // If we're rendering the final output use the output points
+      if (flip === 1) {
+        oPnts = shapes[j].points.output;
+      }
       let opacity = shapes[j].opacity[idx];
 
-      // TODO: This could all be precalculated, no reason to do it every frame
-      // only when the shapes or the video changes
-      let transformed = pnts.map(pnt => {
-        let absolute = [gl.canvas.width * pnt[0], gl.canvas.height * pnt[1]];
-        let transformed = this.applyToPoint(this.matrices[idx][j], absolute);
-        let relative = [transformed[0] / gl.canvas.width, transformed[1] / gl.canvas.height];
-        return relative;
-      });
-      let positions = [transformed[0][0] * 2 - 1, transformed[0][1] * -2 + 1, transformed[1][0] * 2 - 1, transformed[1][1] * -2 + 1, transformed[2][0] * 2 - 1, transformed[2][1] * -2 + 1];
+      // Convert from 0,1 to -1,1 coords
+      let positions = [oPnts[0][0] * 2 - 1, oPnts[0][1] * -2 + 1, oPnts[1][0] * 2 - 1, oPnts[1][1] * -2 + 1, oPnts[2][0] * 2 - 1, oPnts[2][1] * -2 + 1];
       gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.position);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
       gl.vertexAttribPointer(attrs.locations.position, 2, gl.FLOAT, false, 0, 0);
@@ -507,7 +503,6 @@ class Output {
     if (success) {
       return shader;
     }
-    console.log(success, source);
     gl.deleteShader(shader);
   }
   createProgram(gl, vShaderSrc, fShaderSrc) {
@@ -541,6 +536,7 @@ class Output {
         },
         uniforms: {
           sampler: gl.getUniformLocation(program, "u_texture"),
+          matrix: gl.getUniformLocation(program, "u_matrix"),
           flip: gl.getUniformLocation(program, "u_flipY"),
           opacity: gl.getUniformLocation(program, "u_opacity"),
           effect: gl.getUniformLocation(program, "u_effect"),
@@ -654,8 +650,10 @@ class Output {
     }
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, video);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   }
   initFrameBuffer(gl, texture) {
     let frameBuffer = gl.createFramebuffer();
@@ -824,7 +822,6 @@ class Output {
       this.videos.splice(idx, 1);
       this.contexts.splice(idx, 1);
       this.matrices.splice(idx, 1);
-      this.textures.splice(idx, 1);
       this.glAttrs.splice(idx, 1);
       gl.canvas.parentNode.removeChild(gl.canvas);
       video.parentNode.removeChild(video);
@@ -844,7 +841,6 @@ class Output {
       setTimeout(() => {
         this.calculateMatrix(e.target);
         this.updateContext(e.target);
-        console.log(vid);
         vid.play();
       }, 100);
     });
