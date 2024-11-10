@@ -22,6 +22,7 @@
   "description": "",
   "devDependencies": {
     "css-loader": "^7.1.2",
+    "glob": "^11.0.0",
     "sass": "^1.79.5",
     "sass-loader": "^16.0.2",
     "style-loader": "^4.0.0",

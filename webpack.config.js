@@ -1,14 +1,16 @@
 const path = require("path");
+const fs = require("fs");
+const url = require("url");
 
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const fs = require("fs");
 
 module.exports = {
   entry: {
     main: "/src/js/main.js",
     screen: "/src/js/screen.js",
+    effects: "/src/js/effects.js",
     styles: ["/src/scss/main.scss"],
   },
   // watch: true,

@@ -31,16 +31,27 @@ export class Group {
 
 		this.onSelect = (e) => {
 			onSelect(idx);
+
+			let prev = document.querySelector(".group .selected");
+			if (prev !== null) {
+				prev.classList.remove("selected");
+			}
+
+			this.el.querySelector(".group-btn").classList.add("selected");
 		};
 
 		this.el = document.createElement("div");
 		this.el.className = `row group grp-clr-${idx}`;
 		this.el.innerHTML = `
-			<div>
-				<input type='text' value="${group.label}" />
-				<input class='uk-radio' name='group' type='radio' value="${group.id}"  />
+			<div class='group-btn ${idx === 0 ? "selected" : ""}'>
+				<label for='group-${idx}'>
+					<input type='text' value="${group.label}" />
+					<input id='group-${idx}' class='uk-radio' name='group' type='radio' value="${group.id}"  />
+				</label>
 			</div>
 		`;
+
+		this.el.addEventListener("click", this.onSelect.bind(this));
 
 		this.el
 			.querySelector("input[type='text']")

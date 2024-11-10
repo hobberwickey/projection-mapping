@@ -1,3 +1,5 @@
+import { Effects } from "./effects";
+
 // Matrix math from https://github.com/chrvadala/transformation-matrix/blob/main/src/fromTriangles.js
 const shaderMethods = {
   pal: `
@@ -483,6 +485,7 @@ class Output {
     // Draw the video frame for a frame buffer
     this.updateTexture(gl, glAttrs, glAttrs.texture, videoEl);
 
+    // Loop through the effects and draw each to a framebuffer
     for (var i = 0; i < effects.length; i++) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[i % 2]);
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);

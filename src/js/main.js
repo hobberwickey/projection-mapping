@@ -3,6 +3,8 @@ import { Video } from "./libs/videos.js";
 import { Effect } from "./libs/effects.js";
 import { Group, Shape, GroupToggle } from "./libs/shapes.js";
 
+import { Effects } from "./effects";
+
 const defaultTriangle = [
   [0.4, 0.4],
   [0.6, 0.4],
@@ -230,6 +232,16 @@ class App {
         this.state = data.state;
       }
     });
+
+    // TODO for disabling all click for MIDI Map Mode
+    // document.addEventListener(
+    //   "click",
+    //   (e) => {
+    //     e.stopPropagation();
+    //     e.preventDefault();
+    //   },
+    //   true,
+    // );
   }
 
   popout() {
@@ -249,20 +261,22 @@ class App {
   toggleSlideout() {
     let el = document.querySelector(".slideout");
 
-    console.log(el);
-
     if (el.classList.contains("active")) {
       el.classList.remove("active");
       el.querySelector("#slideout-handle").setAttribute(
         "uk-icon",
         "chevron-double-left",
       );
+
+      document.querySelector("#page").classList.remove("slideout-active");
     } else {
       el.classList.add("active");
       el.querySelector("#slideout-handle").setAttribute(
         "uk-icon",
         "chevron-double-right",
       );
+
+      document.querySelector("#page").classList.add("slideout-active");
     }
   }
 
@@ -319,9 +333,9 @@ class App {
       );
 
       if (this.selectedEffect === i) {
-        effect.el
-          .querySelector("input[type='radio']")
-          .setAttribute("checked", true);
+        // effect.el
+        //   .querySelector("input[type='radio']")
+        //   .setAttribute("checked", true);
       }
 
       document.querySelector("#effects").appendChild(effect.el);
@@ -587,7 +601,5 @@ class App {
   //   );
   // }
 }
-
-console.log(Config.default);
 
 new App(Config.default);

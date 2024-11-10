@@ -1,94 +1,91 @@
-const effects = [
-	{
-		id: "default",
-		label: "Video Controls",
-		opacity: "Opacity",
-		effect_a: "Playback",
-		effect_b: "Position",
-	},
-	{
-		id: "cosine_palette",
-		label: "Cosine Palette",
-		opacity: "Opacity",
-		effect_a: "Intensity",
-		effect_b: "Shift",
-	},
-	{
-		id: "color_opacity",
-		label: "Color Opacity",
-		opacity: "Opacity",
-		effect_a: "Hue",
-		effect_b: "Sensitivity",
-	},
-	{
-		id: "cosine_distort",
-		label: "Cosine Distort",
-		opacity: "Opacity",
-		effect_a: "Horizontal",
-		effect_b: "Vertical",
-	},
-	{
-		id: "prism",
-		label: "Prism",
-		opacity: "Opacity",
-		effect_a: "Horizontal",
-		effect_b: "Vertical",
-	},
-	{
-		id: "pixelate",
-		label: "Pixelate",
-		opacity: "Opacity",
-		effect_a: "Pixel Size",
-		effect_b: "Pallete Depth",
-	},
-];
+import { Effects } from "../effects.js";
 
 export class Effect {
 	constructor(idx, effect, onSelect, onChange) {
 		this.idx = idx;
+		this.selected = effect;
 
-		this.onChange = (e) => {
-			console.log(idx, effect, e.target.value);
-			onChange(idx, e.target.value);
+		this.onChange = (effect, evt) => {
+			onChange(idx, effect);
+
+			this.selected = Effects.find((ef) => ef.id === effect);
+			this.el.querySelector(".select-display").innerText =
+				this.selected?.label || "No Effect";
 		};
 
-		this.onSelect = (e) => {
-			console.log(idx, effect);
-			onSelect(idx);
+		this.onSelect = (effect, evt) => {
+			onSelect(idx, effect);
+
+			let previous = document.querySelector(".select.selected");
+			if (!!previous) {
+				previous.classList.remove("selected");
+			}
+			this.el.classList.add("selected");
+			this.el.focus();
+		};
+
+		this.toggleActive = (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			this.el.classList.add("active");
+
+			window.addEventListener("click", () => {
+				this.el.classList.remove("active");
+			});
 		};
 
 		this.el = document.createElement("div");
-		this.el.className = "effect";
+		this.el.className = `select ${idx === 0 ? "selected" : ""}`;
+		this.el.tabIndex = 1;
 		this.el.innerHTML = `
-			<ul class='uk-list fx-clr-${idx}'>
-				<li>
-					<div>
-						<input name='effect' class='uk-radio' type='radio' value='${effect}' 
-						/><label>
-							<select class='uk-select'>
-								<option value=''>No Effect</option>
-							</select>
-						</label>
-					</div>
-				</li>
-			</ul>
+			<div class='effect'>
+				<div class='select-display fx-clr-${idx}'>No Effect</div>
+				<div class='select-list'>
+					<ul class='uk-list'>
+						<li data-value=''>No Effect</li>
+					</ul>
+				</div>
+				<div class='select-handle'>
+					<span uk-icon="icon: triangle-down"></span>
+				</div>
+			</div>
 		`;
 
-		effects.map((e) => {
-			let option = document.createElement("option");
-			option.value = e.id;
-			option.innerText = e.label;
-			option.selected = e.id === effect;
+		this.el.querySelector("ul li").addEventListener("click", (evt) => {
+			this.onChange("", evt);
+		});
 
-			this.el.querySelector("select").appendChild(option);
+		Effects.map((e) => {
+			let option = document.createElement("li");
+			option.innerText = e.label;
+			option.dataset.value = e.id;
+
+			if (e.id === effect) {
+				option.classList.add("selected");
+			}
+
+			option.addEventListener("click", (evt) => {
+				this.onChange(e.id, evt);
+			});
+
+			this.el.querySelector("ul").appendChild(option);
 		});
 
 		this.el
-			.querySelector("select")
-			.addEventListener("change", this.onChange.bind(this));
+			.querySelector(".select-handle")
+			.addEventListener("click", this.toggleActive.bind(this));
 
 		this.el
-			.querySelector("input")
-			.addEventListener("change", this.onSelect.bind(this));
+			.querySelector(".effect")
+			.addEventListener("click", this.onSelect.bind(this));
+
+		// this.el
+		// 	.querySelector("select")
+		// 	.addEventListener("change", this.onChange.bind(this));
+
+		// this.el
+		// 	.querySelector("input")
+		// 	.addEventListener("change", this.onSelect.bind(this));
 	}
 }

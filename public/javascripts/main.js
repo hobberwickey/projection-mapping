@@ -118,6 +118,13 @@ class App {
     document
       .querySelector("#add_triangle")
       .addEventListener("click", this.addTriangle.bind(this));
+
+    document.querySelectorAll("input[type='text']").forEach((input) => {
+      console.log(input);
+      input.addEventListener("focus", (e) => {
+        e.target.select();
+      });
+    });
   }
 
   popout() {
@@ -215,7 +222,7 @@ class App {
 }
 
 let app = null;
-window.addEventListener("load", () => {
+window.addEventListener("DOMContentLoaded", () => {
   app = new App();
   app.launch();
 });

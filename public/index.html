@@ -32,6 +32,60 @@
                 </li>
               </ul>
             </div>
+            <div class="uk-navbar-right">
+              <ul class="uk-navbar-nav">
+                <li id="current-project">
+                  <div>
+                    <a href="javascript:void(0)"
+                      ><span uk-icon="icon: check"></span
+                    ></a>
+                    <input type="text" value="My Project" />
+                  </div>
+                </li>
+                <li id="open_menu">
+                  <div>
+                    <a href="javascript:void(0)"
+                      ><span uk-icon="icon: menu"></span
+                    ></a>
+                  </div>
+                  <div class="menu uk-width-medium" uk-dropdown="mode: click">
+                    <ul class="uk-list">
+                      <li>
+                        <label>My Projects</label>
+                        <ul class="uk-list">
+                          <li>No Saved Projects</li>
+                        </ul>
+
+                        <a
+                          href="javascript:void(0)"
+                          id="download-projects"
+                          class="btn"
+                        >
+                          Download Projects
+                        </a>
+                        <div class="upload-projects">
+                          <div class="upload-wrapper">
+                            <label class="btn" for="upload-projects">
+                              Upload Projects
+                            </label>
+                            <input type="file" id="upload-projects" />
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <label>About</label>
+                        <ul class="uk-list">
+                          <li>Overview</li>
+                          <li>Mapping</li>
+                          <li>Effects</li>
+                          <li>Groups</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </nav>
@@ -84,6 +138,7 @@
           </div>
         </div>
       </div>
+      <div class="overlay"></div>
     </div>
 
     <div class="slideout">
@@ -96,6 +151,7 @@
                 href="javascript:void(0)"
                 uk-icon="chevron-double-left"
               ></a>
+              Groups
             </div>
           </div>
         </div>

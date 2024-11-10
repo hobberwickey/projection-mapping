@@ -24,8 +24,10 @@ export class Video {
 			<div>
 				<div class='left'>
 					<div id='video-${video.id}' class="uk-card-header">
-						<input type='radio' name='video' class='uk-radio' 
-		        /><input type='text' class="uk-card-title" value='${video.label}'></input>
+						<label for='video-${idx}'>
+							<input id='video-${idx}' type='radio' name='video' class='uk-radio' />	
+							<input type='text' class="uk-card-title" value='${video.label}' />
+						</label>
 		    	</div>
 					<div class="uk-card-body">
 						<div class='preview no-video upload-wrapper'>
@@ -40,6 +42,8 @@ export class Video {
 				</div>
 			</div>
 		`;
+
+		this.el.addEventListener("click", this.onSelect.bind(this));
 
 		this.el
 			.querySelector(".upload-wrapper input")
