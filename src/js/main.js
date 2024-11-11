@@ -13,6 +13,8 @@ const defaultTriangle = [
 
 class App {
   constructor(config) {
+    this.id = this.gen_id();
+    this.name = "My Project";
     this.config = config;
     this.screen = null;
 
@@ -23,7 +25,7 @@ class App {
     };
 
     this.state =
-      JSON.parse(localStorage.getItem("saves"))?.auto || this.defaultState();
+      JSON.parse(localStorage.getItem("auto")) || this.defaultState();
 
     this.selectedVideos = [0];
     this.selectedGroup = 0;
@@ -42,8 +44,95 @@ class App {
     this.launch();
   }
 
-  id() {
+  gen_id() {
     return (Math.random() * 1000000) | 0;
+  }
+
+  save() {
+    let projects = this.getProjects();
+    let idx = projects.findIndex((p) => p.id === this.id);
+
+    if (idx === -1) {
+      projects.push({
+        id: this.id,
+        name: this.name,
+        state: JSON.parse(JSON.stringify(this.state)),
+      });
+    } else {
+      projects.splice(idx, 1, {
+        id: this.id,
+        name: this.name,
+        state: JSON.parse(JSON.stringify(this.state)),
+      });
+    }
+
+    this.updateProjectList();
+    localStorage.setItem("projects", JSON.stringify(projects));
+  }
+
+  load(id) {
+    let projects = this.getProjects();
+    let project = projects.find((p) => p.id === id);
+
+    this.id = project.id;
+    this.name = project.name;
+    this.state = JSON.parse(JSON.stringify(project.state));
+
+    // Get the project from local storage,
+    // load the id, name, and state
+    // clear all videos
+
+    this.updateProjectList();
+    this.setValues();
+  }
+
+  getProjects() {
+    return JSON.parse(localStorage.getItem("projects")) || [];
+  }
+
+  deleteProject() {
+    let projects = this.getProjects();
+    let idx = projects.findIndex((p) => p.id === this.id);
+
+    if (idx !== -1) {
+      let project = projects[idx];
+      projects.splice(idx, 1);
+
+      if (project.id === this.id) {
+        this.resetState();
+      }
+    }
+
+    localStorage.setItem("projects", JSON.stringify(projects));
+    this.updateProjectList();
+  }
+
+  downloadProjects() {
+    let projects = this.getProjects();
+    let dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(projects, null, 2));
+
+    let a = document.createElement("a");
+    a.setAttribute("href", dataStr);
+    a.setAttribute("class", "hidden");
+    a.setAttribute("download", "sensory_control_projects.json");
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  uploadProjects(e) {
+    // Stub
+  }
+
+  saveState() {
+    localStorage.setItem("auto", JSON.stringify(this.state));
+  }
+
+  resetState() {
+    // Stub
   }
 
   defaultState() {
@@ -52,7 +141,7 @@ class App {
     return {
       videos: new Array(config.video_count).fill().map((_, idx) => {
         return {
-          id: this.id(),
+          id: this.gen_id(),
           label: `Video ${idx + 1}`,
           values: new Array(config.effect_count).fill().map(() => {
             return new Array(config.effect_parameter_count).fill(0);
@@ -66,7 +155,7 @@ class App {
 
       groups: new Array(config.group_count).fill().map((_, idx) => {
         return {
-          id: this.id(),
+          id: this.gen_id(),
           editable: idx !== 0,
           opacity: new Array(config.video_count).fill(0),
           label: idx === 0 ? "All" : `Group ${idx}`,
@@ -76,7 +165,7 @@ class App {
 
       shapes: [
         {
-          id: this.id(),
+          id: this.gen_id(),
           type: "triangle",
           label: "Triangle 1",
           opacity: new Array(config.video_count).fill(0),
@@ -94,7 +183,7 @@ class App {
           },
         },
         {
-          id: this.id(),
+          id: this.gen_id(),
           type: "triangle",
           label: "Triangle 2",
           opacity: new Array(config.video_count).fill(0),
@@ -212,6 +301,16 @@ class App {
       .querySelector("#slideout-handle")
       .addEventListener("click", this.toggleSlideout.bind(this));
 
+    document
+      .querySelector("#project_name")
+      .addEventListener("input", this.updateProjectName.bind(this));
+
+    document
+      .querySelector("#save_btn")
+      .addEventListener("click", this.save.bind(this));
+
+    this.updateProjectList();
+
     let inputs = document.querySelectorAll(".inputs input[type='range']");
     inputs[0].addEventListener(
       "input",
@@ -230,8 +329,15 @@ class App {
       let data = JSON.parse(event.data);
       if (data.action === "update_state") {
         this.state = data.state;
+        this.saveState();
       }
     });
+
+    document
+      .querySelector("#download-projects")
+      .addEventListener("click", () => {
+        this.downloadProjects();
+      });
 
     // TODO for disabling all click for MIDI Map Mode
     // document.addEventListener(
@@ -256,6 +362,35 @@ class App {
         }),
       );
     });
+  }
+
+  updateProjectName(e) {
+    this.name = e.target.value;
+  }
+
+  updateProjectList() {
+    let projectList = document.querySelector("#project_list");
+    let projects = this.getProjects();
+
+    projectList.innerHTML = "";
+    if (projects.length > 0) {
+      projects.map((p) => {
+        let item = document.createElement("li");
+
+        item.innerText = p.name;
+        item.className = `clickable ${p.id === this.id ? "active" : ""}`;
+        item.addEventListener("click", () => {
+          this.load(p.id);
+        });
+
+        projectList.appendChild(item);
+      });
+    } else {
+      let item = document.createElement("li");
+
+      item.innerText = "No Saved Projects";
+      projectList.appendChild(item);
+    }
   }
 
   toggleSlideout() {
@@ -380,7 +515,7 @@ class App {
 
     let idx = shapes.length;
     let shape = {
-      id: this.id(),
+      id: this.gen_id(),
       type: "triangle",
       label: `Triangle ${idx + 1}`,
       opacity: new Array(this.config.video_count).fill(0.5),
@@ -411,6 +546,12 @@ class App {
         state: this.state,
       }),
     );
+
+    this.saveState();
+  }
+
+  removeShape() {
+    // Stub
   }
 
   updateVideo(idx, video, file) {
@@ -481,6 +622,8 @@ class App {
         state: this.state,
       }),
     );
+
+    this.saveState();
   }
 
   toggleVideo(idx) {
@@ -540,6 +683,8 @@ class App {
         state: this.state,
       }),
     );
+
+    this.saveState();
   }
 
   setValues() {

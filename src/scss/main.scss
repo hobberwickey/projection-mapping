@@ -121,6 +121,16 @@ nav {
   }
 }
 
+.hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
 .select {
   position: relative;
   padding: 0px 10px;

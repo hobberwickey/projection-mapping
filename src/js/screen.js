@@ -28,7 +28,7 @@ const vertexShaderSrc = `
   attribute vec2 a_texcoord;
 
   uniform float u_flipY;
-  uniform mat3 u_matrix;
+  // uniform mat3 u_matrix;
     
   varying vec2 v_texcoord;
    
@@ -382,7 +382,7 @@ class UI {
     point[0] = x;
     point[1] = y;
 
-    if (!!window.parent) {
+    if (!!window.opener) {
       window.opener.postMessage(
         JSON.stringify({
           action: "update_state",
@@ -425,7 +425,7 @@ class Output {
 
     this.videos = [];
     this.contexts = [];
-    this.matrices = [];
+    // this.matrices = [];
     this.glAttrs = [];
 
     this.isPlaying = false;
@@ -618,7 +618,7 @@ class Output {
         },
         uniforms: {
           sampler: gl.getUniformLocation(program, "u_texture"),
-          matrix: gl.getUniformLocation(program, "u_matrix"),
+          // matrix: gl.getUniformLocation(program, "u_matrix"),
           flip: gl.getUniformLocation(program, "u_flipY"),
           opacity: gl.getUniformLocation(program, "u_opacity"),
           effect: gl.getUniformLocation(program, "u_effect"),
@@ -800,170 +800,170 @@ class Output {
     return frameBuffer;
   }
 
-  createMatrix(video) {
-    let idx = this.videos.indexOf(video);
-    if (idx === -1) {
-      console.log("Couldn't find video:", video);
-    }
+  // createMatrix(video) {
+  //   let idx = this.videos.indexOf(video);
+  //   if (idx === -1) {
+  //     console.log("Couldn't find video:", video);
+  //   }
 
-    while (this.matrices.length <= idx) {
-      this.matrices.push([]);
-    }
-  }
+  //   while (this.matrices.length <= idx) {
+  //     this.matrices.push([]);
+  //   }
+  // }
 
-  calculateMatrices() {
-    for (var v = 0; v < this.videos.length; v++) {
-      if (this.matrices[v] === void 0) {
-        this.matrices.push([]);
-      }
+  // calculateMatrices() {
+  //   for (var v = 0; v < this.videos.length; v++) {
+  //     if (this.matrices[v] === void 0) {
+  //       this.matrices.push([]);
+  //     }
 
-      this.calculateMatrix(this.videos[v]);
-    }
-  }
+  //     this.calculateMatrix(this.videos[v]);
+  //   }
+  // }
 
-  calculateMatrix(video) {
-    let { shapes } = this.state;
+  // calculateMatrix(video) {
+  //   let { shapes } = this.state;
 
-    let idx = this.videos.indexOf(video);
-    if (idx === -1) {
-      console.log("Couldn't find video:", video);
-    }
+  //   let idx = this.videos.indexOf(video);
+  //   if (idx === -1) {
+  //     console.log("Couldn't find video:", video);
+  //   }
 
-    let widthI = video.videoWidth;
-    let heightI = video.videoHeight;
+  //   let widthI = video.videoWidth;
+  //   let heightI = video.videoHeight;
 
-    // let widthO = this.contexts[idx].canvas.width;
-    // let heightO = this.contexts[idx].canvas.height;
+  //   // let widthO = this.contexts[idx].canvas.width;
+  //   // let heightO = this.contexts[idx].canvas.height;
 
-    let widthO = video.videoWidth;
-    let heightO = video.videoHeight;
+  //   let widthO = video.videoWidth;
+  //   let heightO = video.videoHeight;
 
-    let matrices = this.matrices[idx];
-    for (var i = 0; i < shapes.length; i++) {
-      if (matrices[i] === void 0) {
-        matrices.push(null);
-      }
+  //   let matrices = this.matrices[idx];
+  //   for (var i = 0; i < shapes.length; i++) {
+  //     if (matrices[i] === void 0) {
+  //       matrices.push(null);
+  //     }
 
-      let shape = shapes[i];
-      let { input, output } = shape.points;
+  //     let shape = shapes[i];
+  //     let { input, output } = shape.points;
 
-      let transformedI = input.map((pnt) => {
-        return [(pnt[0] * widthI) | 0, (pnt[1] * heightI) | 0];
-      });
+  //     let transformedI = input.map((pnt) => {
+  //       return [(pnt[0] * widthI) | 0, (pnt[1] * heightI) | 0];
+  //     });
 
-      let transformedO = output.map((pnt) => {
-        return [(pnt[0] * widthO) | 0, (pnt[1] * heightO) | 0];
-      });
+  //     let transformedO = output.map((pnt) => {
+  //       return [(pnt[0] * widthO) | 0, (pnt[1] * heightO) | 0];
+  //     });
 
-      matrices[i] = this.matrixFromTriangles(transformedI, transformedO);
-    }
-  }
+  //     matrices[i] = this.matrixFromTriangles(transformedI, transformedO);
+  //   }
+  // }
 
-  inverse(matrix) {
-    const { a, b, c, d, e, f } = matrix;
-    const denom = a * d - b * c;
+  // inverse(matrix) {
+  //   const { a, b, c, d, e, f } = matrix;
+  //   const denom = a * d - b * c;
 
-    return {
-      a: d / denom,
-      b: b / -denom,
-      c: c / -denom,
-      d: a / denom,
-      e: (d * e - c * f) / -denom,
-      f: (b * e - a * f) / denom,
-    };
-  }
+  //   return {
+  //     a: d / denom,
+  //     b: b / -denom,
+  //     c: c / -denom,
+  //     d: a / denom,
+  //     e: (d * e - c * f) / -denom,
+  //     f: (b * e - a * f) / denom,
+  //   };
+  // }
 
-  transform(...matrices) {
-    matrices = Array.isArray(matrices[0]) ? matrices[0] : matrices;
+  // transform(...matrices) {
+  //   matrices = Array.isArray(matrices[0]) ? matrices[0] : matrices;
 
-    const multiply = (m1, m2) => {
-      return {
-        a: m1.a * m2.a + m1.c * m2.b,
-        c: m1.a * m2.c + m1.c * m2.d,
-        e: m1.a * m2.e + m1.c * m2.f + m1.e,
-        b: m1.b * m2.a + m1.d * m2.b,
-        d: m1.b * m2.c + m1.d * m2.d,
-        f: m1.b * m2.e + m1.d * m2.f + m1.f,
-      };
-    };
+  //   const multiply = (m1, m2) => {
+  //     return {
+  //       a: m1.a * m2.a + m1.c * m2.b,
+  //       c: m1.a * m2.c + m1.c * m2.d,
+  //       e: m1.a * m2.e + m1.c * m2.f + m1.e,
+  //       b: m1.b * m2.a + m1.d * m2.b,
+  //       d: m1.b * m2.c + m1.d * m2.d,
+  //       f: m1.b * m2.e + m1.d * m2.f + m1.f,
+  //     };
+  //   };
 
-    switch (matrices.length) {
-      case 0:
-        throw new Error("no matrices provided");
+  //   switch (matrices.length) {
+  //     case 0:
+  //       throw new Error("no matrices provided");
 
-      case 1:
-        return matrices[0];
+  //     case 1:
+  //       return matrices[0];
 
-      case 2:
-        return multiply(matrices[0], matrices[1]);
+  //     case 2:
+  //       return multiply(matrices[0], matrices[1]);
 
-      default: {
-        const [m1, m2, ...rest] = matrices;
-        const m = multiply(m1, m2);
-        return transform(m, ...rest);
-      }
-    }
-  }
+  //     default: {
+  //       const [m1, m2, ...rest] = matrices;
+  //       const m = multiply(m1, m2);
+  //       return transform(m, ...rest);
+  //     }
+  //   }
+  // }
 
-  smoothMatrix(matrix, precision = 10000000000) {
-    return {
-      a: Math.round(matrix.a * precision) / precision,
-      b: Math.round(matrix.b * precision) / precision,
-      c: Math.round(matrix.c * precision) / precision,
-      d: Math.round(matrix.d * precision) / precision,
-      e: Math.round(matrix.e * precision) / precision,
-      f: Math.round(matrix.f * precision) / precision,
-    };
-  }
+  // smoothMatrix(matrix, precision = 10000000000) {
+  //   return {
+  //     a: Math.round(matrix.a * precision) / precision,
+  //     b: Math.round(matrix.b * precision) / precision,
+  //     c: Math.round(matrix.c * precision) / precision,
+  //     d: Math.round(matrix.d * precision) / precision,
+  //     e: Math.round(matrix.e * precision) / precision,
+  //     f: Math.round(matrix.f * precision) / precision,
+  //   };
+  // }
 
-  matrixFromTriangles(t1, t2) {
-    const px1 = t1[0][0];
-    const py1 = t1[0][1];
-    const px2 = t2[0][0];
-    const py2 = t2[0][1];
+  // matrixFromTriangles(t1, t2) {
+  //   const px1 = t1[0][0];
+  //   const py1 = t1[0][1];
+  //   const px2 = t2[0][0];
+  //   const py2 = t2[0][1];
 
-    // point q = second point of the triangle
-    const qx1 = t1[1][0];
-    const qy1 = t1[1][1];
-    const qx2 = t2[1][0];
-    const qy2 = t2[1][1];
+  //   // point q = second point of the triangle
+  //   const qx1 = t1[1][0];
+  //   const qy1 = t1[1][1];
+  //   const qx2 = t2[1][0];
+  //   const qy2 = t2[1][1];
 
-    // point r = third point of the triangle
-    const rx1 = t1[2][0];
-    const ry1 = t1[2][1];
-    const rx2 = t2[2][0];
-    const ry2 = t2[2][1];
+  //   // point r = third point of the triangle
+  //   const rx1 = t1[2][0];
+  //   const ry1 = t1[2][1];
+  //   const rx2 = t2[2][0];
+  //   const ry2 = t2[2][1];
 
-    const r1 = {
-      a: px1 - rx1,
-      b: py1 - ry1,
-      c: qx1 - rx1,
-      d: qy1 - ry1,
-      e: rx1,
-      f: ry1,
-    };
-    const r2 = {
-      a: px2 - rx2,
-      b: py2 - ry2,
-      c: qx2 - rx2,
-      d: qy2 - ry2,
-      e: rx2,
-      f: ry2,
-    };
+  //   const r1 = {
+  //     a: px1 - rx1,
+  //     b: py1 - ry1,
+  //     c: qx1 - rx1,
+  //     d: qy1 - ry1,
+  //     e: rx1,
+  //     f: ry1,
+  //   };
+  //   const r2 = {
+  //     a: px2 - rx2,
+  //     b: py2 - ry2,
+  //     c: qx2 - rx2,
+  //     d: qy2 - ry2,
+  //     e: rx2,
+  //     f: ry2,
+  //   };
 
-    const inverseR1 = this.inverse(r1);
-    const affineMatrix = this.transform([r2, inverseR1]);
+  //   const inverseR1 = this.inverse(r1);
+  //   const affineMatrix = this.transform([r2, inverseR1]);
 
-    // round the matrix elements to smooth the finite inversion
-    return this.smoothMatrix(affineMatrix);
-  }
+  //   // round the matrix elements to smooth the finite inversion
+  //   return this.smoothMatrix(affineMatrix);
+  // }
 
-  applyToPoint(matrix, point) {
-    return [
-      matrix.a * point[0] + matrix.c * point[1] + matrix.e,
-      matrix.b * point[0] + matrix.d * point[1] + matrix.f,
-    ];
-  }
+  // applyToPoint(matrix, point) {
+  //   return [
+  //     matrix.a * point[0] + matrix.c * point[1] + matrix.e,
+  //     matrix.b * point[0] + matrix.d * point[1] + matrix.f,
+  //   ];
+  // }
 
   resetVideo(idx) {
     let video = this.videos[idx];
@@ -978,7 +978,7 @@ class Output {
 
       this.videos.splice(idx, 1);
       this.contexts.splice(idx, 1);
-      this.matrices.splice(idx, 1);
+      // this.matrices.splice(idx, 1);
       this.glAttrs.splice(idx, 1);
 
       gl.canvas.parentNode.removeChild(gl.canvas);
@@ -1001,7 +1001,7 @@ class Output {
     vid.muted = true;
     vid.addEventListener("loadedmetadata", (e) => {
       setTimeout(() => {
-        this.calculateMatrix(e.target);
+        // this.calculateMatrix(e.target);
         this.updateContext(e.target);
 
         vid.play();
@@ -1010,7 +1010,7 @@ class Output {
     vid.src = URL.createObjectURL(file);
 
     this.createVideo(vid);
-    this.createMatrix(vid);
+    // this.createMatrix(vid);
     this.reset_video = null;
   }
 
@@ -1064,9 +1064,9 @@ class App {
       this.output.updateState.call(this.output, this.state);
       this.ui.updateState.call(this.ui, this.state);
 
-      if (oldState.shapes.length !== this.state.shapes.length) {
-        this.output.calculateMatrices.call(this.output);
-      }
+      // if (oldState.shapes.length !== this.state.shapes.length) {
+      //   this.output.calculateMatrices.call(this.output);
+      // }
     }
   }
 
@@ -1109,11 +1109,11 @@ class App {
       }
 
       let { selectedPoint, movePoint } = this.ui;
-      let { videos, drawFrame, calculateMatrices } = this.output;
+      let { videos, drawFrame /*, calculateMatrices*/ } = this.output;
 
       if (selectedPoint !== null) {
         movePoint.call(this.ui, e);
-        calculateMatrices.call(this.output);
+        // calculateMatrices.call(this.output);
       }
     });
 
