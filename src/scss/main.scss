@@ -373,13 +373,13 @@ input[type="text"] {
 
   .uk-card-header {
     border-bottom: none;
-    padding: 13px 20px;
+    padding: 13px 50px 13px 20px;
     position: relative;
 
     label {
       width: 100%;
       padding: 0px;
-      display: block;
+      display: inline-block;
 
       input {
         display: inline-block;
@@ -402,6 +402,14 @@ input[type="text"] {
           max-width: 100%;
         }
       }
+    }
+
+    a {
+      display: inline-block;
+      vertical-align: middle;
+      width: 30px;
+      text-align: right;
+      margin-right: -30px;
     }
   }
 

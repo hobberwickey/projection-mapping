@@ -24,8 +24,7 @@ class App {
       hd: 200,
     };
 
-    this.state =
-      JSON.parse(localStorage.getItem("auto")) || this.defaultState();
+    this.state = this.defaultState();
 
     this.selectedVideos = [0];
     this.selectedGroup = 0;
@@ -434,7 +433,7 @@ class App {
   }
 
   setupVideos() {
-    let { updateVideo, toggleVideo, selectedVideos } = this;
+    let { updateVideo, toggleVideo, selectedVideos, removeVideo } = this;
     let { videos } = this.state;
 
     for (var i = 0; i < videos.length; i++) {
@@ -443,6 +442,7 @@ class App {
         videos[i],
         updateVideo.bind(this),
         toggleVideo.bind(this),
+        removeVideo.bind(this),
       );
       document.querySelector("#videos").appendChild(video.el);
 
@@ -636,6 +636,24 @@ class App {
     //   this.selectedVideos.push(idx);
     // }
 
+    this.setValues();
+  }
+
+  removeVideo(idx) {
+    let video = this.state.videos[idx];
+    video.values = new Array(6).fill().map((a) => {
+      return [0, 0];
+    });
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "remove_video",
+        videoIdx: idx,
+        state: this.state,
+      }),
+    );
+
+    this.saveState();
     this.setValues();
   }
 

@@ -206,7 +206,7 @@ const Config = {
 };
 ;// ./src/js/libs/videos.js
 class Video {
-  constructor(idx, video, onChange, onSelect) {
+  constructor(idx, video, onChange, onSelect, onDelete) {
     this.onChange = e => {
       this.el.querySelector("video").src = URL.createObjectURL(e.target.files[0]);
       this.el.querySelector("video").currentTime = 50;
@@ -214,9 +214,13 @@ class Video {
       onChange(idx, video, e.target.files[0]);
     };
     this.onSelect = e => {
-      onSelect(idx);
       document.querySelector(".video.selected").classList.remove("selected");
       this.el.classList.add("selected");
+      onSelect(idx);
+    };
+    this.onDelete = () => {
+      this.el.querySelector("video").src = "";
+      onDelete(idx);
     };
     this.el = document.createElement("div");
     this.el.className = `video uk-card uk-card-small uk-card-default`;
@@ -227,7 +231,8 @@ class Video {
 						<label for='video-${idx}'>
 							<input id='video-${idx}' type='radio' name='video' class='uk-radio' />	
 							<input type='text' class="uk-card-title" value='${video.label}' />
-						</label>
+						</label
+						><a class='remove-video' href="javascript:void(0)" uk-icon="icon: trash"></a>
 		    	</div>
 					<div class="uk-card-body">
 						<div class='preview no-video upload-wrapper'>
@@ -245,6 +250,7 @@ class Video {
     this.el.addEventListener("click", this.onSelect.bind(this));
     this.el.querySelector(".upload-wrapper input").addEventListener("change", this.onChange.bind(this));
     this.el.querySelector("input[type='radio']").addEventListener("change", this.onSelect.bind(this));
+    this.el.querySelector(".remove-video").addEventListener("click", this.onDelete.bind(this));
   }
 }
 // EXTERNAL MODULE: ./src/js/effects.js
@@ -409,7 +415,7 @@ class App {
       fg: 186,
       hd: 200
     };
-    this.state = JSON.parse(localStorage.getItem("auto")) || this.defaultState();
+    this.state = this.defaultState();
     this.selectedVideos = [0];
     this.selectedGroup = 0;
     this.selectedEffect = 0;
@@ -712,13 +718,14 @@ class App {
     let {
       updateVideo,
       toggleVideo,
-      selectedVideos
+      selectedVideos,
+      removeVideo
     } = this;
     let {
       videos
     } = this.state;
     for (var i = 0; i < videos.length; i++) {
-      let video = new Video(i, videos[i], updateVideo.bind(this), toggleVideo.bind(this));
+      let video = new Video(i, videos[i], updateVideo.bind(this), toggleVideo.bind(this), removeVideo.bind(this));
       document.querySelector("#videos").appendChild(video.el);
       if (i === selectedVideos[0]) {
         video.el.classList.add("selected");
@@ -880,6 +887,19 @@ class App {
     //   this.selectedVideos.push(idx);
     // }
 
+    this.setValues();
+  }
+  removeVideo(idx) {
+    let video = this.state.videos[idx];
+    video.values = new Array(6).fill().map(a => {
+      return [0, 0];
+    });
+    this.screen.postMessage(JSON.stringify({
+      action: "remove_video",
+      videoIdx: idx,
+      state: this.state
+    }));
+    this.saveState();
     this.setValues();
   }
   toggleGroup(shapeIdx, groupIdx) {

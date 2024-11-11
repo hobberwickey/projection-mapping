@@ -423,10 +423,10 @@ class Output {
   constructor(state) {
     this.state = state;
 
-    this.videos = [];
-    this.contexts = [];
+    this.videos = new Array(6).fill(null);
+    this.contexts = new Array(6).fill(null);
+    this.glAttrs = new Array(6).fill(null);
     // this.matrices = [];
-    this.glAttrs = [];
 
     this.isPlaying = false;
     this.reset_video = null;
@@ -451,7 +451,9 @@ class Output {
 
   step() {
     for (var i = 0; i < this.videos.length; i++) {
-      this.drawFrame(i);
+      if (this.videos[i] !== null) {
+        this.drawFrame(i);
+      }
     }
 
     window.requestAnimationFrame(this.step.bind(this));
@@ -633,12 +635,12 @@ class Output {
     }
   }
 
-  createVideo(video) {
-    this.videos.push(video);
-    this.createContext();
+  createVideo(idx, video) {
+    this.videos[idx] = video;
+    this.createContext(idx);
   }
 
-  createContext() {
+  createContext(idx) {
     let contextsEl = document.querySelector(".contexts");
     let canvas = document.createElement("canvas");
     contextsEl.appendChild(canvas);
@@ -676,8 +678,8 @@ class Output {
       }
     }
 
-    this.glAttrs.push(glAttrs);
-    this.contexts.push(gl);
+    this.glAttrs[idx] = glAttrs;
+    this.contexts[idx] = gl;
   }
 
   updateContext(video) {
@@ -966,25 +968,7 @@ class Output {
   // }
 
   resetVideo(idx) {
-    let video = this.videos[idx];
-    let gl = this.contexts[idx];
-
-    if (!!video) {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-
-      gl.clear(gl.COLOR_BUFFER_BIT);
-
-      this.videos.splice(idx, 1);
-      this.contexts.splice(idx, 1);
-      // this.matrices.splice(idx, 1);
-      this.glAttrs.splice(idx, 1);
-
-      gl.canvas.parentNode.removeChild(gl.canvas);
-      video.parentNode.removeChild(video);
-    }
-
+    this.removeVideo(idx);
     this.reset_video = idx;
   }
 
@@ -993,6 +977,7 @@ class Output {
       return;
     }
 
+    let idx = this.reset_video;
     let vid = document.createElement("video");
     document.querySelector(".videos").appendChild(vid);
 
@@ -1009,13 +994,42 @@ class Output {
     });
     vid.src = URL.createObjectURL(file);
 
-    this.createVideo(vid);
+    this.createVideo(idx, vid);
     // this.createMatrix(vid);
     this.reset_video = null;
   }
 
+  removeVideo(idx) {
+    let video = this.videos[idx];
+    let gl = this.contexts[idx];
+
+    if (!!video) {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      this.videos[idx] = null;
+      this.contexts[idx] = null;
+      this.glAttrs[idx] = null;
+
+      gl.canvas.parentNode.removeChild(gl.canvas);
+      video.parentNode.removeChild(video);
+    }
+  }
+
   setEffect(idx, effect) {
+    let fx = Effects.find((e) => e.id === effect);
+
+    console.log(effect);
+    console.log(Effects);
+
     for (var i = 0; i < this.glAttrs.length; i++) {
+      if (this.glAttrs[i] === null) {
+        continue;
+      }
+
       let attrs = this.glAttrs[i];
       let gl = this.contexts[i];
 
@@ -1026,14 +1040,12 @@ class Output {
         attrs.effects[idx] = null;
       }
 
-      if (!!effect && !!shaders[effect]) {
-        attrs.effects[idx] = this.createProgram(
-          gl,
-          vertexShaderSrc,
-          shaders[effect],
-        );
+      console.log(fx);
+
+      if (!!effect && !!fx.shader) {
+        attrs.effects[idx] = this.createProgram(gl, vertexShaderSrc, fx.shader);
       } else {
-        glAttrs.effects[idx] = null;
+        attrs.effects[idx] = null;
       }
     }
   }
@@ -1151,10 +1163,11 @@ class App {
         return;
       }
 
-      let { layer, setLayer } = this.ui;
+      let { layer, setLayer, drawUI } = this.ui;
 
       if (e.keyCode === 32) {
         setLayer.call(this.ui, layer === "input" ? "output" : "input");
+        drawUI.call(this.ui);
       }
     });
 
@@ -1169,9 +1182,17 @@ class App {
           let { resetVideo } = this.output;
 
           resetVideo.call(this.output, videoIdx);
+        } else if (data.action === "remove_video") {
+          let { videoIdx, state } = data;
+          let { removeVideo } = this.output;
+
+          removeVideo.call(this.output, videoIdx);
+          this.setState(state);
         } else if (data.action === "set_effect") {
-          this.output.setEffect.call(this.output, data.effectIdx, data.effect);
-          this.setState(data.state);
+          let { effectIdx, effect, state } = data;
+
+          this.output.setEffect.call(this.output, effectIdx, effect);
+          this.setState(state);
         }
       } else {
         let { loadVideo } = this.output;
