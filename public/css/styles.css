@@ -51,6 +51,13 @@ nav .uk-navbar-right #current-project input {
   margin-left: 10px;
   font-size: 16px;
 }
+nav .uk-navbar-right #save_btn {
+  transition: background-color 300ms ease, color 300ms ease;
+}
+nav .uk-navbar-right #save_btn.saved {
+  background-color: green;
+  color: white !important;
+}
 nav .uk-navbar-right #open_menu svg {
   width: 35px;
   height: 35px;
@@ -746,8 +753,9 @@ label {
   height: 50px;
 }
 .slideout .slideout-content .table .column .row.header div {
-  padding-left: 27px;
-  padding-top: 19px;
+  padding-right: 25px;
+  padding-top: 8px;
+  padding-left: 5px;
 }
 .slideout .slideout-content .table .column .row.header div input {
   display: inline-block;
@@ -755,6 +763,16 @@ label {
 }
 .slideout .slideout-content .table .column .row.header div input[type=radio] {
   margin-left: -20px;
+}
+.slideout .slideout-content .table .column .row.header div a {
+  display: inline-block;
+  vertical-align: top;
+  width: 20px;
+  text-align: right;
+}
+.slideout .slideout-content .table .column .row.header div a svg {
+  width: 20px;
+  height: 20px;
 }
 .slideout .slideout-content .table .column .row:first-child {
   height: 10%;

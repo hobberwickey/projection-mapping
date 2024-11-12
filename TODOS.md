@@ -1,0 +1,4 @@
+- Show correct group toggle states on load
+- Show triangle name
+- Show selected shape
+- Lock shape

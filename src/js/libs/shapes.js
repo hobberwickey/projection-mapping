@@ -1,5 +1,5 @@
 export class Shape {
-	constructor(idx, shape, onSelect, onUpdate) {
+	constructor(idx, shape, onSelect, onUpdate, onDelete) {
 		this.onUpdate = (e) => {
 			console.log(idx, shape.id, e.target.value);
 		};
@@ -8,18 +8,28 @@ export class Shape {
 			console.log(idx, shape.id, e.target.value);
 		};
 
+		this.onDelete = () => {
+			onDelete(idx);
+		};
+
 		this.el = document.createElement("div");
 		this.el.className = "row header";
 		this.el.innerHTML = `
 			<div>
-				<input type='radio' name='shape' class='uk-radio' 
-				/><input type='text' value="${shape.label}" />
+				<input type='text' value="${shape.label}" /
+				><a class='remove-shape' href="javascript:void(0)" uk-icon="icon: trash"></a>
 			</div>
 		`;
 
 		this.el
 			.querySelector("input")
 			.addEventListener("input", this.onUpdate.bind(this));
+
+		this.el
+			.querySelector(".remove-shape")
+			.addEventListener("click", this.onDelete.bind(this));
+
+		Object.defineProperty(this.el, "controller", this);
 	}
 }
 
@@ -60,6 +70,8 @@ export class Group {
 		this.el
 			.querySelector("input[type='radio']")
 			.addEventListener("input", this.onSelect.bind(this));
+
+		Object.defineProperty(this.el, "controller", this);
 	}
 }
 
@@ -89,5 +101,7 @@ export class GroupToggle {
 		this.el
 			.querySelector("input")
 			.addEventListener("input", this.toggleGroup.bind(this));
+
+		Object.defineProperty(this.el, "controller", this);
 	}
 }

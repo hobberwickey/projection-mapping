@@ -66,6 +66,7 @@ class App {
     }
 
     this.updateProjectList();
+    document.querySelector("#save_btn").classList.add("saved");
     localStorage.setItem("projects", JSON.stringify(projects));
   }
 
@@ -80,9 +81,26 @@ class App {
     // Get the project from local storage,
     // load the id, name, and state
     // clear all videos
-
     this.updateProjectList();
+    this.setEffectValues();
     this.setValues();
+
+    for (var i = 0; i < this.config.video_count; i++) {
+      this.removeVideo(i);
+    }
+
+    document.querySelectorAll(".table .column.shape").forEach((col) => {
+      col.parentNode.removeChild(col);
+    });
+
+    document.querySelectorAll(".table .column.groups .group").forEach((grp) => {
+      grp.parentNode.removeChild(grp);
+    });
+
+    this.setupGroups();
+
+    document.querySelector("#save_btn").classList.add("saved");
+    document.querySelector("#project_name").value = this.name;
   }
 
   getProjects() {
@@ -128,10 +146,24 @@ class App {
 
   saveState() {
     localStorage.setItem("auto", JSON.stringify(this.state));
+    document.querySelector("#save_btn").classList.remove("saved");
   }
 
   resetState() {
-    // Stub
+    for (var i = 0; i < this.config.video_count; i++) {
+      this.removeVideo(i);
+    }
+
+    this.state = defaultState();
+
+    if (this.screen !== null) {
+      this.screen.postMessage(
+        JSON.stringify({
+          action: "update_state",
+          state: this.state,
+        }),
+      );
+    }
   }
 
   defaultState() {
@@ -308,6 +340,16 @@ class App {
       .querySelector("#save_btn")
       .addEventListener("click", this.save.bind(this));
 
+    document.querySelector(".menu").addEventListener("click", () => {
+      UIkit.dropdown(document.querySelector(".menu")).hide(0);
+    });
+
+    document
+      .querySelector(".menu .upload-projects")
+      .addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+
     this.updateProjectList();
 
     let inputs = document.querySelectorAll(".inputs input[type='range']");
@@ -467,12 +509,6 @@ class App {
         this.setEffect.bind(this),
       );
 
-      if (this.selectedEffect === i) {
-        // effect.el
-        //   .querySelector("input[type='radio']")
-        //   .setAttribute("checked", true);
-      }
-
       document.querySelector("#effects").appendChild(effect.el);
     }
   }
@@ -494,7 +530,13 @@ class App {
       let column = document.createElement("div");
       column.className = "column shape";
 
-      let shape = new Shape(i, shapes[i]);
+      let shape = new Shape(
+        i,
+        shapes[i],
+        this.selectShape.bind(this),
+        this.updateShape.bind(this),
+        this.removeShape.bind(this),
+      );
       column.appendChild(shape.el);
 
       document.querySelector(".slideout .table").appendChild(column);
@@ -530,14 +572,20 @@ class App {
     let column = document.createElement("div");
     column.className = "column shape";
 
-    let shapeEl = new Shape(idx + 1, shapes[idx]);
+    let shapeEl = new Shape(
+      idx + 1,
+      shapes[idx],
+      this.selectShape.bind(this),
+      this.updateShape.bind(this),
+      this.removeShape.bind(this),
+    );
     column.appendChild(shapeEl.el);
 
     document.querySelector(".slideout .table").appendChild(column);
 
     for (var j = 0; j < groups.length; j++) {
-      let toggle = new GroupToggle(j, idx);
-      column.appendChild(toggle.el, this.toggleGroup.bind(this));
+      let toggle = new GroupToggle(j, idx, this.toggleGroup.bind(this));
+      column.appendChild(toggle.el);
     }
 
     this.screen.postMessage(
@@ -550,12 +598,38 @@ class App {
     this.saveState();
   }
 
-  removeShape() {
+  removeShape(idx) {
+    let { shapes } = this.state;
+    shapes.splice(idx, 1);
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "update_state",
+        state: this.state,
+      }),
+    );
+
+    let shapeColumns = document.querySelectorAll(".column.shape");
+    let column = shapeColumns[idx];
+    column.parentNode.removeChild(column);
+
+    this.saveState();
+  }
+
+  updateShape(idx, name) {
+    // Stub
+  }
+
+  selectShape(idx) {
     // Stub
   }
 
   updateVideo(idx, video, file) {
     if (!this.screen) {
+      return;
+    }
+
+    if (file === null) {
       return;
     }
 
@@ -611,7 +685,6 @@ class App {
 
         let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
 
-        console.log(video.values);
         video.values[selectedEffect][effectIdx] = newValue;
       }
     }
@@ -652,6 +725,10 @@ class App {
         state: this.state,
       }),
     );
+
+    let videoElements = document.querySelectorAll(".video");
+    let videoEl = videoElements[idx];
+    videoEl.querySelector(".preview").classList.add("no-video");
 
     this.saveState();
     this.setValues();
@@ -719,6 +796,18 @@ class App {
     document.querySelectorAll(".inputs input")[2].value = effect_b;
 
     this.setMidi();
+  }
+
+  setEffectValues() {
+    let effects = this.state.effects;
+    let effectEls = document.querySelectorAll("#effects > .select");
+
+    for (var i = 0; i < effects.length; i++) {
+      let effect = effects[i];
+      let el = effectEls[i];
+
+      el.controller.setSelected(effect);
+    }
   }
 
   setMidi() {

@@ -1092,7 +1092,9 @@ class App {
       let { videos, pause } = this.output;
 
       videos.map((video) => {
-        video.pause();
+        if (video !== null) {
+          video.pause();
+        }
       });
 
       // pause.call(this.output);
@@ -1108,7 +1110,9 @@ class App {
       let { setSelectedPoint } = this.ui;
 
       videos.map((video, idx) => {
-        video.play();
+        if (video !== null) {
+          video.play();
+        }
       });
 
       // play.call(this.output);

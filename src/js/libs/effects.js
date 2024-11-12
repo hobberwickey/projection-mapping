@@ -8,9 +8,7 @@ export class Effect {
 		this.onChange = (effect, evt) => {
 			onChange(idx, effect);
 
-			this.selected = Effects.find((ef) => ef.id === effect);
-			this.el.querySelector(".select-display").innerText =
-				this.selected?.label || "No Effect";
+			this.setSelected(effect);
 		};
 
 		this.onSelect = (effect, evt) => {
@@ -33,6 +31,14 @@ export class Effect {
 			window.addEventListener("click", () => {
 				this.el.classList.remove("active");
 			});
+		};
+
+		this.setSelected = (effect) => {
+			console.log(effect);
+
+			this.selected = Effects.find((ef) => ef.id === effect);
+			this.el.querySelector(".select-display").innerText =
+				this.selected?.label || "No Effect";
 		};
 
 		this.el = document.createElement("div");
@@ -80,12 +86,6 @@ export class Effect {
 			.querySelector(".effect")
 			.addEventListener("click", this.onSelect.bind(this));
 
-		// this.el
-		// 	.querySelector("select")
-		// 	.addEventListener("change", this.onChange.bind(this));
-
-		// this.el
-		// 	.querySelector("input")
-		// 	.addEventListener("change", this.onSelect.bind(this));
+		Object.defineProperty(this.el, "controller", { value: this });
 	}
 }
