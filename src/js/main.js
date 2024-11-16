@@ -293,9 +293,9 @@ class App {
 
               console.log("velocity", velocity);
 
-              let input = inputs[idx];
-              input.value = velocity / 127;
-              input.dispatchEvent(new Event("input", { bubbles: true }));
+              // let input = inputs[idx];
+              // input.value = velocity / 127;
+              // input.dispatchEvent(new Event("input", { bubbles: true }));
             }
           };
         }
@@ -526,6 +526,8 @@ class App {
       }
     }
 
+    console.log(groups);
+
     for (var i = 0; i < shapes.length; i++) {
       let column = document.createElement("div");
       column.className = "column shape";
@@ -543,6 +545,8 @@ class App {
 
       for (var j = 0; j < groups.length; j++) {
         let toggle = new GroupToggle(j, i, this.toggleGroup.bind(this));
+        toggle.setToggle(groups[j].shapes.includes(i));
+
         column.appendChild(toggle.el);
       }
     }
@@ -822,6 +826,7 @@ class App {
     let { sliders } = this.state.notes;
     let notes = Object.keys(sliders.output);
 
+    console.log(this.midiOutput);
     if (!!this.midiOutput) {
       this.midiOutput.send([144, notes[0], (opacity * 127) | 0]);
     }

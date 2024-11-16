@@ -81,6 +81,14 @@ export class GroupToggle {
 			onToggle(shapeIdx, groupIdx);
 		};
 
+		this.setToggle = (state) => {
+			if (groupIdx === 0) {
+				return;
+			}
+
+			this.el.querySelector("input[type='checkbox']").checked = state;
+		};
+
 		this.el = document.createElement("div");
 		this.el.className = "row toggle";
 

@@ -2,3 +2,7 @@
 - Show triangle name
 - Show selected shape
 - Lock shape
+- toggles get cut off at the bottom
+- video toggle has a 'selected' state and the other 2 don't
+- if no video, hide garbage can icon
+- i don't undertand groups

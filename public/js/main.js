@@ -387,6 +387,12 @@ class GroupToggle {
     this.toggleGroup = () => {
       onToggle(shapeIdx, groupIdx);
     };
+    this.setToggle = state => {
+      if (groupIdx === 0) {
+        return;
+      }
+      this.el.querySelector("input[type='checkbox']").checked = state;
+    };
     this.el = document.createElement("div");
     this.el.className = "row toggle";
     if (groupIdx !== 0) {
@@ -633,11 +639,10 @@ class App {
               let idx = sliders.input[note];
               let inputs = document.querySelectorAll(".inputs input[type='range']");
               console.log("velocity", velocity);
-              let input = inputs[idx];
-              input.value = velocity / 127;
-              input.dispatchEvent(new Event("input", {
-                bubbles: true
-              }));
+
+              // let input = inputs[idx];
+              // input.value = velocity / 127;
+              // input.dispatchEvent(new Event("input", { bubbles: true }));
             }
           };
         }
@@ -797,6 +802,7 @@ class App {
         group.el.querySelector("input[type='radio']").checked = true;
       }
     }
+    console.log(groups);
     for (var i = 0; i < shapes.length; i++) {
       let column = document.createElement("div");
       column.className = "column shape";
@@ -805,6 +811,7 @@ class App {
       document.querySelector(".slideout .table").appendChild(column);
       for (var j = 0; j < groups.length; j++) {
         let toggle = new GroupToggle(j, i, this.toggleGroup.bind(this));
+        toggle.setToggle(groups[j].shapes.includes(i));
         column.appendChild(toggle.el);
       }
     }
@@ -1021,6 +1028,7 @@ class App {
       sliders
     } = this.state.notes;
     let notes = Object.keys(sliders.output);
+    console.log(this.midiOutput);
     if (!!this.midiOutput) {
       this.midiOutput.send([144, notes[0], opacity * 127 | 0]);
     }

@@ -172,73 +172,61 @@ nav .uk-navbar-right .menu li > label {
 
 .effect .fx-clr-0 {
   border: solid 1px var(--fx-clr-0);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-0);
   background-color: var(--fx-clr-0);
 }
 
 .effect .fx-clr-1 {
   border: solid 1px var(--fx-clr-1);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-1);
   background-color: var(--fx-clr-1);
 }
 
 .effect .fx-clr-2 {
   border: solid 1px var(--fx-clr-2);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-2);
   background-color: var(--fx-clr-2);
 }
 
 .effect .fx-clr-3 {
   border: solid 1px var(--fx-clr-3);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-3);
   background-color: var(--fx-clr-3);
 }
 
 .effect .fx-clr-4 {
   border: solid 1px var(--fx-clr-4);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-4);
   background-color: var(--fx-clr-4);
 }
 
 .effect .fx-clr-5 {
   border: solid 1px var(--fx-clr-5);
-  box-shadow: 0px 1px 10px 2px var(--fx-clr-5);
   background-color: var(--fx-clr-5);
 }
 
 .group.grp-clr-0 {
   border: solid 1px var(--grp-clr-0);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-0);
   background-color: var(--grp-clr-0);
 }
 
 .group.grp-clr-1 {
   border: solid 1px var(--grp-clr-1);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-1);
   background-color: var(--grp-clr-1);
 }
 
 .group.grp-clr-2 {
   border: solid 1px var(--grp-clr-2);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-2);
   background-color: var(--grp-clr-2);
 }
 
 .group.grp-clr-3 {
   border: solid 1px var(--grp-clr-3);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-3);
   background-color: var(--grp-clr-3);
 }
 
 .group.grp-clr-4 {
   border: solid 1px var(--grp-clr-4);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-4);
   background-color: var(--grp-clr-4);
 }
 
 .group.grp-clr-5 {
   border: solid 1px var(--grp-clr-5);
-  box-shadow: 0px 1px 10px 2px var(--grp-clr-5);
   background-color: var(--grp-clr-5);
 }
 
