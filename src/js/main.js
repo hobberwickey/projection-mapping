@@ -675,6 +675,8 @@ class App {
         }
 
         group.opacity[videoIdx] = opacity + diff;
+
+        console.log("Target:", group.opacity[videoIdx] * 127);
       }
     } else {
       let diff = 0;
@@ -826,9 +828,11 @@ class App {
     let { sliders } = this.state.notes;
     let notes = Object.keys(sliders.output);
 
-    console.log(this.midiOutput);
     if (!!this.midiOutput) {
+      console.log("TARGET:", (opacity * 127) | 0);
       this.midiOutput.send([144, notes[0], (opacity * 127) | 0]);
+      this.midiOutput.send([144, notes[1], (effect_a * 127) | 0]);
+      this.midiOutput.send([144, notes[2], (effect_b * 127) | 0]);
     }
   }
 
