@@ -244,15 +244,14 @@ class App {
           52: 5,
         },
         knobs: {
-          // 56: 0,
-          // 54: 1,
-          // 55: 2,
+          43: 0,
+          44: 1,
         },
         sliders: {
           input: {
-            56: 1,
-            54: 0,
-            55: 2,
+            56: 2,
+            54: 1,
+            55: 0,
           },
           output: {
             45: 0,
@@ -265,17 +264,27 @@ class App {
   }
 
   setupMidi() {
-    let { buttons, sliders } = this.state.notes;
+    let { buttons, sliders, knobs } = this.state.notes;
 
     const onMIDISuccess = (midiAccess) => {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
       for (const entry of this.midiAccess.inputs) {
+        console.log(entry[1]);
         if (entry[1].id === "-1994529889") {
           this.midiInput = entry[1];
 
           entry[1].onmidimessage = (e) => {
             let note = e.data[1];
             let velocity = e.data[2];
+
+            console.log(note, velocity);
+
+            let { shapes, groups, videos } = this.state;
+            let { selectedVideos, selectedGroup, selectedEffect } = this;
+
+            let group = groups[selectedGroup];
+            let ids =
+              selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
 
             if (buttons.hasOwnProperty(note)) {
               let idx = buttons[note];
@@ -285,13 +294,121 @@ class App {
 
               input.checked = true;
               input.dispatchEvent(new Event("change", { bubbles: true }));
+            } else if (knobs.hasOwnProperty(note)) {
+              if (note === 43) {
+                if (velocity === 0) {
+                  this.selectedEffect = Math.max(0, selectedEffect - 1);
+                  // if (selectedEffect === 0) {
+                  //   this.selectedEffect = 5;
+                  // } else {
+                  //   this.selectedEffect -= 1;
+                  // }
+                } else {
+                  this.selectedEffect = Math.min(5, selectedEffect + 1);
+                  // if (selectedEffect === 5) {
+                  //   this.selectedEffect = 0;
+                  // } else {
+                  //   this.selectedEffect += 1;
+                  // }
+                }
+
+                let prevEffect = document.querySelector(".select.selected");
+                if (!!prevEffect) {
+                  prevEffect.classList.remove("selected");
+                }
+
+                let currentEffect = document
+                  .querySelectorAll(".select")
+                  [this.selectedEffect].classList.add("selected");
+              } else if (note === 44) {
+                if (velocity === 0) {
+                  this.selectedGroup = Math.max(0, selectedGroup - 1);
+                  // if (selectedGroup === 0) {
+                  //   this.selectedGroup = 5;
+                  // } else {
+                  //   this.selectedGroup -= 1;
+                  // }
+                } else {
+                  this.selectedGroup = Math.min(5, selectedGroup + 1);
+                  // if (selectedGroup === 5) {
+                  //   this.selectedGroup = 0;
+                  // } else {
+                  //   this.selectedGroup += 1;
+                  // }
+                }
+
+                let prevGroup = document.querySelector(".group .selected");
+                if (!!prevGroup) {
+                  prevGroup.classList.remove("selected");
+                }
+
+                let currentGroup = document
+                  .querySelectorAll(".group .group-btn")
+                  [this.selectedGroup].classList.add("selected");
+              }
+
+              this.screen.postMessage(
+                JSON.stringify({
+                  action: "update_state",
+                  state: this.state,
+                }),
+              );
+
+              this.saveState();
             } else if (sliders.input.hasOwnProperty(note)) {
               let idx = sliders.input[note];
               let inputs = document.querySelectorAll(
                 ".inputs input[type='range']",
               );
 
-              console.log("velocity", velocity);
+              console.log("velocity", note, velocity);
+              let value = velocity / 127;
+              if (idx === 0) {
+                for (var i = 0; i < selectedVideos.length; i++) {
+                  let videoIdx = selectedVideos[i];
+                  let opacity = group.opacity[videoIdx];
+                  let diff = value - opacity;
+
+                  for (var j = 0; j < ids.length; j++) {
+                    let shape = shapes[ids[j]];
+                    let oldValue = shape.opacity[videoIdx];
+                    let shapeDiff = +value - oldValue;
+                    let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
+
+                    shape.opacity[videoIdx] = newValue;
+                  }
+
+                  group.opacity[videoIdx] = opacity + diff;
+
+                  let input = inputs[idx];
+                  input.value = value;
+                }
+              } else {
+                let diff = 0;
+                for (var i = 0; i < selectedVideos.length; i++) {
+                  let video = videos[selectedVideos[i]];
+                  let effectIdx = idx === 1 ? 0 : 1;
+                  let oldValue = video.values[selectedEffect][effectIdx];
+                  if (i === 0) {
+                    diff = +value - oldValue;
+                  }
+
+                  let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
+                  video.values[selectedEffect][effectIdx] = newValue;
+
+                  let input = inputs[idx];
+                  input.value = value;
+                }
+              }
+
+              this.screen.postMessage(
+                JSON.stringify({
+                  action: "update_state",
+                  state: this.state,
+                }),
+              );
+
+              this.saveState();
 
               // let input = inputs[idx];
               // input.value = velocity / 127;
@@ -656,6 +773,9 @@ class App {
     let { selectedVideos, selectedGroup, selectedEffect } = this;
     let { value } = e.target;
 
+    let { sliders } = this.state.notes;
+    let notes = Object.keys(sliders.output);
+
     let group = groups[selectedGroup];
     let ids = selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
 
@@ -675,23 +795,38 @@ class App {
         }
 
         group.opacity[videoIdx] = opacity + diff;
+        // console.log("Target:", group.opacity[videoIdx] * 127);
+      }
 
-        console.log("Target:", group.opacity[videoIdx] * 127);
+      if (!!this.midiOutput) {
+        this.midiOutput.send([
+          144,
+          notes[0],
+          (group.opacity[selectedVideos[0]] * 127) | 0,
+        ]);
       }
     } else {
       let diff = 0;
+      let effectIdx = effect === "effect_a" ? 0 : 1;
+
       for (var i = 0; i < selectedVideos.length; i++) {
         let video = videos[selectedVideos[i]];
-        let effectIdx = effect === "effect_a" ? 0 : 1;
         let oldValue = video.values[selectedEffect][effectIdx];
-
         if (i === 0) {
           diff = +value - oldValue;
         }
-
         let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-
         video.values[selectedEffect][effectIdx] = newValue;
+      }
+
+      let noteIdx = effect === "effect_a" ? 1 : 2;
+      if (!!this.midiOutput) {
+        this.midiOutput.send([
+          144,
+          notes[noteIdx],
+          (videos[selectedVideos[0]].values[selectedEffect][effectIdx] * 127) |
+            0,
+        ]);
       }
     }
 
@@ -703,6 +838,7 @@ class App {
     );
 
     this.saveState();
+    // this.setMidi();
   }
 
   toggleVideo(idx) {
@@ -829,7 +965,6 @@ class App {
     let notes = Object.keys(sliders.output);
 
     if (!!this.midiOutput) {
-      console.log("TARGET:", (opacity * 127) | 0);
       this.midiOutput.send([144, notes[0], (opacity * 127) | 0]);
       this.midiOutput.send([144, notes[1], (effect_a * 127) | 0]);
       this.midiOutput.send([144, notes[2], (effect_b * 127) | 0]);
