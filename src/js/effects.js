@@ -139,4 +139,33 @@ export const Effects = [
 		  }
 		`,
 	},
+	{
+		id: "zoom",
+		label: "Zoom",
+		opacity: "Opacity",
+		effect_a: "X-Zoom",
+		effect_b: "Y-Zoom",
+		shader: `
+			precision mediump float;
+		  varying vec2 v_texcoord;
+		  uniform sampler2D u_texture;
+
+		  uniform vec2 u_dimensions; 
+		  uniform mediump float u_opacity;
+		  uniform vec2 u_effect;
+
+		  void main() {
+		  	float x_intensity = (1.0 - u_effect[0]);
+		  	float y_intensity = (1.0 - u_effect[1]);
+
+
+		    vec2 prism_coords = vec2(
+		    	(v_texcoord[0] * x_intensity) + (u_effect[0] / 2.0), 
+		    	(v_texcoord[1] * y_intensity) + (u_effect[1] / 2.0)
+		    );
+
+		    gl_FragColor = texture2D(u_texture, prism_coords);
+		  }
+		`,
+	},
 ];
