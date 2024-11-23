@@ -50,7 +50,7 @@ const fragmentShader = `
 
   void main() {
     vec4 color = texture2D(u_texture, v_texcoord);
-    gl_FragColor = vec4(color[0], color[1], color[2], u_opacity);
+    gl_FragColor = vec4(color[0], color[1], color[2], u_opacity * color[3]);
   }
 `;
 

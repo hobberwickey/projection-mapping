@@ -40,7 +40,7 @@ export const Effects = [
 	      float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
 	      float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
 
-	      gl_FragColor = vec4(color[0], color[1], color[2], hue_opacity * u_effect[1]);
+	      gl_FragColor = vec4(color[0], color[1], color[2], 1.0 - hue_opacity * (u_effect[1]));
 	    }
 	  `,
 	},
