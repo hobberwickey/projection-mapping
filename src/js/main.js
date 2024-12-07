@@ -141,7 +141,33 @@ class App {
   }
 
   uploadProjects(e) {
-    // Stub
+    let projects = this.getProjects();
+
+    if (e.target.files.length > 0) {
+      let file = e.target.files[0];
+      let reader = new FileReader();
+      let self = this;
+
+      reader.onload = function () {
+        let loaded = JSON.parse(reader.result);
+
+        (loaded || []).map((project) => {
+          let existingIdx = projects.findIndex((p) => p.id === project.id);
+
+          if (existingIdx === -1) {
+            projects.push(project);
+          } else {
+            // TODO: Implement
+            console.log("Project already exists, confirm overwrite");
+          }
+        });
+
+        localStorage.setItem("projects", JSON.stringify(projects));
+        self.updateProjectList();
+      };
+
+      reader.readAsText(file);
+    }
   }
 
   saveState() {
@@ -463,8 +489,9 @@ class App {
 
     document
       .querySelector(".menu .upload-projects")
-      .addEventListener("click", (e) => {
+      .addEventListener("change", (e) => {
         e.stopPropagation();
+        this.uploadProjects(e);
       });
 
     this.updateProjectList();
@@ -529,6 +556,8 @@ class App {
   updateProjectList() {
     let projectList = document.querySelector("#project_list");
     let projects = this.getProjects();
+
+    console.log("Projects:", projects);
 
     projectList.innerHTML = "";
     if (projects.length > 0) {
@@ -912,6 +941,15 @@ class App {
   setEffect(idx, effect) {
     this.state.effects[idx] = effect;
 
+    let fx = Effects.find((e) => e.id === effect);
+    if (!!fx) {
+      for (var i = 0; i < this.state.videos.length; i++) {
+        this.state.videos[i].values[idx] = [...fx.defaults];
+      }
+    } else {
+      console.log("Unknown Effect", effect);
+    }
+
     this.screen.postMessage(
       JSON.stringify({
         action: "set_effect",
@@ -922,6 +960,7 @@ class App {
     );
 
     this.saveState();
+    this.setValues();
   }
 
   setValues() {
