@@ -54,197 +54,197 @@ const fragmentShader = `
   }
 `;
 
-const pixelateShader = `
-  precision mediump float;
-  varying vec2 v_texcoord;
-  uniform sampler2D u_texture;
+// const pixelateShader = `
+//   precision mediump float;
+//   varying vec2 v_texcoord;
+//   uniform sampler2D u_texture;
 
-  uniform vec2 u_dimensions; 
-  uniform mediump float u_opacity;
-  uniform vec2 u_effect;
+//   uniform vec2 u_dimensions;
+//   uniform mediump float u_opacity;
+//   uniform vec2 u_effect;
 
-  void main() {
-    float pixelateX = u_dimensions[0] * floor(max(u_effect[0] * 30.0, 1.0));
-    float pixelateY = u_dimensions[1] * floor(max(u_effect[1] * 30.0, 1.0));
-    vec2 pixel_coords = vec2(
-      v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
-      v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
-    );
+//   void main() {
+//     float pixelateX = u_dimensions[0] * floor(max(u_effect[0] * 30.0, 1.0));
+//     float pixelateY = u_dimensions[1] * floor(max(u_effect[1] * 30.0, 1.0));
+//     vec2 pixel_coords = vec2(
+//       v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
+//       v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
+//     );
 
-    gl_FragColor = texture2D(u_texture, pixel_coords);
-  }
-`;
+//     gl_FragColor = texture2D(u_texture, pixel_coords);
+//   }
+// `;
 
-const prismShader = `
-  precision mediump float;
-  varying vec2 v_texcoord;
-  uniform sampler2D u_texture;
+// const prismShader = `
+//   precision mediump float;
+//   varying vec2 v_texcoord;
+//   uniform sampler2D u_texture;
 
-  uniform vec2 u_dimensions; 
-  uniform mediump float u_opacity;
-  uniform vec2 u_effect;
+//   uniform vec2 u_dimensions;
+//   uniform mediump float u_opacity;
+//   uniform vec2 u_effect;
 
-  void main() {
-    vec2 prism_values = vec2(floor(u_effect[0] * 9.0) + 1.0, floor(u_effect[1] * 9.0) + 1.0);
-    vec2 prism_coords = vec2(fract(v_texcoord[0] * prism_values[0]), fract(v_texcoord[1] * prism_values[1]));
+//   void main() {
+//     vec2 prism_values = vec2(floor(u_effect[0] * 9.0) + 1.0, floor(u_effect[1] * 9.0) + 1.0);
+//     vec2 prism_coords = vec2(fract(v_texcoord[0] * prism_values[0]), fract(v_texcoord[1] * prism_values[1]));
 
-    gl_FragColor = texture2D(u_texture, prism_coords);
-  }
-`;
+//     gl_FragColor = texture2D(u_texture, prism_coords);
+//   }
+// `;
 
-const cosinePaletteShader = `
-  precision mediump float;
-  varying vec2 v_texcoord;
-  uniform sampler2D u_texture;
+// const cosinePaletteShader = `
+//   precision mediump float;
+//   varying vec2 v_texcoord;
+//   uniform sampler2D u_texture;
 
-  uniform vec2 u_dimensions; 
-  uniform mediump float u_opacity;
-  uniform vec2 u_effect;
+//   uniform vec2 u_dimensions;
+//   uniform mediump float u_opacity;
+//   uniform vec2 u_effect;
 
-  ${shaderMethods["pal"]}
-  ${shaderMethods["rgb2hsv"]}
+//   ${shaderMethods["pal"]}
+//   ${shaderMethods["rgb2hsv"]}
 
-  void main() {
-    vec4 color = texture2D(u_texture, v_texcoord);
-    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
-    vec3 effect = pal(hsv[2] + u_effect[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
-    vec3 weighted = vec3(
-      color[0] * (1.0 - u_effect[0]) + effect[0] * u_effect[0],
-      color[1] * (1.0 - u_effect[0]) + effect[1] * u_effect[0],
-      color[2] * (1.0 - u_effect[0]) + effect[2] * u_effect[0]
-    );
+//   void main() {
+//     vec4 color = texture2D(u_texture, v_texcoord);
+//     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+//     vec3 effect = pal(hsv[2] + u_effect[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
+//     vec3 weighted = vec3(
+//       color[0] * (1.0 - u_effect[0]) + effect[0] * u_effect[0],
+//       color[1] * (1.0 - u_effect[0]) + effect[1] * u_effect[0],
+//       color[2] * (1.0 - u_effect[0]) + effect[2] * u_effect[0]
+//     );
 
-    gl_FragColor = vec4(weighted, color[3]);
-  }
-`;
+//     gl_FragColor = vec4(weighted, color[3]);
+//   }
+// `;
 
-const colorOpacityShader = `
-  precision mediump float;
-  varying vec2 v_texcoord;
-  uniform sampler2D u_texture;
+// const colorOpacityShader = `
+//   precision mediump float;
+//   varying vec2 v_texcoord;
+//   uniform sampler2D u_texture;
 
-  float PI = 3.14159265358;
+//   float PI = 3.14159265358;
 
-  uniform vec2 u_dimensions; 
-  uniform mediump float u_opacity;
-  uniform vec2 u_effect;
+//   uniform vec2 u_dimensions;
+//   uniform mediump float u_opacity;
+//   uniform vec2 u_effect;
 
-  ${shaderMethods["pal"]}
-  ${shaderMethods["rgb2hsv"]}
+//   ${shaderMethods["pal"]}
+//   ${shaderMethods["rgb2hsv"]}
 
-  void main() {
-    vec4 color = texture2D(u_texture, v_texcoord);
-    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+//   void main() {
+//     vec4 color = texture2D(u_texture, v_texcoord);
+//     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
 
-    float hue_target = u_effect[0];
-    float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
-    float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
+//     float hue_target = u_effect[0];
+//     float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
+//     float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
 
-    gl_FragColor = vec4(color[0], color[1], color[2], hue_opacity * u_effect[1]);
-  }
-`;
+//     gl_FragColor = vec4(color[0], color[1], color[2], hue_opacity * u_effect[1]);
+//   }
+// `;
 
-const _fragmentShaderSrc = ` 
-  precision mediump float;
+// const _fragmentShaderSrc = `
+//   precision mediump float;
 
-  float PI = 3.14159265358;
+//   float PI = 3.14159265358;
 
-  // Passed in from the vertex shader
-  varying vec2 v_texcoord;
-   
-  // The texture.
-  uniform sampler2D u_texture;
+//   // Passed in from the vertex shader
+//   varying vec2 v_texcoord;
 
-  // 128 pixel buffer to hold a running palette
-  uniform sampler2D u_palette;
-  uniform sampler2D u_palette_buffer;
+//   // The texture.
+//   uniform sampler2D u_texture;
 
-  // Prism Effect
-  uniform vec2 u_prism;
+//   // 128 pixel buffer to hold a running palette
+//   uniform sampler2D u_palette;
+//   uniform sampler2D u_palette_buffer;
 
-  // Color Values
-  uniform vec2 u_color_values;
+//   // Prism Effect
+//   uniform vec2 u_prism;
 
-  // Cosine Palette
-  uniform vec2 u_cosine_palette;
+//   // Color Values
+//   uniform vec2 u_color_values;
 
-  // Color Opacity
-  uniform vec2 u_color_opacity;
+//   // Cosine Palette
+//   uniform vec2 u_cosine_palette;
 
-  // Pixelate
-  uniform vec2 u_pixelate;
+//   // Color Opacity
+//   uniform vec2 u_color_opacity;
 
-  // Opacity
-  uniform mediump float u_opacity;
+//   // Pixelate
+//   uniform vec2 u_pixelate;
 
-  // Texture Dimensions
-  uniform vec2 u_dimensions; 
+//   // Opacity
+//   uniform mediump float u_opacity;
 
-  // Old Opacity
-  uniform vec3 u_effects;
+//   // Texture Dimensions
+//   uniform vec2 u_dimensions;
 
-  vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) 
-  {
-    return a + b*cos( 6.28318*(c*t+d) );
-  }
+//   // Old Opacity
+//   uniform vec3 u_effects;
 
-  vec3 rgb2hsv(vec3 c)
-  {
-    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+//   vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
+//   {
+//     return a + b*cos( 6.28318*(c*t+d) );
+//   }
 
-    float d = q.x - min(q.w, q.y);
-    float e = 1.0e-10;
-    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-  }
+//   vec3 rgb2hsv(vec3 c)
+//   {
+//     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+//     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+//     vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
 
-  void main() {
-    //////////////// Coordinate Effects /////////////////
-    
-    // Pixellate
-    float pixelateX = u_dimensions[0] * floor(max(u_pixelate[0] * 30.0, 1.0));
-    float pixelateY = u_dimensions[1] * floor(max(u_pixelate[0] * 30.0, 1.0));
-    vec2 pixellated = vec2(
-      v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
-      v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
-    );
+//     float d = q.x - min(q.w, q.y);
+//     float e = 1.0e-10;
+//     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+//   }
 
-    // Prism Effect
-    vec2 prism_values = vec2(floor(u_prism[0] * 9.0) + 1.0, floor(u_prism[1] * 9.0) + 1.0);
-    vec2 prism_coords = vec2(fract(pixellated[0] * prism_values[0]), fract(pixellated[1] * prism_values[1]));
+//   void main() {
+//     //////////////// Coordinate Effects /////////////////
 
-    ///////////////// Color Effects ////////////////////////
+//     // Pixellate
+//     float pixelateX = u_dimensions[0] * floor(max(u_pixelate[0] * 30.0, 1.0));
+//     float pixelateY = u_dimensions[1] * floor(max(u_pixelate[0] * 30.0, 1.0));
+//     vec2 pixellated = vec2(
+//       v_texcoord[0] - (v_texcoord[0] - floor(v_texcoord[0]/pixelateX) * pixelateX),
+//       v_texcoord[1] - (v_texcoord[1] - floor(v_texcoord[1]/pixelateY) * pixelateY)
+//     );
 
-    // Get the texture color
-    vec4 color = texture2D(u_texture, prism_coords);
+//     // Prism Effect
+//     vec2 prism_values = vec2(floor(u_prism[0] * 9.0) + 1.0, floor(u_prism[1] * 9.0) + 1.0);
+//     vec2 prism_coords = vec2(fract(pixellated[0] * prism_values[0]), fract(pixellated[1] * prism_values[1]));
 
-    // Cosine Palette
-    vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
-    vec3 effect = pal(hsv[2] + u_cosine_palette[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
-    vec3 weighted = vec3(
-      color[0] * (1.0 - u_cosine_palette[0]) + effect[0] * u_cosine_palette[0],
-      color[1] * (1.0 - u_cosine_palette[0]) + effect[1] * u_cosine_palette[0],
-      color[2] * (1.0 - u_cosine_palette[0]) + effect[2] * u_cosine_palette[0]
-    );
+//     ///////////////// Color Effects ////////////////////////
 
-    // RGB Opacity
-    float hue_target = u_color_opacity[0];
-    float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
-    float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
-    
-    gl_FragColor =  vec4(weighted, max(0.0, u_opacity - (hue_opacity * u_color_opacity[1])));
-  }
-`;
+//     // Get the texture color
+//     vec4 color = texture2D(u_texture, prism_coords);
 
-const shaders = {
-  default: null,
-  cosine_palette: cosinePaletteShader,
-  color_opacity: colorOpacityShader,
-  cosine_distort: null,
-  prism: prismShader,
-  pixelate: pixelateShader,
-};
+//     // Cosine Palette
+//     vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
+//     vec3 effect = pal(hsv[2] + u_cosine_palette[1], vec3(0.5,0.5,0.5),vec3(0.5,0.5,0.5),vec3(1.0,1.0,1.0),vec3(0.0,0.33,0.67) );
+//     vec3 weighted = vec3(
+//       color[0] * (1.0 - u_cosine_palette[0]) + effect[0] * u_cosine_palette[0],
+//       color[1] * (1.0 - u_cosine_palette[0]) + effect[1] * u_cosine_palette[0],
+//       color[2] * (1.0 - u_cosine_palette[0]) + effect[2] * u_cosine_palette[0]
+//     );
+
+//     // RGB Opacity
+//     float hue_target = u_color_opacity[0];
+//     float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
+//     float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
+
+//     gl_FragColor =  vec4(weighted, max(0.0, u_opacity - (hue_opacity * u_color_opacity[1])));
+//   }
+// `;
+
+// const shaders = {
+//   default: null,
+//   cosine_palette: cosinePaletteShader,
+//   color_opacity: colorOpacityShader,
+//   cosine_distort: null,
+//   prism: prismShader,
+//   pixelate: pixelateShader,
+// };
 
 class UI {
   constructor(state) {
@@ -433,6 +433,30 @@ class Output {
   }
 
   updateState(state) {
+    for (var i = 0; i < this.state.videos.length; i++) {
+      let video = this.state.videos[i];
+      let next = state.videos[i];
+
+      for (var j = 0; j < state.effects.length; j++) {
+        let effect = Effects.find((e) => e.id === state.effects[j]);
+        if (!!effect && effect.id === "video_controls") {
+          let prev = video.values[j];
+          let curr = next.values[j];
+
+          let vid = this.videos[i];
+          if (!!vid) {
+            if (prev[0] !== curr[0]) {
+              vid.playbackRate = curr[0] * 2;
+            } else if (prev[1] !== curr[1]) {
+              vid.currentTime =
+                (vid.currentTime + vid.duration * (curr[1] - prev[1])) %
+                vid.duration;
+            }
+          }
+        }
+      }
+    }
+
     this.state = state;
   }
 
@@ -470,9 +494,7 @@ class Output {
     // Get the active effect programs
     let effects = [];
     for (var i = 0; i < glAttrs.effects.length; i++) {
-      if (glAttrs.effects[i] !== null) {
-        effects.push(glAttrs.effects[i]);
-      }
+      effects.push(glAttrs.effects[i]);
     }
 
     // Get the video and it's HTML element
@@ -488,13 +510,19 @@ class Output {
     this.updateTexture(gl, glAttrs, glAttrs.texture, videoEl);
 
     // Loop through the effects and draw each to a framebuffer
+    let activeBuffer = 0;
     for (var i = 0; i < effects.length; i++) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[i % 2]);
+      if (!effects[i]) {
+        continue;
+      }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[activeBuffer % 2]);
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
       this.drawShapes(gl, idx, effects[i], shapes, video.values[i], -1);
 
-      gl.bindTexture(gl.TEXTURE_2D, glAttrs.textures[i % 2]);
+      gl.bindTexture(gl.TEXTURE_2D, glAttrs.textures[activeBuffer % 2]);
+      activeBuffer++;
     }
 
     // Draw to the screen
@@ -667,10 +695,10 @@ class Output {
 
       let effects = this.state.effects;
       for (var i = 0; i < effects.length; i++) {
-        let effect = effects[i];
-        if (!!effect && !!shaders[effect]) {
+        let effect = Effects.find((e) => e.id === effects[i]);
+        if (!!effect && !!effect.shader) {
           glAttrs.effects.push(
-            this.createProgram(gl, vertexShaderSrc, shaders[effect]),
+            this.createProgram(gl, vertexShaderSrc, effect.shader),
           );
         } else {
           glAttrs.effects.push(null);
@@ -1209,7 +1237,7 @@ class App {
   }
 }
 
-let app = null;
+window.app = null;
 window.addEventListener("load", () => {
-  app = new App();
+  window.app = new App();
 });

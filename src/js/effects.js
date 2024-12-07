@@ -1,10 +1,20 @@
 export const Effects = [
 	{
+		id: "video_controls",
+		label: "Video Controls",
+		opacity: "Opacity",
+		effect_a: "Playback Speed",
+		effect_b: "Start Offset",
+		defaults: [0.5, 0.05],
+		shader: null,
+	},
+	{
 		id: "color_opacity",
 		label: "Color Opacity",
 		opacity: "Opacity",
 		effect_a: "Hue",
 		effect_b: "Sensitivity",
+		defaults: [0.05, 0.05],
 		shader: `
 	    precision mediump float;
 	    varying vec2 v_texcoord;
@@ -50,6 +60,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Intensity",
 		effect_b: "Shift",
+		defaults: [0.05, 0.05],
 		shader: `
 	    precision mediump float;
 	    varying vec2 v_texcoord;
@@ -95,6 +106,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Pixel Size",
 		effect_b: "Pallete Depth",
+		defaults: [0.05, 0.05],
 		shader: `
 		  precision mediump float;
 		  varying vec2 v_texcoord;
@@ -122,6 +134,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Horizontal",
 		effect_b: "Vertical",
+		defaults: [0.05, 0.05],
 		shader: `
 		  precision mediump float;
 		  varying vec2 v_texcoord;
@@ -145,6 +158,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "X-Zoom",
 		effect_b: "Y-Zoom",
+		defaults: [0.05, 0.05],
 		shader: `
 			precision mediump float;
 		  varying vec2 v_texcoord;

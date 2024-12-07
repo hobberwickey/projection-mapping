@@ -6,3 +6,8 @@
 - video toggle has a 'selected' state and the other 2 don't
 - if no video, hide garbage can icon
 - i don't undertand groups
+
+- Effects
+  - Saturation and contrast
+  - Bit reduction palette
+  - Duo tone
