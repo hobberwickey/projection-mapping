@@ -671,7 +671,6 @@ class Output {
   createContext(idx) {
     let contextsEl = document.querySelector(".contexts");
     let canvas = document.createElement("canvas");
-    contextsEl.appendChild(canvas);
 
     let gl = canvas.getContext("webgl");
     let glAttrs = {

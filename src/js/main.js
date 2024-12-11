@@ -30,6 +30,9 @@ class App {
     this.selectedGroup = 0;
     this.selectedEffect = 0;
 
+    this.selectedShape = null;
+    this.selectedVertex = null;
+
     this.midiAccess = null;
     this.midiInput = null;
     this.midiOutput = null;
@@ -296,7 +299,9 @@ class App {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
       for (const entry of this.midiAccess.inputs) {
         console.log(entry[1]);
-        if (entry[1].id === "-1994529889") {
+        if (entry[1].name === "Arduino Micro") {
+          console.log("MIDI DEVICE FOUND");
+
           this.midiInput = entry[1];
 
           entry[1].onmidimessage = (e) => {
@@ -381,6 +386,7 @@ class App {
               );
 
               this.saveState();
+              this.setLEDS();
             } else if (sliders.input.hasOwnProperty(note)) {
               let idx = sliders.input[note];
               let inputs = document.querySelectorAll(
@@ -409,6 +415,8 @@ class App {
                   let input = inputs[idx];
                   input.value = value;
                 }
+
+                this.setLEDS();
               } else {
                 let diff = 0;
                 for (var i = 0; i < selectedVideos.length; i++) {
@@ -445,7 +453,7 @@ class App {
       }
 
       for (const entry of this.midiAccess.outputs) {
-        if (entry[1].id === "987282012") {
+        if (entry[1].name === "Arduino Micro") {
           this.midiOutput = entry[1];
         }
       }
@@ -515,6 +523,11 @@ class App {
       if (data.action === "update_state") {
         this.state = data.state;
         this.saveState();
+      } else if (data.action === "select_shape") {
+        this.selectedShape = data.shape;
+        this.selectedVertex = data.vertex;
+
+        // TODO get selected shape and call el.controller.setSelected
       }
     });
 
@@ -977,6 +990,7 @@ class App {
     document.querySelectorAll(".inputs input")[2].value = effect_b;
 
     this.setMidi();
+    this.setLEDS();
   }
 
   setEffectValues() {
@@ -1007,6 +1021,21 @@ class App {
       this.midiOutput.send([144, notes[0], (opacity * 127) | 0]);
       this.midiOutput.send([144, notes[1], (effect_a * 127) | 0]);
       this.midiOutput.send([144, notes[2], (effect_b * 127) | 0]);
+    }
+  }
+
+  setLEDS() {
+    let selectedVideo = this.selectedVideos[0];
+    let selectedGroup = this.selectedGroup;
+    let selectedEffect = this.selectedEffect;
+
+    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
+    let opacityNote = [10, 11, 12, 13, 14, 15][selectedVideo];
+
+    console.log("Opacity Note", opacityNote);
+
+    if (!!this.midiOutput) {
+      this.midiOutput.send([144, opacityNote, (opacity * 100) | 0]);
     }
   }
 

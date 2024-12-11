@@ -1,5 +1,7 @@
 export class Video {
 	constructor(idx, video, onChange, onSelect, onDelete) {
+		this.isLoaded = false;
+
 		this.onChange = (e) => {
 			if (e.target.files.length > 0) {
 				this.el.querySelector("video").src = URL.createObjectURL(
@@ -8,6 +10,7 @@ export class Video {
 
 				this.el.querySelector("video").currentTime = 50;
 				this.el.querySelector(".preview").classList.remove("no-video");
+				this.el.querySelector("input[type='file']").disabled = true;
 			}
 
 			onChange(idx, video, e.target.files[0]);
@@ -21,7 +24,7 @@ export class Video {
 
 		this.onDelete = () => {
 			this.el.querySelector("video").src = "";
-
+			this.el.querySelector("input[type='file']").disabled = false;
 			onDelete(idx);
 		};
 

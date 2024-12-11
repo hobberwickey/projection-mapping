@@ -1,4 +1,10 @@
+#include <FastLED.h>
 #include <MIDIUSB.h>
+
+#define NUM_LEDS 70
+#define DATA_PIN A1
+
+CRGB leds[NUM_LEDS];
 
 unsigned long sliderTimer;
 unsigned long knobTimer;
@@ -68,8 +74,26 @@ int knobNotes[3] = {
   43, 44
 };
 
+int opacityNotes[6] = {
+  10, 11, 12, 13, 14, 15
+};
+
+int opacityValues[6] = {
+  0, 0, 0, 0, 0, 0
+};
+
+int effectNotes[2] = {
+  16, 17
+};
+
+int effectValues[2] = {
+  0, 0
+};
+
 // Create an 'object' for our actual Momentary Button
 void setup() {
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS); 
+  
   for (int i=0; i<6; i++) {
     pinMode(togglePins[i], INPUT_PULLUP);
   }
@@ -95,6 +119,29 @@ void setup() {
   }
 
   Serial.begin(115200);
+}
+
+void setLEDS() {
+  int brightness = 1;
+  for (int i=0; i<6; i++) {
+    int value = opacityValues[i];
+    int offset = i * 8;
+    
+    for (int j=0; j<8; j++) {
+      int pixel = offset + j;
+      int intensity = floor(value / 12);
+
+      if (j < intensity) {
+        leds[pixel].r = 12 * brightness;
+      } else if (j == intensity) {
+        leds[pixel].r = value % 12;
+      } else if (j > intensity) {
+        leds[pixel].r = 0;
+      }
+    }
+  }
+  // leds[0].r = 100;
+  FastLED.show();
 }
 
 void noteOn(byte channel, byte pitch, byte velocity) {
@@ -232,6 +279,25 @@ void handleMidiIn(int header, int note, int velocity) {
       sliderValues[i] = velocity;
       sliderStates[i] = 1;
     }
+  }
+
+  int shouldSetLEDS = 0;
+  for (int i=0; i<6; i++) {
+    if (note == opacityNotes[i]) {
+      opacityValues[i] = velocity;
+      shouldSetLEDS = 1;
+    }
+  }
+
+  for (int i=0; i<2; i++) {
+    if (note == effectNotes[i]) {
+      effectValues[i] = velocity;
+      shouldSetLEDS = 1;
+    }
+  }
+
+  if (shouldSetLEDS = 1) {
+    setLEDS();
   }
 }
 

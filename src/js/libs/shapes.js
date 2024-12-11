@@ -6,20 +6,31 @@ export class Shape {
 
 		this.onSelect = (e) => {
 			console.log(idx, shape.id, e.target.value);
+			onSelect(idx);
+			this.setSelected();
 		};
 
 		this.onDelete = () => {
 			onDelete(idx);
 		};
 
+		this.setSelected = () => {
+			document.querySelector(".shape.selected").classList.remove("selected");
+			this.el.classList.add("selected");
+		};
+
 		this.el = document.createElement("div");
-		this.el.className = "row header";
+		this.el.className = "row header shape";
 		this.el.innerHTML = `
 			<div>
 				<input type='text' value="${shape.label}" /
 				><a class='remove-shape' href="javascript:void(0)" uk-icon="icon: trash"></a>
 			</div>
 		`;
+
+		this.el.addEventListener("click", (e) => {
+			this.onSelect.bind(this, e);
+		});
 
 		this.el
 			.querySelector("input")
