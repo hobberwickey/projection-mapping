@@ -713,12 +713,12 @@ class Output {
     // this.contexts[idx] = gl;
   }
 
-  updateContext(video, idx) {
-    let idx = this.videos.indexOf(video);
-    if (idx === -1) {
-      console.log("Couldn't find video:", video);
-      return;
-    }
+  updateContext(video) {
+    // let idx = this.videos.indexOf(video);
+    // if (idx === -1) {
+    //   console.log("Couldn't find video:", video);
+    //   return;
+    // }
 
     // gl.canvas.width = video.videoWidth;
     // gl.canvas.height = video.videoHeight;
@@ -1027,7 +1027,7 @@ class Output {
 
   removeVideo(idx) {
     let video = this.videos[idx];
-    let gl = this.contexts[idx];
+    // let gl = this.contexts[idx];
 
     if (!!video) {
       video.pause();
@@ -1037,27 +1037,27 @@ class Output {
       gl.clear(gl.COLOR_BUFFER_BIT);
 
       this.videos[idx] = null;
-      this.contexts[idx] = null;
-      this.glAttrs[idx] = null;
+      // this.contexts[idx] = null;
+      // this.glAttrs[idx] = null;
 
-      gl.canvas.parentNode.removeChild(gl.canvas);
-      video.parentNode.removeChild(video);
+      // gl.canvas.parentNode.removeChild(gl.canvas);
+      // video.parentNode.removeChild(video);
     }
   }
 
   setEffect(idx, effect) {
     let fx = Effects.find((e) => e.id === effect);
 
-    console.log(effect);
-    console.log(Effects);
+    // console.log(effect);
+    // console.log(Effects);
 
     for (var i = 0; i < this.glAttrs.length; i++) {
-      if (this.glAttrs[i] === null) {
+      if (this.attrs === null) {
         continue;
       }
 
-      let attrs = this.glAttrs[i];
-      let gl = this.contexts[i];
+      let attrs = this.attrs;
+      let gl = this.gl;
 
       if (!!attrs.effects[idx]) {
         // TODO: if there starts to be weird things, then this
@@ -1066,7 +1066,7 @@ class Output {
         attrs.effects[idx] = null;
       }
 
-      console.log(fx);
+      // console.log(fx);
 
       if (!!effect && !!fx.shader) {
         attrs.effects[idx] = this.createProgram(gl, vertexShaderSrc, fx.shader);
