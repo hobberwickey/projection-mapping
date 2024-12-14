@@ -328,19 +328,19 @@ class App {
             } else if (knobs.hasOwnProperty(note)) {
               if (note === 43) {
                 if (velocity === 0) {
-                  this.selectedEffect = Math.max(0, selectedEffect - 1);
-                  // if (selectedEffect === 0) {
-                  //   this.selectedEffect = 5;
-                  // } else {
-                  //   this.selectedEffect -= 1;
-                  // }
+                  // this.selectedEffect = Math.max(0, selectedEffect - 1);
+                  if (selectedEffect === 0) {
+                    this.selectedEffect = 5;
+                  } else {
+                    this.selectedEffect -= 1;
+                  }
                 } else {
-                  this.selectedEffect = Math.min(5, selectedEffect + 1);
-                  // if (selectedEffect === 5) {
-                  //   this.selectedEffect = 0;
-                  // } else {
-                  //   this.selectedEffect += 1;
-                  // }
+                  // this.selectedEffect = Math.min(5, selectedEffect + 1);
+                  if (selectedEffect === 5) {
+                    this.selectedEffect = 0;
+                  } else {
+                    this.selectedEffect += 1;
+                  }
                 }
 
                 let prevEffect = document.querySelector(".select.selected");
