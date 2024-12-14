@@ -1025,6 +1025,10 @@ class App {
   }
 
   setLEDS() {
+    if (!this.midiOutput) {
+      return;
+    }
+
     let selectedVideo = this.selectedVideos[0];
     let selectedGroup = this.selectedGroup;
     let selectedEffect = this.selectedEffect;
@@ -1032,10 +1036,41 @@ class App {
     let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
     let opacityNote = [10, 11, 12, 13, 14, 15][selectedVideo];
 
-    console.log("Opacity Note", opacityNote);
+    this.midiOutput.send([144, opacityNote, (opacity * 100) | 0]);
 
-    if (!!this.midiOutput) {
-      this.midiOutput.send([144, opacityNote, (opacity * 100) | 0]);
+    let groupNotes = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+
+    let effectNotes = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
+
+    for (var i = 0; i < 6; i++) {
+      let note1 = groupNotes[i * 2];
+      let note2 = groupNotes[i * 2 + 1];
+
+      let groupOpacity = this.state.groups[i].opacity[selectedVideo];
+
+      if (selectedGroup !== i) {
+        this.midiOutput.send([144, note1, (groupOpacity * 10) | 0]);
+        this.midiOutput.send([144, note2, (groupOpacity * 10) | 0]);
+      } else {
+        this.midiOutput.send([144, note1, 127]);
+        this.midiOutput.send([144, note2, 127]);
+      }
+    }
+
+    for (var i = 0; i < 6; i++) {
+      let note1 = effectNotes[i * 2];
+      let note2 = effectNotes[i * 2 + 1];
+
+      let values = this.state.videos[selectedVideo].values[i];
+
+      if (selectedEffect !== i) {
+        this.midiOutput.send([144, note1, (values[0] * 10) | 0]);
+        this.midiOutput.send([144, note2, (values[1] * 10) | 0]);
+      } else {
+        console.log(note1, note2);
+        this.midiOutput.send([144, note1, 127]);
+        this.midiOutput.send([144, note2, 127]);
+      }
     }
   }
 
