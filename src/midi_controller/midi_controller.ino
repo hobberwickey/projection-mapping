@@ -185,13 +185,13 @@ void setLEDS() {
       int pixel = 48 + (i * 12) + j;
       
       if (value == 127) {
-        r = 10;
+        r = 10; 
         g = 10;
         b = 10;
       } else {
-        r = 0; // floor(r * 0.1); 
-        g = 0; // floor(g * 0.1);
-        b = 0; // floor(b * 0.1);
+        r = floor(r  * (value * 0.1) * 0.1); 
+        g = floor(g  * (value * 0.1) * 0.1);
+        b = floor(b  * (value * 0.1) * 0.1);
       }
 
       leds[pixel].r = r;
