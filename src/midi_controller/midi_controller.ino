@@ -184,14 +184,14 @@ void setLEDS() {
       int value = effectValues[i][j];
       int pixel = 48 + (i * 12) + j;
       
-      if (value == 255) {
-        r = 10;
+      if (value == 127) {
+        r = 10; 
         g = 10;
         b = 10;
       } else {
-        r = floor(r * 0.1); 
-        g = floor(g * 0.1);
-        b = floor(b * 0.1);
+        r = floor(r  * (value * 0.1) * 0.1); 
+        g = floor(g  * (value * 0.1) * 0.1);
+        b = floor(b  * (value * 0.1) * 0.1);
       }
 
       leds[pixel].r = r;
