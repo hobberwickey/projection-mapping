@@ -425,8 +425,19 @@ class Output {
 
     this.videos = new Array(6).fill(null);
     this.contexts = new Array(6).fill(null);
+    this.textures = [];
     this.glAttrs = new Array(6).fill(null);
     // this.matrices = [];
+
+    this.gl = null;
+    this.attrs = {
+      main: null,
+
+      effects: [],
+      srcs: new Array(6).fill(null),
+      textures: [],
+      buffers: [],
+    };
 
     this.isPlaying = false;
     this.reset_video = null;
@@ -669,61 +680,51 @@ class Output {
   }
 
   createContext(idx) {
-    let contextsEl = document.querySelector(".contexts");
-    let canvas = document.createElement("canvas");
+    if (this.gl === null) {
+      let contextsEl = document.querySelector(".contexts");
+      let canvas = document.createElement("canvas");
+      this.gl = canvas.getContext("webgl");
+    }
 
-    let gl = canvas.getContext("webgl");
-    let glAttrs = {
-      main: null,
+    this.attrs.main = this.createProgram(gl, vertexShaderSrc, fragmentShader);
 
-      effects: [],
-      texture: this.initTexture(gl),
-      textures: [],
-      buffers: [],
-    };
+    if (this.attrs.main !== null) {
+      this.gl.clearColor(0, 0, 0, 1);
+      this.gl.clear(gl.COLOR_BUFFER_BIT);
 
-    glAttrs.main = this.createProgram(gl, vertexShaderSrc, fragmentShader);
-
-    if (glAttrs.main !== null) {
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-
-      gl.disable(gl.DEPTH_TEST);
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      this.gl.disable(gl.DEPTH_TEST);
+      this.gl.enable(gl.BLEND);
+      this.gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
       let effects = this.state.effects;
       for (var i = 0; i < effects.length; i++) {
         let effect = Effects.find((e) => e.id === effects[i]);
         if (!!effect && !!effect.shader) {
-          glAttrs.effects.push(
-            this.createProgram(gl, vertexShaderSrc, effect.shader),
+          this.attrs.effects.push(
+            this.createProgram(this.gl, vertexShaderSrc, effect.shader),
           );
         } else {
-          glAttrs.effects.push(null);
+          this.attrs.effects.push(null);
         }
       }
     }
 
-    this.glAttrs[idx] = glAttrs;
-    this.contexts[idx] = gl;
+    // this.glAttrs[idx] = glAttrs;
+    // this.contexts[idx] = gl;
   }
 
-  updateContext(video) {
+  updateContext(video, idx) {
     let idx = this.videos.indexOf(video);
     if (idx === -1) {
       console.log("Couldn't find video:", video);
       return;
     }
 
-    let gl = this.contexts[idx];
-
-    gl.canvas.width = video.videoWidth;
-    gl.canvas.height = video.videoHeight;
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    // gl.canvas.width = video.videoWidth;
+    // gl.canvas.height = video.videoHeight;
+    gl.viewport(0, 0, video.videoWidth, video.videoHeight);
+    // gl.clearColor(0, 0, 0, 1);
+    // gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
   initTexture(gl) {
@@ -1005,8 +1006,6 @@ class Output {
     }
 
     let idx = this.reset_video;
-    let vid = document.createElement("video");
-    document.querySelector(".videos").appendChild(vid);
 
     vid.playsInline = true;
     vid.loop = true;

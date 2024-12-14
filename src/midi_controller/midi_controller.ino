@@ -1,7 +1,7 @@
 #include <FastLED.h>
 #include <MIDIUSB.h>
 
-#define NUM_LEDS 70
+#define NUM_LEDS 72
 #define DATA_PIN A1
 
 CRGB leds[NUM_LEDS];
@@ -82,13 +82,45 @@ int opacityValues[6] = {
   0, 0, 0, 0, 0, 0
 };
 
-int effectNotes[2] = {
-  16, 17
+int effectNotes[2][12] = {
+  {
+    16, 17, 18, 
+    19, 20, 21, 
+    22, 23, 24,
+    25, 26, 27
+  },
+  {
+    28, 29, 30,
+    31, 32, 33, 
+    34, 35, 36,
+    37, 38, 39
+  }
 };
 
-int effectValues[2] = {
-  0, 0
+int effectValues[2][12] = {
+  {
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+  },
+  {
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+  }
 };
+
+int effectColors[6][3] = {
+  {31, 119, 178},
+  {52, 159, 45},
+  {224, 26, 30},
+  {255, 128, 0},
+  {106, 61, 153},
+  {175, 87, 40}
+};
+
 
 // Create an 'object' for our actual Momentary Button
 void setup() {
@@ -140,6 +172,34 @@ void setLEDS() {
       }
     }
   }
+
+  for (int i=0; i<2; i++) {
+    for (int j=0; j<12; j++) {
+      int colorIdx = floor(j / 2);
+
+      int r  = effectColors[colorIdx][0];
+      int g  = effectColors[colorIdx][1];
+      int b  = effectColors[colorIdx][2];
+
+      int value = effectValues[i][j];
+      int pixel = 48 + (i * 12) + j;
+      
+      if (value == 255) {
+        r = 10;
+        g = 10;
+        b = 10;
+      } else {
+        r = floor(r * 0.1); 
+        g = floor(g * 0.1);
+        b = floor(b * 0.1);
+      }
+
+      leds[pixel].r = r;
+      leds[pixel].g = g;
+      leds[pixel].b = b;
+    }
+  }
+
   // leds[0].r = 100;
   FastLED.show();
 }
@@ -290,9 +350,11 @@ void handleMidiIn(int header, int note, int velocity) {
   }
 
   for (int i=0; i<2; i++) {
-    if (note == effectNotes[i]) {
-      effectValues[i] = velocity;
-      shouldSetLEDS = 1;
+    for (int j=0; j<12; j++) {
+      if (note == effectNotes[i][j]) {
+        effectValues[i][j] = velocity;
+        shouldSetLEDS = 1;
+      }
     }
   }
 
