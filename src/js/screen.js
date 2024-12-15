@@ -605,7 +605,7 @@ class Output {
         0,
       );
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.srcs[idx]);
+      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.texture);
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array([
@@ -676,7 +676,6 @@ class Output {
         },
         uniforms: {
           sampler: gl.getUniformLocation(program, "u_texture"),
-          // matrix: gl.getUniformLocation(program, "u_matrix"),
           flip: gl.getUniformLocation(program, "u_flipY"),
           opacity: gl.getUniformLocation(program, "u_opacity"),
           effect: gl.getUniformLocation(program, "u_effect"),
