@@ -495,7 +495,9 @@ class Output {
   }
 
   step() {
-    for (var i = 0; i < this.videos.length; i++) {
+    let len = this.videos.length - 1;
+
+    for (var i = len; i >= 0; i--) {
       if (this.videos[i] !== null) {
         this.drawFrame(i);
       }
@@ -1062,8 +1064,7 @@ class Output {
       video.removeAttribute("src");
       video.load();
 
-      gl.clear(gl.COLOR_BUFFER_BIT);
-
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT);
       this.videos[idx] = null;
       // this.contexts[idx] = null;
       // this.glAttrs[idx] = null;
