@@ -528,7 +528,7 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, attrs, this.textures[idx], videoEl);
+    this.updateTexture(gl, attrs, this.textures, videoEl);
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
     for (var i = 0; i < effects.length; i++) {
@@ -555,6 +555,7 @@ class Output {
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
     this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
   }
 
@@ -710,9 +711,7 @@ class Output {
       fragmentShader,
     );
 
-    this.textures = new Array(6).fill(null).map((t) => {
-      return this.initTexture(this.gl);
-    });
+    this.textures = this.initTexture(this.gl);
 
     if (this.attrs.main !== null) {
       this.gl.clearColor(0, 0, 0, 1);
@@ -749,8 +748,8 @@ class Output {
     // gl.canvas.width = video.videoWidth;
     // gl.canvas.height = video.videoHeight;
     this.gl.viewport(0, 0, video.videoWidth, video.videoHeight);
-    // gl.clearColor(0, 0, 0, 1);
-    // gl.clear(gl.COLOR_BUFFER_BIT);
+    this.gl.clearColor(0, 0, 0, 1);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
 
   initTexture(gl) {
@@ -763,8 +762,8 @@ class Output {
     // use it immediately.
     const level = 0;
     const internalFormat = gl.RGBA;
-    const width = 1280;
-    const height = 720;
+    const width = 1;
+    const height = 1;
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
@@ -795,6 +794,8 @@ class Output {
     if (video.currentTime === 0) {
       return;
     }
+
+    console.log("Updating Texture", texture, video);
 
     const level = 0;
     const internalFormat = gl.RGBA;
