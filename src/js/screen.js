@@ -528,7 +528,7 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, attrs, this.textures, videoEl);
+    this.updateTexture(gl, attrs, this.textures[idx], videoEl);
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
     for (var i = 0; i < effects.length; i++) {
@@ -537,7 +537,7 @@ class Output {
       }
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, attrs.buffers[activeBuffer % 2]);
-      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      gl.viewport(0, 0, 1280, 720);
 
       this.drawShapes(
         gl,
@@ -555,7 +555,7 @@ class Output {
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+    // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
     this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
   }
 
@@ -699,11 +699,8 @@ class Output {
   // }
 
   createContext(idx) {
-    if (this.gl === null) {
-      let contextsEl = document.querySelector(".contexts");
-      let canvas = document.createElement("canvas");
-      this.gl = canvas.getContext("webgl");
-    }
+    let canvas = document.querySelector(".context canvas");
+    this.gl = canvas.getContext("webgl");
 
     this.attrs.main = this.createProgram(
       this.gl,
@@ -711,7 +708,9 @@ class Output {
       fragmentShader,
     );
 
-    this.textures = this.initTexture(this.gl);
+    this.textures = new Array(6).fill(null).map((t) => {
+      return this.initTexture(this.gl);
+    });
 
     if (this.attrs.main !== null) {
       this.gl.clearColor(0, 0, 0, 1);
@@ -747,7 +746,7 @@ class Output {
 
     // gl.canvas.width = video.videoWidth;
     // gl.canvas.height = video.videoHeight;
-    this.gl.viewport(0, 0, video.videoWidth, video.videoHeight);
+    this.gl.viewport(0, 0, 1280, 720);
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
@@ -794,8 +793,6 @@ class Output {
     if (video.currentTime === 0) {
       return;
     }
-
-    console.log("Updating Texture", texture, video);
 
     const level = 0;
     const internalFormat = gl.RGBA;
