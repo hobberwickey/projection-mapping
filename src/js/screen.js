@@ -434,7 +434,6 @@ class Output {
       main: null,
 
       effects: [],
-      srcs: new Array(6).fill(null),
       textures: [],
       buffers: [],
     };
@@ -450,6 +449,8 @@ class Output {
         }, 100);
       });
     });
+
+    this.createContext();
   }
 
   updateState(state) {
@@ -527,8 +528,7 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, attrs, attrs.srcs[idx], videoEl);
-
+    this.updateTexture(gl, attrs, this.textures[idx], videoEl);
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
     for (var i = 0; i < effects.length; i++) {
@@ -690,10 +690,12 @@ class Output {
     }
   }
 
-  createVideo(idx, video) {
-    this.videos[idx] = video;
-    this.createContext(idx);
-  }
+  // createVideo(idx, video) {
+  //   console.log(idx, video);
+
+  //   this.videos[idx] = video;
+  //   // this.createContext(idx);
+  // }
 
   createContext(idx) {
     if (this.gl === null) {
@@ -708,7 +710,7 @@ class Output {
       fragmentShader,
     );
 
-    this.attrs.srcs = this.attrs.srcs.map((src) => {
+    this.textures = new Array(6).fill(null).map((t) => {
       return this.initTexture(this.gl);
     });
 
@@ -1047,7 +1049,8 @@ class Output {
 
     vid.src = URL.createObjectURL(file);
 
-    this.createVideo(idx, vid);
+    this.videos[idx] = vid;
+    // this.createVideo(idx, vid);
     // this.createMatrix(vid);
     this.reset_video = null;
   }
