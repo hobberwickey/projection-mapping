@@ -441,6 +441,15 @@ class Output {
 
     this.isPlaying = false;
     this.reset_video = null;
+
+    document.querySelectorAll(".videos video").forEach((vid) => {
+      vid.addEventListener("loadedmetadata", (e) => {
+        setTimeout(() => {
+          this.updateContext(e.target);
+          vid.play();
+        }, 100);
+      });
+    });
   }
 
   updateState(state) {
@@ -498,14 +507,14 @@ class Output {
     let { videos, shapes } = this.state;
 
     // Get the context
-    let gl = this.contexts[idx];
+    let gl = this.gl;
     // Get the attributes
-    let glAttrs = this.glAttrs[idx];
+    let attrs = this.attrs;
 
     // Get the active effect programs
     let effects = [];
-    for (var i = 0; i < glAttrs.effects.length; i++) {
-      effects.push(glAttrs.effects[i]);
+    for (var i = 0; i < attrs.effects.length; i++) {
+      effects.push(attrs.effects[i]);
     }
 
     // Get the video and it's HTML element
@@ -518,7 +527,7 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, glAttrs, glAttrs.texture, videoEl);
+    this.updateTexture(gl, attrs, attrs.texture, videoEl);
 
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
@@ -527,27 +536,27 @@ class Output {
         continue;
       }
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, glAttrs.buffers[activeBuffer % 2]);
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, attrs.buffers[activeBuffer % 2]);
+      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
       this.drawShapes(gl, idx, effects[i], shapes, video.values[i], -1);
 
-      gl.bindTexture(gl.TEXTURE_2D, glAttrs.textures[activeBuffer % 2]);
+      gl.bindTexture(gl.TEXTURE_2D, attrs.textures[activeBuffer % 2]);
       activeBuffer++;
     }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    this.drawShapes(gl, idx, glAttrs.main, shapes, [0, 0], 1);
+    this.drawShapes(gl, video, idx, attrs.main, shapes, [0, 0], 1);
   }
 
-  drawShapes(gl, idx, attrs, shapes, values, flip) {
+  drawShapes(gl, video, idx, attrs, shapes, values, flip) {
     gl.useProgram(attrs.program);
     gl.uniform2fv(attrs.uniforms.effect, values);
     gl.uniform1f(attrs.uniforms.flip, flip);
     gl.uniform2fv(attrs.uniforms.dimensions, [
-      1 / gl.canvas.width,
-      1 / gl.canvas.height,
+      1 / video.videoWidth,
+      1 / video.videoHeight,
     ]);
 
     for (var j = 0; j < shapes.length; j++) {
@@ -686,15 +695,19 @@ class Output {
       this.gl = canvas.getContext("webgl");
     }
 
-    this.attrs.main = this.createProgram(gl, vertexShaderSrc, fragmentShader);
+    this.attrs.main = this.createProgram(
+      this.gl,
+      vertexShaderSrc,
+      fragmentShader,
+    );
 
     if (this.attrs.main !== null) {
       this.gl.clearColor(0, 0, 0, 1);
-      this.gl.clear(gl.COLOR_BUFFER_BIT);
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-      this.gl.disable(gl.DEPTH_TEST);
-      this.gl.enable(gl.BLEND);
-      this.gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      this.gl.disable(this.gl.DEPTH_TEST);
+      this.gl.enable(this.gl.BLEND);
+      this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
       let effects = this.state.effects;
       for (var i = 0; i < effects.length; i++) {
@@ -722,7 +735,7 @@ class Output {
 
     // gl.canvas.width = video.videoWidth;
     // gl.canvas.height = video.videoHeight;
-    gl.viewport(0, 0, video.videoWidth, video.videoHeight);
+    this.gl.viewport(0, 0, video.videoWidth, video.videoHeight);
     // gl.clearColor(0, 0, 0, 1);
     // gl.clear(gl.COLOR_BUFFER_BIT);
   }
@@ -1006,18 +1019,21 @@ class Output {
     }
 
     let idx = this.reset_video;
+    let videos = document.querySelectorAll(".videos video");
+    let vid = videos[idx];
 
-    vid.playsInline = true;
-    vid.loop = true;
-    vid.muted = true;
-    vid.addEventListener("loadedmetadata", (e) => {
-      setTimeout(() => {
-        // this.calculateMatrix(e.target);
-        this.updateContext(e.target);
+    // vid.playsInline = true;
+    // vid.loop = true;
+    // vid.muted = true;
+    // vid.addEventListener("loadedmetadata", (e) => {
+    //   setTimeout(() => {
+    //     // this.calculateMatrix(e.target);
+    //     this.updateContext(e.target);
 
-        vid.play();
-      }, 100);
-    });
+    //     vid.play();
+    //   }, 100);
+    // });
+
     vid.src = URL.createObjectURL(file);
 
     this.createVideo(idx, vid);

@@ -1073,41 +1073,41 @@ class App {
       }
     }
 
-    let effectNotes = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+    // let effectNotes = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
 
-    let groupNotes = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
+    // let groupNotes = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
 
-    for (var i = 0; i < 6; i++) {
-      let note1 = groupNotes[i * 2];
-      let note2 = groupNotes[i * 2 + 1];
+    // for (var i = 0; i < 6; i++) {
+    //   let note1 = groupNotes[i * 2];
+    //   let note2 = groupNotes[i * 2 + 1];
 
-      let groupOpacity = this.state.groups[i].opacity[selectedVideo];
+    //   let groupOpacity = this.state.groups[i].opacity[selectedVideo];
 
-      if (selectedGroup !== i) {
-        this.midiOutput.send(144, note1, (groupOpacity * 10) | 0);
-        this.midiOutput.send(144, note2, (groupOpacity * 10) | 0);
-      } else {
-        this.midiOutput.send(144, note1, 0);
-        this.midiOutput.send(144, note2, 0);
-      }
-    }
+    //   if (selectedGroup !== i) {
+    //     this.midiOutput.send(144, note1, (groupOpacity * 10) | 0);
+    //     this.midiOutput.send(144, note2, (groupOpacity * 10) | 0);
+    //   } else {
+    //     this.midiOutput.send(144, note1, 0);
+    //     this.midiOutput.send(144, note2, 0);
+    //   }
+    // }
 
-    console.log(selectedEffect);
-    console.log(selectedGroup);
-    for (var i = 0; i < 6; i++) {
-      let note1 = effectNotes[i * 2];
-      let note2 = effectNotes[i * 2 + 1];
+    // console.log(selectedEffect);
+    // console.log(selectedGroup);
+    // for (var i = 0; i < 6; i++) {
+    //   let note1 = effectNotes[i * 2];
+    //   let note2 = effectNotes[i * 2 + 1];
 
-      let values = this.state.videos[selectedVideo].values[i];
+    //   let values = this.state.videos[selectedVideo].values[i];
 
-      if (selectedEffect !== i) {
-        this.midiOutput.send(144, note1, (values[0] * 10) | 0);
-        this.midiOutput.send(144, note2, (values[1] * 10) | 0);
-      } else {
-        this.midiOutput.send(144, note1, 255);
-        this.midiOutput.send(144, note2, 255);
-      }
-    }
+    //   if (selectedEffect !== i) {
+    //     this.midiOutput.send(144, note1, (values[0] * 10) | 0);
+    //     this.midiOutput.send(144, note2, (values[1] * 10) | 0);
+    //   } else {
+    //     this.midiOutput.send(144, note1, 255);
+    //     this.midiOutput.send(144, note2, 255);
+    //   }
+    // }
   }
 
   debounce(callback, wait) {
