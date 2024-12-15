@@ -527,7 +527,7 @@ class Output {
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, attrs, attrs.texture, videoEl);
+    this.updateTexture(gl, attrs, attrs.srcs[idx], videoEl);
 
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
@@ -539,7 +539,15 @@ class Output {
       gl.bindFramebuffer(gl.FRAMEBUFFER, attrs.buffers[activeBuffer % 2]);
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
-      this.drawShapes(gl, idx, effects[i], shapes, video.values[i], -1);
+      this.drawShapes(
+        gl,
+        videoEl,
+        idx,
+        effects[i],
+        shapes,
+        video.values[i],
+        -1,
+      );
 
       gl.bindTexture(gl.TEXTURE_2D, attrs.textures[activeBuffer % 2]);
       activeBuffer++;
@@ -547,7 +555,7 @@ class Output {
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    this.drawShapes(gl, video, idx, attrs.main, shapes, [0, 0], 1);
+    this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
   }
 
   drawShapes(gl, video, idx, attrs, shapes, values, flip) {
@@ -597,7 +605,7 @@ class Output {
         0,
       );
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.texture);
+      gl.bindBuffer(gl.ARRAY_BUFFER, attrs.srcs[idx]);
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array([
@@ -700,6 +708,10 @@ class Output {
       vertexShaderSrc,
       fragmentShader,
     );
+
+    this.attrs.srcs = this.attrs.srcs.map((src) => {
+      return this.initTexture(this.gl);
+    });
 
     if (this.attrs.main !== null) {
       this.gl.clearColor(0, 0, 0, 1);
