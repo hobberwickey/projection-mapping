@@ -308,7 +308,7 @@ class App {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            console.log(note, velocity);
+            // console.log(note, velocity);
 
             let { shapes, groups, videos } = this.state;
             let { selectedVideos, selectedGroup, selectedEffect } = this;
