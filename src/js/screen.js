@@ -542,7 +542,7 @@ class Output {
       }
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, buffers[activeBuffer % 2]);
-      gl.viewport(0, 0, 1280, 720);
+      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
       this.drawShapes(
         gl,
