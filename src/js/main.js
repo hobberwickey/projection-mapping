@@ -471,9 +471,9 @@ class App {
 
     // this.rotateColors();
 
-    document
-      .querySelector("#launch")
-      .addEventListener("click", this.popout.bind(this));
+    // document
+    //   .querySelector("#launch")
+    //   .addEventListener("click", this.popout.bind(this));
 
     document
       .querySelector("#add_triangle")

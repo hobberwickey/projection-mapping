@@ -1,0 +1,43 @@
+<template id='launch-overlay'>
+  <div class="launch-overlay">
+    <h1 class="fance">Sensory Controls</h1>
+    <div id="launch">
+      <a href="javascript:void(0)"
+        ><span uk-icon="icon: play"></span>Launch</a
+      >
+      <p>
+        To get started, click the launch button and drag the opened window
+        onto your projector. Return to this window to configure and control
+        the projection
+      </p>
+    </div>
+  </div>
+</template>
+
+<script>
+  class LaunchOverlay extends HTMLElement {
+    static observedAttributes = ["state"];
+
+    constructor() {
+      super();
+    }
+
+    connectedCallback() {
+      this.appendChild(document.querySelector("#launch-overlay").content.cloneNode(true))
+    }
+
+    disconnectedCallback() {
+      console.log("Custom element removed from page.");
+    }
+
+    adoptedCallback() {
+      console.log("Custom element moved to new page.");
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      console.log(`Attribute ${name} has changed.`);
+    }
+  }
+
+  customElements.define("launch-overlay", LaunchOverlay);
+</script>
