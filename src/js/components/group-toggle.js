@@ -1,4 +1,4 @@
-export default class GroupToggle extends HTMLElement {
+export default class FXSlider extends HTMLElement {
   static observedAttributes = ["state"];
 
   constructor() {
@@ -8,15 +8,16 @@ export default class GroupToggle extends HTMLElement {
   connectedCallback() {
     this.shadow = this.attachShadow({ mode: "open" });
     this.shadow.innerHTML = `
-      <div class='row toggle'>
-        <div>
-          <input 
-            class='uk-checkbox' 
-            type='checkbox' 
-            checked=${} disabled value="${groupIdx}"  />
-        </div>
-      </div>
-    `
+      <input
+        class="${this.prod}"
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value="0.5"
+        class="uk-range opacity"
+      />
+    `;
   }
 
   disconnectedCallback() {
@@ -32,4 +33,4 @@ export default class GroupToggle extends HTMLElement {
   }
 }
 
-customElements.define("my-custom-element", MyCustomElement);
+customElements.define("fx-slider", MyCustomElement);
