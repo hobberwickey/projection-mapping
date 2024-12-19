@@ -1,6 +1,7 @@
 <template id="simple-component">
   <div :id="id + '-' + color" @click="handleClick">
-    Text content should be {{color === 'red' ? 'blue' : 'red'}} and {{color}}
+    Text content should be <b>{{color === 'red' ? 'blue' : 'red'}}</b> and {{color}}
+    <p>{{user?.name}}</p>
   </div>
 </template>
 
@@ -8,17 +9,14 @@
   class SimpleComponent extends Component {
     constructor() {
       super();
-
-      this.color = "red";
-      this.id = "attribute-bound";
     }
 
     static get observedAttributes() {
-      return [];
+      return ["id", "color"];
     }
 
     static get observedProperties() {
-      return [];
+      return ["user"];
     }
 
     handleClick() {
