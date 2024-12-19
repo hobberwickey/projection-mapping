@@ -16,6 +16,7 @@
     <script src="/javascripts/vendor/uikit.min.js"></script>
     <script src="/javascripts/vendor/uikit-icons.min.js"></script>
 
+    <script src="/js/component.js"></script>
     <!-- <script type="module" src="/components/launch-overlay/index.mjs"></script> -->
   </head>
 
@@ -95,7 +96,8 @@
         <div class="right">
           <div>
             <div class="effect-wrapper">
-              <h3>Effect Slots</h3>
+              <!-- <h3>Effect Slots</h3> -->
+              <simple-component></simple-component>
               <div
                 id="effects"
                 class="uk-grid-small uk-child-width-1-3@m"
@@ -162,11 +164,8 @@
     <launch-overlay></launch-overlay>
     <script>
       let prefix = "/components";
-      let components = [
-        "launch-overlay"
-      ]
+      let components = ["simple-component"];
 
-      
       components.map((component) => {
         fetch(`${prefix}/${component}.html`)
           .then((response) => {
@@ -197,8 +196,6 @@
             }
           });
       });
-     
-
     </script>
     <script src="/js/main.js"></script>
   </body>

@@ -1,0 +1,30 @@
+<template id="simple-component">
+  <div :id="id + '-' + color" @click="handleClick">
+    Text content should be {{color === 'red' ? 'blue' : 'red'}} and {{color}}
+  </div>
+</template>
+
+<script>
+  class SimpleComponent extends Component {
+    constructor() {
+      super();
+
+      this.color = "red";
+      this.id = "attribute-bound";
+    }
+
+    static get observedAttributes() {
+      return [];
+    }
+
+    static get observedProperties() {
+      return [];
+    }
+
+    handleClick() {
+      console.log("clicked");
+    }
+  }
+
+  customElements.define("simple-component", SimpleComponent);
+</script>

@@ -2,22 +2,20 @@
   <div class="launch-overlay">
     <h1 class="fance">Sensory Controls</h1>
     <div id="launch">
-      <a href="javascript:void(0)"><span uk-icon="icon: play"></span>Launch</a>
+      <a href="javascript:void(0)" @click="launch">
+        <span uk-icon="icon: play"></span>Launch
+      </a>
       <p>
         To get started, click the launch button and drag the opened window onto
         your projector. Return to this window to configure and control the
-        projection
+        projection {{test}}
       </p>
     </div>
   </div>
 </template>
 
 <script>
-  console.log("execute");
-
   class LaunchOverlay extends HTMLElement {
-    static observedAttributes = ["state"];
-
     constructor() {
       super();
     }
