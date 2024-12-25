@@ -1,0 +1,23 @@
+<template id="sensory-controls">
+  <sc-header :app="app"></sc-header>
+  <sc-content :app="app"></sc-content>
+  <launch-overlay :app="app" :color="color"></launch-overlay>
+</template>
+
+<script>
+  class SensoryControls extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return ["app", "color"];
+    }
+
+    connected() {
+      this.listen("app", "loader", () => {
+        console.log("App Loaded");
+      });
+    }
+  }
+</script>

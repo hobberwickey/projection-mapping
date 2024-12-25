@@ -1,7 +1,8 @@
 <template id="simple-component">
-  <div :id="id + '-' + color" @click="handleClick">
-    Text content should be <b>{{color === 'red' ? 'blue' : 'red'}}</b> and {{color}}
-    <p>{{user?.name}}</p>
+  <div :href='"test"' :id="id + '-' + color" @click="handleClick(color)">
+    Text content should be <b>{{color === 'red' ? 'blue' : 'red'}}</b> and
+    {{color}}
+    <p>{{id}}</p>
   </div>
 </template>
 
@@ -19,10 +20,8 @@
       return ["user"];
     }
 
-    handleClick() {
-      console.log("clicked");
+    handleClick(clr) {
+      console.log("clicky", clr);
     }
   }
-
-  customElements.define("simple-component", SimpleComponent);
 </script>

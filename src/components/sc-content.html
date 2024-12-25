@@ -1,0 +1,23 @@
+<template id="sc-content">
+  <div></div>
+</template>
+
+<script>
+  class SCContent extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedAttributes() {
+      return ["color"];
+    }
+
+    static get observedProperties() {
+      return ["state"];
+    }
+
+    connected() {
+      console.log(this.app);
+    }
+  }
+</script>
