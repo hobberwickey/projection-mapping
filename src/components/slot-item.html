@@ -1,0 +1,39 @@
+<template>
+  <div class="select">
+    <div class="select-display">Empty</div>
+    <div class="select-list">
+      <ul class="uk-list">
+        <li data-value="">Empty</li>
+      </ul>
+    </div>
+    <div class="select-handle">
+      <span uk-icon="icon: triangle-down"></span>
+    </div>
+  </div>
+</template>
+
+<script>
+  class SlotList extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return [
+        "idx",
+        "items",
+        "labelField",
+        "idField",
+        "selected",
+        "onChange",
+        "onSelect",
+      ];
+    }
+
+    connected() {
+      this.listen("items", "items_update", (values, oldValues) => {
+        console.log(values);
+      });
+    }
+  }
+</script>

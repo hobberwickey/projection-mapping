@@ -84,8 +84,7 @@ class Component extends HTMLElement {
       //   }
       // } else {
 
-      console.log(this.children);
-
+      this.__children__ = [...this.children];
       if (!!ComponentRegistry.templates[name]) {
         let template =
           ComponentRegistry.templates[name].content.cloneNode(true);
@@ -187,9 +186,11 @@ class Component extends HTMLElement {
                     context = bindings[i](context, values);
                   }
 
-                  console.log(prop, el);
-
                   el[attr.replace(":", "")] = context;
+
+                  if (!["array", "object"].includes(typeof context)) {
+                    el.setAttribute(attr.replace(":", ""), context);
+                  }
                 }
               }
             },
@@ -306,12 +307,12 @@ class Component extends HTMLElement {
         for (var i = 0; i < attrs.length; i++) {
           if (attrExp.test(attrs[i].name)) {
             bindAttribute(el, attrs[i].name, attrs[i].value);
-            // el.removeAttribute(attrs[i].name);
+            // el.setAttribute(attrs[i].name.replace(":", ""), attrs[i].value);
           }
 
           if (eventExp.test(attrs[i].name)) {
             bindEvent(el, attrs[i].name, attrs[i].value);
-            // el.removeAttribute(attrs[i].name);
+            // el.setAttribute(attrs[i].name);
           }
         }
       }
@@ -372,6 +373,10 @@ class Component extends HTMLElement {
         }
 
         el[attr.replace(":", "")] = context;
+
+        if (!["array", "object"].includes(typeof context)) {
+          el.setAttribute(attr.replace(":", ""), context);
+        }
       }
     }
 

@@ -1,0 +1,56 @@
+<template>
+	<div>
+		<div class="left">
+			<div :id="'video-' + idx" class="video-header">
+				<label :for="'video-' + idx">
+					<input
+						:id="'video-' + idx"
+						type="radio"
+						name="video"
+						class="uk-radio"
+					/>
+					<input
+						type="text"
+						class="uk-card-title"
+						:value="video?.label || 'Video ' + idx"
+					/> </label
+				><a
+					class="remove-video"
+					href="javascript:void(0)"
+					uk-icon="icon: trash"
+				></a>
+			</div>
+			<div class="video-body">
+				<div class="preview no-video upload-wrapper">
+					<video></video>
+					<p>No Video</p>
+					<label class="uk-label" :for="'video-' + idx + '-input'"></label>
+					<input
+						:id="'video-' + idx + '-input'"
+						type="file"
+						accept="video/mp4,video/x-m4v,video/*"
+					/>
+				</div>
+			</div>
+		</div>
+		<div class="right">
+			<div>
+				<vertical-range></vertical-range>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+	class VideoSlot extends Component {
+		constructor() {
+			super();
+		}
+
+		static get observedProperties() {
+			return ["idx", "video"];
+		}
+
+		connected() {}
+	}
+</script>

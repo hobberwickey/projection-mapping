@@ -1,0 +1,17 @@
+<template>
+	<div class="range-input">
+		<input type="range" min="0" max="1" step="0.01" value="0.5" />
+	</div>
+</template>
+
+<script>
+	class VerticalRange extends Component {
+		constructor() {
+			super();
+		}
+
+		static get observedProperties() {
+			return ["onUpdate"];
+		}
+	}
+</script>

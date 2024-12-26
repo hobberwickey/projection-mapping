@@ -1,0 +1,16 @@
+<script>
+  class SlotList extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return [];
+    }
+
+    connected() {
+      console.log("This doesn't really need to do anything does it?")
+      console.log(this.__children__);
+    }
+  }
+</script>

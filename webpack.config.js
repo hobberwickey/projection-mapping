@@ -79,6 +79,13 @@ class WebComponentsLoader {
               let script = doc.querySelector("script");
               let style = doc.querySelector("style");
 
+              if (!script) {
+                console.log(`File ${file} is not a valid component`);
+                return;
+              } else {
+                console.log(`Bundling Component: ${file}`);
+              }
+
               templates.push(
                 `
               (() => {
@@ -131,6 +138,7 @@ module.exports = {
     screen: "/src/js/screen.js",
     effects: "/src/js/effects.js",
     styles: ["/src/scss/main.scss"],
+    restyle: ["/src/scss/restyle.scss"],
   },
   // watch: true,
   mode: "production",
