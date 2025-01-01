@@ -86,15 +86,15 @@
     }
 
     connected() {
-      this.listen("app", "loader", () => {
-        this.onConnect();
-      });
+      // this.listen("app", "loader", () => {
+      //   this.onConnect();
+      // });
     }
 
     onConnect() {
-      let { context } = this.app;
+      // let { context } = this.app;
 
-      context.subscribe("ui", (value, oldValue) => {});
+      
     }
 
     addTriangle() {

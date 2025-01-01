@@ -248,19 +248,17 @@ slot-list {
           height: 35px;
         }
       }
-    }
 
-    &.active {
-      .select-list {
-        opacity: 1;
-        pointer-events: all;
+      &.active {
+        .select-list {
+          opacity: 1;
+          pointer-events: all;
+        }
       }
     }
 
     &.selected {
-      .effect {
-        box-shadow: 0px 1px 14px 6px hsl(184.14deg 100% 51.57%) !important;
-      }
+      box-shadow: 0px 1px 14px 6px hsl(184.14deg 100% 51.57%) !important;
     }
   }
 }

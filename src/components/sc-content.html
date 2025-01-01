@@ -40,37 +40,30 @@
       <div class="slots uk-width-1-1 uk-flex">
         <div class="uk-width-1-2">
           <label>Script Slots</label>
-          <slot-list class="effects uk-grid-collapse" uk-grid>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-          </slot-list>
+          <slot-list
+            :select="selectScript"
+            :update="updateScript"
+            :selected="selectedScript"
+            :items="[]"
+            class="effects uk-grid-collapse"
+            uk-grid
+          ></slot-list>
         </div>
         <div class="uk-width-1-2">
           <label>Effect Slots</label>
-          <slot-list class="effects uk-grid-collapse" uk-grid>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-            <slot-item></slot-item>
-          </slot-list>
+          <slot-list
+            :select="selectEffect"
+            :update="updateEffect"
+            :selected="selectedEffect"
+            :items="app?.effects"
+            class="effects uk-grid-collapse"
+            uk-grid
+          ></slot-list>
         </div>
       </div>
       <div class="controls uk-width-1-1 uk-flex">
         <div class="videos uk-width-6-10">
-          <div class="uk-child-width-1-3@s uk-grid-collapse" uk-grid>
-            <video-slot idx="1"></video-slot>
-            <video-slot idx="2"></video-slot>
-            <video-slot idx="3"></video-slot>
-            <video-slot idx="4"></video-slot>
-            <video-slot idx="5"></video-slot>
-            <video-slot idx="6"></video-slot>
-          </div>
+          <video-slots :app="app" :selected="selectedVideo"></video-slots>
         </div>
         <div class="sliders uk-width-4-10">
           <div>
@@ -89,16 +82,61 @@
       super();
     }
 
-    static get observedAttributes() {
-      return ["color"];
-    }
-
     static get observedProperties() {
-      return ["state"];
+      return [
+        "app",
+        "state",
+        "selectedVideo",
+        "selectedEffect",
+        "selectedScript",
+      ];
     }
 
     connected() {
-      console.log(this.app);
+      this.listen("state", "state-changed", (state) => {
+        // Todo: There's probably a more effecticent way of transfers these bindings
+        this.selectedVideo = state.selected.video;
+        this.selectedEffect = state.selected.effect;
+        this.selectedScript = state.selected.script;
+      });
+
+      this.listen("app", "app-loaded", (app) => {
+        console.log("App Loaded:", app.effects)
+      })
+
+      this.listen("selectedEffect", "select-effect", (selected) => {
+        let slots = this.querySelectorAll("slot-items.effects").forEach(
+          (slot, idx) => {
+            slot.classList.toggle("selected", selected === idx);
+          },
+        );
+      });
+
+      this.listen("selectedScript", "select-script", (selected) => {
+        let slots = this.querySelectorAll("slot-items.scripts").forEach(
+          (slot, idx) => {
+            slot.classList.toggle("selected", selected === idx);
+          },
+        );
+      });
+    }
+
+    selectEffect(idx) {
+      this.app.updateSelected("effect", idx);
+    }
+
+    updateEffect(idx, effect) {
+      console.log(idx, effect)
+      this.app.setEffect(idx, effect);
+    }
+
+    selectScript(idx) {
+      console.log("Script Selected", idx);
+      this.app.updateSelected("script", idx);
+    }
+
+    updateScript(idx, script) {
+      console.log("Script Updated:", idx, effect);
     }
   }
 </script>

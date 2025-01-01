@@ -24,6 +24,44 @@
 
     <script src="/js/components.js"></script>
     <script src="/js/rebuild.js"></script>
+
+    <script>
+      // (() => {
+      //   let value = {
+      //     window: null
+      //   }
+        
+      //   for (var x in window) {
+      //     value[x] = null
+      //   }
+
+      //   let scope = {};
+      //   Object.defineProperty(scope, "test", {
+      //     get() {
+      //       console.log("Getting Test");
+      //       return test;
+      //     }
+      //   })
+
+      //   let names = Object.keys(value);
+      //   let values = Object.values(value);
+        
+      //   console.log(scope)
+      //   let fn = () => {
+      //     return new Function(...[...names, "scope"], `
+      //       console.log(window); 
+      //       console.log(location);
+
+      //       with (scope) {
+      //         console.log(test);
+      //       }
+      //     `)(...[...values, scope]);
+      //   }
+
+      //   console.log("function created");
+      //   fn();
+      // })()
+    </script>
   </body>
 
   <!-- <div id="page" class="fullscreen">

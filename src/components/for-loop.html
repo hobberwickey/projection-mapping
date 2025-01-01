@@ -1,0 +1,32 @@
+<script>
+  class ForLoop extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return ["items", "select"];
+    }
+
+    connected() {
+      this.renderItems();
+      this.listen("items", "items-updated", () => {
+        this.renderItems();
+      });
+    }
+
+    renderItems() {
+      // console.log(this.select)
+
+      // let frag = document.createDocumentFragment();
+      // let len = (this.items || []).length;
+
+      // for (var i = 0; i < len; i++) {
+      //   frag.appendChild(this.template.content.cloneNode(true));
+      // }
+
+      // this.innerHTML = "";
+      // this.appendChild(frag);
+    }
+  }
+</script>

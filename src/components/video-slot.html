@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div @click="select(idx)">
 		<div class="left">
 			<div :id="'video-' + idx" class="video-header">
 				<label :for="'video-' + idx">
@@ -12,9 +12,10 @@
 					<input
 						type="text"
 						class="uk-card-title"
-						:value="video?.label || 'Video ' + idx"
+						:value="video?.label || 'Video ' + (idx + 1)"
 					/> </label
 				><a
+					@click="onRemove()"
 					class="remove-video"
 					href="javascript:void(0)"
 					uk-icon="icon: trash"
@@ -27,6 +28,7 @@
 					<label class="uk-label" :for="'video-' + idx + '-input'"></label>
 					<input
 						:id="'video-' + idx + '-input'"
+						@change="onChange($event)"
 						type="file"
 						accept="video/mp4,video/x-m4v,video/*"
 					/>
@@ -35,7 +37,7 @@
 		</div>
 		<div class="right">
 			<div>
-				<vertical-range></vertical-range>
+				<vertical-range :update="updateOpacity"></vertical-range>
 			</div>
 		</div>
 	</div>
@@ -45,12 +47,49 @@
 	class VideoSlot extends Component {
 		constructor() {
 			super();
+
+			this.loaded = false;
 		}
 
 		static get observedProperties() {
-			return ["idx", "video"];
+			return [
+				"idx",
+				"video",
+				"select",
+				"update",
+				"rename",
+				"delete",
+				"opacity",
+			];
 		}
 
-		connected() {}
+		onChange(e) {
+			if (e.target.files.length > 0) {
+				this.querySelector("video").src = URL.createObjectURL(
+					e.target.files[0],
+				);
+
+				this.querySelector("video").currentTime = 50;
+				this.querySelector(".preview").classList.remove("no-video");
+				this.querySelector("input[type='file']").disabled = true;
+			}
+
+			this.loaded = true;
+			this.update(this.idx, e.target.files[0]);
+		}
+
+		onRemove() {
+			this.loaded = false;
+
+			this.querySelector("video").src = "";
+			this.querySelector("input[type='file']").disabled = false;
+			this.querySelector(".preview").classList.add("no-video");
+
+			this.delete(this.idx);
+		}
+
+		updateOpacity(e) {
+			this.opacity(this.idx, e.target.value);
+		}
 	}
 </script>

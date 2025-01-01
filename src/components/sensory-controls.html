@@ -1,22 +1,42 @@
 <template id="sensory-controls">
-  <sc-header :app="app"></sc-header>
-  <sc-content :app="app"></sc-content>
-  <!-- <launch-overlay :app="app" :color="color"></launch-overlay> -->
+  <sc-header :app="app" :storage="storage"></sc-header>
+  <sc-content :app="app" :state="state"></sc-content>
+  <launch-overlay :app="app"></launch-overlay>
 </template>
 
 <script>
   class SensoryControls extends Component {
     constructor() {
       super();
+
+      this.loaded = false;
     }
 
     static get observedProperties() {
-      return ["app", "color"];
+      return ["app", "state", "config", "storage"];
     }
 
     connected() {
-      this.listen("app", "loader", () => {
-        console.log("App Loaded");
+      this.listen("app", "loader", (app) => {
+        if (!this.loaded) {
+          this.config = app.context.config;
+          this.state = app.context.state;
+          this.storage = app.context.storage;
+
+          app.context.listen("config", (config) => {
+            this.config = config;
+          });
+
+          app.context.listen("state", (state) => {
+            this.state = state;
+          });
+
+          app.context.listen("storage", (storage) => {
+            this.storage = storage;
+          });
+        }
+
+        this.loaded = true;
       });
     }
   }

@@ -11,42 +11,9 @@ const defaultTriangle = [
   [0.5, 0.6],
 ];
 
-class App {
+class Storage {
   constructor(context) {
     this.context = context;
-
-    this.context.state = this.defaultState();
-    this.context.ui = this.defaultUI();
-
-    this.id = this.gen_id();
-    this.name = "My Project";
-    // this.config = config;
-    this.screen = null;
-
-    // this.state = this.defaultState();
-
-    this.selectedVideos = [0];
-    this.selectedGroup = 0;
-    this.selectedEffect = 0;
-
-    this.selectedShape = null;
-    this.selectedVertex = null;
-
-    this.midiAccess = null;
-    this.midiInput = null;
-    this.midiOutput = null;
-
-    // this.setupVideos();
-    // this.setupGroups();
-    // this.setupEffects();
-    // this.setupMidi();
-    // this.setValues();
-
-    this.launch();
-  }
-
-  gen_id() {
-    return (Math.random() * 1000000) | 0;
   }
 
   save() {
@@ -188,10 +155,50 @@ class App {
       this.screen.postMessage(
         JSON.stringify({
           action: "update_state",
-          state: this.state,
+          state: this.context.state,
         }),
       );
     }
+  }
+}
+
+class App {
+  constructor(context) {
+    this.context = context;
+    this.context.state = this.defaultState();
+
+    this.effects = Effects;
+
+    this.id = this.gen_id();
+    this.name = "My Project";
+    this.screen = null;
+
+    this.selectedVideos = [0];
+    this.selectedGroup = 0;
+    this.selectedEffect = 0;
+
+    this.selectedShape = null;
+    this.selectedVertex = null;
+
+    this.midiAccess = null;
+    this.midiInput = null;
+    this.midiOutput = null;
+
+    // this.setupVideos();
+    // this.setupGroups();
+    // this.setupEffects();
+    // this.setupMidi();
+    // this.setValues();
+
+    this.launch();
+  }
+
+  saveState() {
+    // stub
+  }
+
+  gen_id() {
+    return (Math.random() * 1000000) | 0;
   }
 
   defaultUI() {
@@ -204,6 +211,11 @@ class App {
     let { config } = this.context;
 
     return {
+      selected: {
+        video: null,
+        effect: null,
+        script: null,
+      },
       videos: new Array(config.video_count).fill().map((_, idx) => {
         return {
           id: this.gen_id(),
@@ -222,7 +234,7 @@ class App {
         return {
           id: this.gen_id(),
           editable: idx !== 0,
-          opacity: new Array(config.video_count).fill(0),
+          opacity: new Array(config.video_count).fill(0.5),
           label: idx === 0 ? "All" : `Group ${idx}`,
           shapes: [],
         };
@@ -233,7 +245,7 @@ class App {
           id: this.gen_id(),
           type: "triangle",
           label: "Triangle 1",
-          opacity: new Array(config.video_count).fill(0),
+          opacity: new Array(config.video_count).fill(0.5),
           points: {
             input: [
               [0, 0],
@@ -573,72 +585,77 @@ class App {
     this.name = e.target.value;
   }
 
-  updateProjectList() {
-    let projectList = document.querySelector("#project_list");
-    let projects = this.getProjects();
-
-    console.log("Projects:", projects);
-
-    projectList.innerHTML = "";
-    if (projects.length > 0) {
-      projects.map((p) => {
-        let item = document.createElement("li");
-
-        item.innerText = p.name;
-        item.className = `clickable ${p.id === this.id ? "active" : ""}`;
-        item.addEventListener("click", () => {
-          this.load(p.id);
-        });
-
-        projectList.appendChild(item);
-      });
-    } else {
-      let item = document.createElement("li");
-
-      item.innerText = "No Saved Projects";
-      projectList.appendChild(item);
-    }
+  updateSelected(type, idx) {
+    this.context.state.selected[type] = idx;
+    this.context.state = { ...this.context.state };
   }
 
-  toggleSlideout() {
-    let el = document.querySelector(".slideout");
+  // updateProjectList() {
+  //   let projectList = document.querySelector("#project_list");
+  //   let projects = this.getProjects();
 
-    if (el.classList.contains("active")) {
-      el.classList.remove("active");
-      el.querySelector("#slideout-handle").setAttribute(
-        "uk-icon",
-        "chevron-double-left",
-      );
+  //   console.log("Projects:", projects);
 
-      document.querySelector("#page").classList.remove("slideout-active");
-    } else {
-      el.classList.add("active");
-      el.querySelector("#slideout-handle").setAttribute(
-        "uk-icon",
-        "chevron-double-right",
-      );
+  //   projectList.innerHTML = "";
+  //   if (projects.length > 0) {
+  //     projects.map((p) => {
+  //       let item = document.createElement("li");
 
-      document.querySelector("#page").classList.add("slideout-active");
-    }
-  }
+  //       item.innerText = p.name;
+  //       item.className = `clickable ${p.id === this.id ? "active" : ""}`;
+  //       item.addEventListener("click", () => {
+  //         this.load(p.id);
+  //       });
 
-  rotateColors() {
-    this.colors.bg = (this.colors.bg + 0.05) % 360;
-    this.colors.fg = (this.colors.fg + 0.02) % 360;
-    this.colors.hd = (this.colors.hd + 0.03) % 360;
+  //       projectList.appendChild(item);
+  //     });
+  //   } else {
+  //     let item = document.createElement("li");
 
-    document.body.style.backgroundColor = `hsl(${this.colors.bg}deg 20.54% 90.41%)`;
-    document.querySelector("nav").style.backgroundColor =
-      `hsl(${this.colors.hd}deg 20.54% 90.41%)`;
-    document
-      .querySelector(":root")
-      .style.setProperty(
-        "--fg-color",
-        `hsl(${this.colors.fg}deg 20.54% 50.41%)`,
-      );
+  //     item.innerText = "No Saved Projects";
+  //     projectList.appendChild(item);
+  //   }
+  // }
 
-    // window.requestAnimationFrame(this.rotateColors.bind(this));
-  }
+  // toggleSlideout() {
+  //   let el = document.querySelector(".slideout");
+
+  //   if (el.classList.contains("active")) {
+  //     el.classList.remove("active");
+  //     el.querySelector("#slideout-handle").setAttribute(
+  //       "uk-icon",
+  //       "chevron-double-left",
+  //     );
+
+  //     document.querySelector("#page").classList.remove("slideout-active");
+  //   } else {
+  //     el.classList.add("active");
+  //     el.querySelector("#slideout-handle").setAttribute(
+  //       "uk-icon",
+  //       "chevron-double-right",
+  //     );
+
+  //     document.querySelector("#page").classList.add("slideout-active");
+  //   }
+  // }
+
+  // rotateColors() {
+  //   this.colors.bg = (this.colors.bg + 0.05) % 360;
+  //   this.colors.fg = (this.colors.fg + 0.02) % 360;
+  //   this.colors.hd = (this.colors.hd + 0.03) % 360;
+
+  //   document.body.style.backgroundColor = `hsl(${this.colors.bg}deg 20.54% 90.41%)`;
+  //   document.querySelector("nav").style.backgroundColor =
+  //     `hsl(${this.colors.hd}deg 20.54% 90.41%)`;
+  //   document
+  //     .querySelector(":root")
+  //     .style.setProperty(
+  //       "--fg-color",
+  //       `hsl(${this.colors.fg}deg 20.54% 50.41%)`,
+  //     );
+
+  //   // window.requestAnimationFrame(this.rotateColors.bind(this));
+  // }
 
   setupVideos() {
     let { updateVideo, toggleVideo, selectedVideos, removeVideo } = this;
@@ -794,7 +811,7 @@ class App {
     // Stub
   }
 
-  updateVideo(idx, video, file) {
+  updateVideo(idx, file) {
     if (!this.screen) {
       return;
     }
@@ -813,6 +830,50 @@ class App {
     this.screen.postMessage(file);
   }
 
+  updateOpacity(videoIdx, value) {
+    if (!this.screen) {
+      return;
+    }
+
+    let { shapes, groups, videos } = this.context.state;
+    let { sliders } = this.context.state.notes;
+
+    let notes = Object.keys(sliders.output);
+    let group = groups[0];
+    let ids = shapes.map((_, idx) => idx);
+
+    let opacity = group.opacity[videoIdx];
+    let diff = value - opacity;
+
+    for (var j = 0; j < ids.length; j++) {
+      let shape = shapes[ids[j]];
+      let oldValue = shape.opacity[videoIdx];
+      let shapeDiff = +value - oldValue;
+      let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
+
+      shape.opacity[videoIdx] = newValue;
+    }
+
+    group.opacity[videoIdx] = opacity + diff;
+
+    if (!!this.midiOutput) {
+      this.midiOutput.send([
+        144,
+        notes[0],
+        (group.opacity[videoIdx] * 127) | 0,
+      ]);
+    }
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "update_state",
+        state: this.context.state,
+      }),
+    );
+
+    this.saveState();
+  }
+
   updateEffect(effect, e) {
     if (!this.screen) {
       return;
@@ -828,61 +889,62 @@ class App {
     let group = groups[selectedGroup];
     let ids = selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
 
-    if (effect === "opacity") {
-      for (var i = 0; i < selectedVideos.length; i++) {
-        let videoIdx = selectedVideos[i];
-        let opacity = group.opacity[videoIdx];
-        let diff = value - opacity;
+    // if (effect === "opacity") {
+    //   for (var i = 0; i < selectedVideos.length; i++) {
+    //     let videoIdx = selectedVideos[i];
+    //     let opacity = group.opacity[videoIdx];
+    //     let diff = value - opacity;
 
-        for (var j = 0; j < ids.length; j++) {
-          let shape = shapes[ids[j]];
-          let oldValue = shape.opacity[videoIdx];
-          let shapeDiff = +value - oldValue;
-          let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
+    //     for (var j = 0; j < ids.length; j++) {
+    //       let shape = shapes[ids[j]];
+    //       let oldValue = shape.opacity[videoIdx];
+    //       let shapeDiff = +value - oldValue;
+    //       let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
 
-          shape.opacity[videoIdx] = newValue;
-        }
+    //       shape.opacity[videoIdx] = newValue;
+    //     }
 
-        group.opacity[videoIdx] = opacity + diff;
-        // console.log("Target:", group.opacity[videoIdx] * 127);
+    //     group.opacity[videoIdx] = opacity + diff;
+    //     // console.log("Target:", group.opacity[videoIdx] * 127);
+    //   }
+
+    //   if (!!this.midiOutput) {
+    //     this.midiOutput.send([
+    //       144,
+    //       notes[0],
+    //       (group.opacity[selectedVideos[0]] * 127) | 0,
+    //     ]);
+    //   }
+    // } else {
+    //
+    let diff = 0;
+    let effectIdx = effect === "effect_a" ? 0 : 1;
+
+    for (var i = 0; i < selectedVideos.length; i++) {
+      let video = videos[selectedVideos[i]];
+      let oldValue = video.values[selectedEffect][effectIdx];
+      if (i === 0) {
+        diff = +value - oldValue;
       }
-
-      if (!!this.midiOutput) {
-        this.midiOutput.send([
-          144,
-          notes[0],
-          (group.opacity[selectedVideos[0]] * 127) | 0,
-        ]);
-      }
-    } else {
-      let diff = 0;
-      let effectIdx = effect === "effect_a" ? 0 : 1;
-
-      for (var i = 0; i < selectedVideos.length; i++) {
-        let video = videos[selectedVideos[i]];
-        let oldValue = video.values[selectedEffect][effectIdx];
-        if (i === 0) {
-          diff = +value - oldValue;
-        }
-        let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-        video.values[selectedEffect][effectIdx] = newValue;
-      }
-
-      let noteIdx = effect === "effect_a" ? 1 : 2;
-      if (!!this.midiOutput) {
-        this.midiOutput.send([
-          144,
-          notes[noteIdx],
-          (videos[selectedVideos[0]].values[selectedEffect][effectIdx] * 127) |
-            0,
-        ]);
-      }
+      let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
+      video.values[selectedEffect][effectIdx] = newValue;
     }
+
+    let noteIdx = effect === "effect_a" ? 1 : 2;
+    if (!!this.midiOutput) {
+      this.midiOutput.send([
+        144,
+        notes[noteIdx],
+        (videos[selectedVideos[0]].values[selectedEffect][effectIdx] * 127) | 0,
+      ]);
+    }
+
+    // }
 
     this.screen.postMessage(
       JSON.stringify({
         action: "update_state",
-        state: this.state,
+        state: this.context.state,
       }),
     );
 
@@ -904,7 +966,7 @@ class App {
   }
 
   removeVideo(idx) {
-    let video = this.state.videos[idx];
+    let video = this.context.state.videos[idx];
     video.values = new Array(6).fill().map((a) => {
       return [0, 0];
     });
@@ -913,13 +975,9 @@ class App {
       JSON.stringify({
         action: "remove_video",
         videoIdx: idx,
-        state: this.state,
+        state: this.context.state,
       }),
     );
-
-    let videoElements = document.querySelectorAll(".video");
-    let videoEl = videoElements[idx];
-    videoEl.querySelector(".preview").classList.add("no-video");
 
     this.saveState();
     this.setValues();
@@ -959,23 +1017,27 @@ class App {
   }
 
   setEffect(idx, effect) {
-    this.state.effects[idx] = effect;
+    let { state } = this.context;
 
-    let fx = Effects.find((e) => e.id === effect);
+    state.effects[idx] = effect;
+
+    let fx = this.effects.find((e) => e.id === effect);
     if (!!fx) {
-      for (var i = 0; i < this.state.videos.length; i++) {
-        this.state.videos[i].values[idx] = [...fx.defaults];
+      for (var i = 0; i < state.videos.length; i++) {
+        state.videos[i].values[idx] = [...fx.defaults];
       }
     } else {
       console.log("Unknown Effect", effect);
     }
+
+    this.context.state = { ...state };
 
     this.screen.postMessage(
       JSON.stringify({
         action: "set_effect",
         effectIdx: idx,
         effect: effect,
-        state: this.state,
+        state: state,
       }),
     );
 
@@ -984,17 +1046,17 @@ class App {
   }
 
   setValues() {
-    let selectedVideo = this.selectedVideos[0];
-    let selectedGroup = this.selectedGroup;
-    let selectedEffect = this.selectedEffect;
+    // let selectedVideo = this.selectedVideos[0];
+    // let selectedGroup = this.selectedGroup;
+    // let selectedEffect = this.selectedEffect;
 
-    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
-    let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    // let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
+    // let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
+    // let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
 
-    document.querySelectorAll(".inputs input")[0].value = opacity;
-    document.querySelectorAll(".inputs input")[1].value = effect_a;
-    document.querySelectorAll(".inputs input")[2].value = effect_b;
+    // document.querySelectorAll(".inputs input")[0].value = opacity;
+    // document.querySelectorAll(".inputs input")[1].value = effect_a;
+    // document.querySelectorAll(".inputs input")[2].value = effect_b;
 
     this.setMidi();
     this.setLEDS();
@@ -1013,6 +1075,8 @@ class App {
   }
 
   setMidi() {
+    // stub
+    return;
     let selectedVideo = this.selectedVideos[0];
     let selectedGroup = this.selectedGroup;
     let selectedEffect = this.selectedEffect;
@@ -1032,6 +1096,8 @@ class App {
   }
 
   setLEDS() {
+    // stub
+    return;
     if (!this.midiOutput) {
       return;
     }
@@ -1149,7 +1215,6 @@ window.addEventListener("load", () => {
     config: { ...Config.default },
     state: {},
     storage: {},
-    ui: {},
   });
 
   const app = new App(context);
