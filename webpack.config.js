@@ -123,7 +123,7 @@ class WebComponentsLoader {
           );
 
           let outputStr = `${componentsTemplate.toString()} \n\n ${templates.join("\n\n")}`;
-
+          console.log("Outputing", this.options.output);
           compilation.emitAsset(this.options.output, new RawSource(outputStr));
         },
       );

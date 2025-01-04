@@ -24,6 +24,7 @@ class Component extends HTMLElement {
 
     // Binding cache
     this.__bindings__ = [];
+    this.__childbindings__ = [];
     this.__observed__ = {};
     this.__values__ = {};
 
@@ -41,7 +42,17 @@ class Component extends HTMLElement {
     return [];
   }
 
-  listen(key, handle, fn) {
+  listen(key, fn) {
+    const uuid = () => {
+      return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+        (
+          +c ^
+          (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))
+        ).toString(16),
+      );
+    };
+
+    let handle = uuid();
     if (this.__observed__.hasOwnProperty(key)) {
       let observers = this.__observed__[key];
       let idx = observers.findIndex((o) => o.el === this && o.attr === handle);
@@ -50,6 +61,7 @@ class Component extends HTMLElement {
         observers.push({
           el: this,
           attr: handle,
+          hidden: true,
           context: "",
           bindings: [
             (context, values) => {
@@ -61,6 +73,7 @@ class Component extends HTMLElement {
         observers.splice(idx, 1, {
           el: this,
           attr: handle,
+          hidden: true,
           context: "",
           bindings: [
             (context, values) => {
@@ -68,17 +81,6 @@ class Component extends HTMLElement {
             },
           ],
         });
-      }
-    }
-  }
-
-  unlisten(key, handle, fn) {
-    if (this.__observed__.hasOwnProperty(key)) {
-      let observers = this.__observed__[prop];
-      let idx = observers.findIndex((o) => o.el === this && o.attr === handle);
-
-      if (idx !== -1) {
-        observers.splice(idx, 1);
       }
     }
   }
@@ -96,6 +98,9 @@ class Component extends HTMLElement {
           this.__observed__.hasOwnProperty(prop)
         ) {
           let { el, attr, context, bindings } = this.__current_target__;
+
+          // console.log(el, attr, context);
+
           let observers = this.__observed__[prop];
           let idx = observers.findIndex((o) => o.el === el && o.attr === attr);
 
@@ -117,7 +122,7 @@ class Component extends HTMLElement {
 
           let values = this.__get_values__();
           for (var i = 0; i < len; i++) {
-            let { el, attr, context, bindings } = observers[i];
+            let { el, attr, hidden, context, bindings } = observers[i];
 
             for (let i = 0; i < bindings.length; i++) {
               context = bindings[i](context, values);
@@ -126,7 +131,7 @@ class Component extends HTMLElement {
             el[attr.replace(":", "")] = context;
 
             if (!["array", "object", "function"].includes(typeof context)) {
-              if (!!el.setAttribute) {
+              if (!hidden && !!el.setAttribute) {
                 el.setAttribute(attr.replace(":", ""), context);
               }
             }
@@ -138,7 +143,7 @@ class Component extends HTMLElement {
     try {
       Object.defineProperties(this, p);
     } catch (e) {
-      console.log("Error defining properties", e);
+      console.log("Error defining properties", this, e);
     }
   }
 
@@ -164,12 +169,6 @@ class Component extends HTMLElement {
 
         this.__parseTemplate__(template);
         this.appendChild(template);
-      } else {
-        console.log(
-          "No Template",
-          this.constructor.observedProperties,
-          this.observedProperties,
-        );
       }
 
       // console.log(this, this.constructor.observedProperties);
@@ -206,6 +205,7 @@ class Component extends HTMLElement {
       if (!binding) {
         binding = {
           el: el,
+          created: [],
           attrs: {},
         };
 
@@ -213,9 +213,14 @@ class Component extends HTMLElement {
       }
 
       if (!binding.attrs[attr]) {
-        let context = el[attr];
-        if (!!el.getAttribute) {
-          context = el.getAttribute(attr);
+        let context;
+        if (attr === "template") {
+          context = el.querySelector("template");
+        } else {
+          context = el[attr];
+          if (!!el.getAttribute) {
+            context = el.getAttribute(attr);
+          }
         }
 
         binding.attrs[attr] = {
@@ -239,8 +244,8 @@ class Component extends HTMLElement {
           }`,
         );
 
-        binding.attrs[attr].bindings.push((ctx, values) => {
-          return ctx.replace(match[0], fn(values));
+        binding.attrs[attr].bindings.push((snippet, values) => {
+          return snippet.replace(match[0], fn(values));
         });
       }
     };
@@ -256,7 +261,7 @@ class Component extends HTMLElement {
         }`,
       );
 
-      binding.attrs[attr].bindings.push((ctx, values) => {
+      binding.attrs[attr].bindings.push((snippet, values) => {
         return fn(values);
       });
     };
@@ -278,103 +283,226 @@ class Component extends HTMLElement {
       });
     };
 
-    const createTemplateContext = (oCtx) => {
+    const createTemplateContext = (oCtx, idx, key, value) => {
       let values = {};
-      for (var x in oCtx.__values__) {
+      let observed = {};
+
+      for (var x in oCtx.__observed__) {
+        observed[x] = [];
+      }
+
+      let ctx = {
+        __bindings__: [],
+        __observed__: observed,
+        __childbindings__: [],
+        __values__: values,
+        __template__: null,
+        __current_target: null,
+        __parent__: oCtx,
+        __current_target__: null,
+
+        __get_values__: function () {
+          return values;
+        },
+      };
+
+      for (let x in oCtx.__values__) {
         Object.defineProperty(values, x, {
           get: () => {
+            if (
+              ctx.__current_target__ !== null &&
+              ctx.__observed__.hasOwnProperty(x)
+            ) {
+              let { el, attr, context, bindings } = ctx.__current_target__;
+
+              let observers = ctx.__observed__[x];
+              let idx = observers.findIndex(
+                (o) => o.el === el && o.attr === attr,
+              );
+
+              if (idx === -1) {
+                observers.push({ ...ctx.__current_target__ });
+              } else {
+                observers.splice(idx, 1, { ...ctx.__current_target__ });
+              }
+            }
+
             return oCtx.__values__[x];
           },
         });
       }
 
-      return {
-        __bindings__: [],
-        __values__: values,
-        __template__: null,
-        __current_target: null,
-        __parent__: oCtx,
-
-        __getValues__: function () {
-          // Inject $key, $value, and $idx
-
-          return this.__values__;
+      Object.defineProperties(values, {
+        $idx: {
+          get: () => {
+            return idx;
+          },
         },
-      };
+        $key: {
+          get: () => {
+            return key;
+          },
+        },
+        $value: {
+          get: () => {
+            return value;
+          },
+        },
+      });
+
+      return ctx;
     };
 
     const bindTemplate = (el, oCtx) => {
-      let attrs = [...(el.attributes || [])];
-      let ctx = createTemplateContext(oCtx);
+      let binding = getBinding(el.parentNode, "template", oCtx);
 
-      ctx.__template__ = el.content.cloneNode(true);
-
-      walk(ctx.__template__, ctx);
-
-      let type = el.getAttribute(":type");
+      let type = el.hasAttribute(":for") ? "loop" : "if";
       if (type === "loop") {
-        bindTempalteLoop(el, "iterator", el.getAttribute(":iterator"), ctx);
-      }
-    };
+        let context = binding.attrs["template"].context;
+        let iteratorFn = new Function(
+          `scope`,
+          `with(scope) {
+            return ${el.getAttribute(":for")}
+          }`,
+        );
 
-    const bindTempalteLoop = (el, attr, context, ctx) => {
-      let binding = getBinding(el, attr, ctx);
-      let iterable = new Function(
-        "scope",
-        `
-          with(scope) {
-            return context;
+        binding.attrs["template"].bindings.push((snippet, values) => {
+          let iterator = iteratorFn(values);
+          let frag = document.createDocumentFragment();
+          for (let i = 0; i < (binding.created || []).length; i++) {
+            let element = binding.created[i];
+            element.parentNode.removeChild(element);
           }
-        `,
-      );
 
-      let loop = (values) => {
-        let iterator = iterable(el.getAttribute(attr), values);
+          // If this is a __render__ loop render the template
+          // to get the bindings, but don't append it
+          if (oCtx.__current_target__ !== null) {
+            let child_bindings = {};
+            let ctx = createTemplateContext(oCtx, 0, null, null);
+            let item = context.content.cloneNode(true);
 
-        for (var key in iterator) {
-        }
+            walk(item, ctx);
 
-        // let idx = 0
-        // for (let key in iterator) {
-        //   Object.defineProperties(values, {
-        //     $idx: {
-        //       get: () => {
-        //         return idx;
-        //       }
-        //     },
-        //     $key: {
-        //       get: () => {
-        //         return key;
-        //       }
-        //     },
-        //     $value: {
-        //       get: () => {
-        //         return iterable[key];
-        //       }
-        //     }
-        //   })
+            this.__render__(ctx, true);
 
-        // }
-      };
+            for (let o in ctx.__observed__) {
+              if (child_bindings.hasOwnProperty(o)) {
+                child_bindings[o].push(...ctx.__observed__[o]);
+              } else {
+                child_bindings[o] = [...ctx.__observed__[o]];
+              }
+            }
 
-      binding.attrs[attr].bindings.push((ctx, values) => {
-        return fn(values);
-      });
+            for (let o in child_bindings) {
+              if (oCtx.__observed__.hasOwnProperty(o)) {
+                oCtx.__observed__[o].push({
+                  el: el,
+                  context: null,
+                  attr: "for-loop",
+                  bindings: [
+                    (_context, _values) => {
+                      let childBindings = oCtx.__childbindings__.find(
+                        (b) => b.el === el,
+                      );
+
+                      if (!childBindings) {
+                        return;
+                      }
+
+                      let observers = childBindings.bindings[o] || [];
+                      let len = observers.length;
+
+                      for (var i = 0; i < len; i++) {
+                        let {
+                          el,
+                          attr,
+                          hidden,
+                          context,
+                          ctx: child_context,
+                          bindings,
+                        } = observers[i];
+
+                        let values = child_context.__get_values__();
+
+                        for (let i = 0; i < bindings.length; i++) {
+                          context = bindings[i](context, values);
+                        }
+
+                        el[attr.replace(":", "")] = context;
+
+                        if (
+                          !["array", "object", "function"].includes(
+                            typeof context,
+                          )
+                        ) {
+                          if (!hidden && !!el.setAttribute) {
+                            el.setAttribute(attr.replace(":", ""), context);
+                          }
+                        }
+                      }
+                    },
+                  ],
+                });
+              }
+            }
+
+            oCtx.__childbindings__.push({
+              el: el,
+              bindings: [],
+            });
+          }
+
+          let created = [];
+          if (!!iterator) {
+            let idx = 0;
+            let child_bindings = {};
+            for (let key in iterator) {
+              let ctx = createTemplateContext(oCtx, idx, key, iterator[key]);
+              // Clone the template
+              let item = context.content.cloneNode(true);
+
+              // Create bindings
+              walk(item, ctx);
+
+              // Keep track of created items
+              created.push(...item.children);
+
+              // append then render
+              frag.append(item);
+              this.__render__(ctx, true);
+
+              for (let o in ctx.__observed__) {
+                if (child_bindings.hasOwnProperty(o)) {
+                  child_bindings[o].push(...ctx.__observed__[o]);
+                } else {
+                  child_bindings[o] = [...ctx.__observed__[o]];
+                }
+              }
+
+              // increment the index
+              idx++;
+            }
+
+            let childIdx = oCtx.__childbindings__.findIndex((b) => b.el === el);
+            if (childIdx !== -1) {
+              oCtx.__childbindings__[childIdx].bindings = child_bindings;
+            }
+          }
+
+          // Set the created elements to be removed on the next render
+          binding.created = created;
+
+          // If this the template is being rendered create bindings on the parent scope
+
+          el.parentNode.insertBefore(frag, el);
+        });
+      }
     };
 
     const walk = (el, ctx) => {
       if (!!el.tagName && (el.tagName || "").toLowerCase() === "template") {
         return bindTemplate(el, ctx);
       }
-
-      // if (
-      //   el.hasOwnProperty("tagName") // &&
-      //   // el.tagName.toLowerCase() === "template"
-      // ) {
-      //   console.log(el, el.tagName);
-      //   // bindTemplate(el, ctx);
-      //   // return;
-      // }
 
       let attrs = [...(el.attributes || [])];
       let children = [...(el.childNodes || [])];
@@ -437,7 +565,7 @@ class Component extends HTMLElement {
     return values;
   }
 
-  __render__(ctx) {
+  __render__(ctx, log) {
     let values = ctx.__get_values__();
 
     for (var i = 0; i < ctx.__bindings__.length; i++) {
@@ -447,7 +575,7 @@ class Component extends HTMLElement {
       for (let attr in binding.attrs) {
         let { context, bindings } = binding.attrs[attr];
 
-        ctx.__current_target__ = { el, attr, context, bindings };
+        ctx.__current_target__ = { el, attr, context, ctx, bindings };
 
         for (let i = 0; i < bindings.length; i++) {
           context = bindings[i](context, values);
@@ -455,7 +583,7 @@ class Component extends HTMLElement {
 
         el[attr.replace(":", "")] = context;
         if (!["array", "object", "function"].includes(typeof context)) {
-          if (!!el.setAttribute) {
+          if (!binding.hidden && !!el.setAttribute) {
             el.setAttribute(attr.replace(":", ""), context);
           }
         }

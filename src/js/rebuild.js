@@ -162,23 +162,33 @@ class Storage {
   }
 }
 
-class App {
-  constructor(context) {
-    this.context = context;
-    this.context.state = this.defaultState();
+class App extends Context {
+  constructor(config) {
+    super({
+      effects: Effects,
+      scripts: [],
+      state: null,
+      id: null,
+      name: "My Project",
+    });
 
-    this.effects = Effects;
+    // this.context = context;
+    this.config = config;
+    this.state = this.defaultState();
+
+    // this.effects = Effects;
+    // this.scripts = [];
 
     this.id = this.gen_id();
     this.name = "My Project";
     this.screen = null;
 
-    this.selectedVideos = [0];
-    this.selectedGroup = 0;
-    this.selectedEffect = 0;
+    // this.selectedVideos = [0];
+    // this.selectedGroup = 0;
+    // this.selectedEffect = 0;
 
-    this.selectedShape = null;
-    this.selectedVertex = null;
+    // this.selectedShape = null;
+    // this.selectedVertex = null;
 
     this.midiAccess = null;
     this.midiInput = null;
@@ -208,7 +218,7 @@ class App {
   }
 
   defaultState() {
-    let { config } = this.context;
+    let { config } = this;
 
     return {
       selected: {
@@ -224,6 +234,10 @@ class App {
             return new Array(config.effect_parameter_count).fill(0);
           }),
         };
+      }),
+
+      scripts: new Array(config.script_count).fill().map((_, idx) => {
+        return null;
       }),
 
       effects: new Array(config.effect_count).fill().map((_, idx) => {
@@ -575,7 +589,7 @@ class App {
       this.screen.postMessage(
         JSON.stringify({
           action: "update_state",
-          state: this.context.state,
+          state: this.state,
         }),
       );
     });
@@ -586,153 +600,8 @@ class App {
   }
 
   updateSelected(type, idx) {
-    this.context.state.selected[type] = idx;
-    this.context.state = { ...this.context.state };
-  }
-
-  // updateProjectList() {
-  //   let projectList = document.querySelector("#project_list");
-  //   let projects = this.getProjects();
-
-  //   console.log("Projects:", projects);
-
-  //   projectList.innerHTML = "";
-  //   if (projects.length > 0) {
-  //     projects.map((p) => {
-  //       let item = document.createElement("li");
-
-  //       item.innerText = p.name;
-  //       item.className = `clickable ${p.id === this.id ? "active" : ""}`;
-  //       item.addEventListener("click", () => {
-  //         this.load(p.id);
-  //       });
-
-  //       projectList.appendChild(item);
-  //     });
-  //   } else {
-  //     let item = document.createElement("li");
-
-  //     item.innerText = "No Saved Projects";
-  //     projectList.appendChild(item);
-  //   }
-  // }
-
-  // toggleSlideout() {
-  //   let el = document.querySelector(".slideout");
-
-  //   if (el.classList.contains("active")) {
-  //     el.classList.remove("active");
-  //     el.querySelector("#slideout-handle").setAttribute(
-  //       "uk-icon",
-  //       "chevron-double-left",
-  //     );
-
-  //     document.querySelector("#page").classList.remove("slideout-active");
-  //   } else {
-  //     el.classList.add("active");
-  //     el.querySelector("#slideout-handle").setAttribute(
-  //       "uk-icon",
-  //       "chevron-double-right",
-  //     );
-
-  //     document.querySelector("#page").classList.add("slideout-active");
-  //   }
-  // }
-
-  // rotateColors() {
-  //   this.colors.bg = (this.colors.bg + 0.05) % 360;
-  //   this.colors.fg = (this.colors.fg + 0.02) % 360;
-  //   this.colors.hd = (this.colors.hd + 0.03) % 360;
-
-  //   document.body.style.backgroundColor = `hsl(${this.colors.bg}deg 20.54% 90.41%)`;
-  //   document.querySelector("nav").style.backgroundColor =
-  //     `hsl(${this.colors.hd}deg 20.54% 90.41%)`;
-  //   document
-  //     .querySelector(":root")
-  //     .style.setProperty(
-  //       "--fg-color",
-  //       `hsl(${this.colors.fg}deg 20.54% 50.41%)`,
-  //     );
-
-  //   // window.requestAnimationFrame(this.rotateColors.bind(this));
-  // }
-
-  setupVideos() {
-    let { updateVideo, toggleVideo, selectedVideos, removeVideo } = this;
-    let { videos } = this.state;
-
-    for (var i = 0; i < videos.length; i++) {
-      let video = new Video(
-        i,
-        videos[i],
-        updateVideo.bind(this),
-        toggleVideo.bind(this),
-        removeVideo.bind(this),
-      );
-      document.querySelector("#videos").appendChild(video.el);
-
-      if (i === selectedVideos[0]) {
-        video.el.classList.add("selected");
-      }
-
-      if (selectedVideos.includes(i)) {
-        video.el.querySelector("input[type='radio']").checked = true;
-      }
-    }
-  }
-
-  setupEffects() {
-    let { effects } = this.state;
-
-    for (var i = 0; i < effects.length; i++) {
-      let effect = new Effect(
-        i,
-        effects[i],
-        this.selectEffect.bind(this),
-        this.setEffect.bind(this),
-      );
-
-      document.querySelector("#effects").appendChild(effect.el);
-    }
-  }
-
-  setupGroups() {
-    let { groups, shapes } = this.state;
-    let { selectGroup } = this;
-
-    for (var i = 0; i < groups.length; i++) {
-      let group = new Group(i, groups[i], selectGroup.bind(this));
-      document.querySelector(".slideout .groups").appendChild(group.el);
-
-      if (i === this.selectedGroup) {
-        group.el.querySelector("input[type='radio']").checked = true;
-      }
-    }
-
-    console.log(groups);
-
-    for (var i = 0; i < shapes.length; i++) {
-      let column = document.createElement("div");
-      column.className = "column shape";
-
-      let shape = new Shape(
-        i,
-        shapes[i],
-        this.selectShape.bind(this),
-        this.updateShape.bind(this),
-        this.removeShape.bind(this),
-      );
-      column.appendChild(shape.el);
-
-      document.querySelector(".slideout .table").appendChild(column);
-
-      for (var j = 0; j < groups.length; j++) {
-        let toggle = new GroupToggle(j, i, this.toggleGroup.bind(this));
-        toggle.setToggle(groups[j].shapes.includes(i));
-
-        column.appendChild(toggle.el);
-      }
-    }
+    this.state.selected[type] = idx;
+    this.state = { ...this.state };
   }
 
   addShape() {
@@ -755,25 +624,6 @@ class App {
     };
 
     shapes.push(shape);
-
-    let column = document.createElement("div");
-    column.className = "column shape";
-
-    let shapeEl = new Shape(
-      idx + 1,
-      shapes[idx],
-      this.selectShape.bind(this),
-      this.updateShape.bind(this),
-      this.removeShape.bind(this),
-    );
-    column.appendChild(shapeEl.el);
-
-    document.querySelector(".slideout .table").appendChild(column);
-
-    for (var j = 0; j < groups.length; j++) {
-      let toggle = new GroupToggle(j, idx, this.toggleGroup.bind(this));
-      column.appendChild(toggle.el);
-    }
 
     this.screen.postMessage(
       JSON.stringify({
@@ -835,8 +685,8 @@ class App {
       return;
     }
 
-    let { shapes, groups, videos } = this.context.state;
-    let { sliders } = this.context.state.notes;
+    let { shapes, groups, videos } = this.state;
+    let { sliders } = this.state.notes;
 
     let notes = Object.keys(sliders.output);
     let group = groups[0];
@@ -867,84 +717,50 @@ class App {
     this.screen.postMessage(
       JSON.stringify({
         action: "update_state",
-        state: this.context.state,
+        state: this.state,
       }),
     );
 
     this.saveState();
   }
 
-  updateEffect(effect, e) {
+  updateEffect(effectIdx, value) {
     if (!this.screen) {
       return;
     }
 
-    let { shapes, groups, videos } = this.state;
-    let { selectedVideos, selectedGroup, selectedEffect } = this;
-    let { value } = e.target;
+    let { state } = this;
+    let { shapes, groups, videos } = state;
+    let { video: videoIdx, effect: selectedEffect } = state.selected;
 
-    let { sliders } = this.state.notes;
-    let notes = Object.keys(sliders.output);
-
-    let group = groups[selectedGroup];
-    let ids = selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
-
-    // if (effect === "opacity") {
-    //   for (var i = 0; i < selectedVideos.length; i++) {
-    //     let videoIdx = selectedVideos[i];
-    //     let opacity = group.opacity[videoIdx];
-    //     let diff = value - opacity;
-
-    //     for (var j = 0; j < ids.length; j++) {
-    //       let shape = shapes[ids[j]];
-    //       let oldValue = shape.opacity[videoIdx];
-    //       let shapeDiff = +value - oldValue;
-    //       let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
-
-    //       shape.opacity[videoIdx] = newValue;
-    //     }
-
-    //     group.opacity[videoIdx] = opacity + diff;
-    //     // console.log("Target:", group.opacity[videoIdx] * 127);
-    //   }
-
-    //   if (!!this.midiOutput) {
-    //     this.midiOutput.send([
-    //       144,
-    //       notes[0],
-    //       (group.opacity[selectedVideos[0]] * 127) | 0,
-    //     ]);
-    //   }
-    // } else {
-    //
-    let diff = 0;
-    let effectIdx = effect === "effect_a" ? 0 : 1;
-
-    for (var i = 0; i < selectedVideos.length; i++) {
-      let video = videos[selectedVideos[i]];
-      let oldValue = video.values[selectedEffect][effectIdx];
-      if (i === 0) {
-        diff = +value - oldValue;
-      }
-      let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-      video.values[selectedEffect][effectIdx] = newValue;
+    if (videoIdx === null || selectedEffect === null) {
+      return;
     }
 
-    let noteIdx = effect === "effect_a" ? 1 : 2;
+    let selectedVideo = state.videos[videoIdx];
+
+    let oldValue = selectedVideo.values[selectedEffect][effectIdx];
+    let diff = +value - oldValue;
+    let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
+
+    selectedVideo.values[selectedEffect][effectIdx] = newValue;
+
+    let { sliders } = state.notes;
+    let notes = Object.keys(sliders.output);
+
+    let noteIdx = effectIdx + 1;
     if (!!this.midiOutput) {
       this.midiOutput.send([
         144,
         notes[noteIdx],
-        (videos[selectedVideos[0]].values[selectedEffect][effectIdx] * 127) | 0,
+        (selectedVideo.values[selectedEffect][effectIdx] * 127) | 0,
       ]);
     }
-
-    // }
 
     this.screen.postMessage(
       JSON.stringify({
         action: "update_state",
-        state: this.context.state,
+        state: this.state,
       }),
     );
 
@@ -966,7 +782,7 @@ class App {
   }
 
   removeVideo(idx) {
-    let video = this.context.state.videos[idx];
+    let video = this.state.videos[idx];
     video.values = new Array(6).fill().map((a) => {
       return [0, 0];
     });
@@ -975,7 +791,7 @@ class App {
       JSON.stringify({
         action: "remove_video",
         videoIdx: idx,
-        state: this.context.state,
+        state: this.state,
       }),
     );
 
@@ -1017,7 +833,7 @@ class App {
   }
 
   setEffect(idx, effect) {
-    let { state } = this.context;
+    let { state } = this;
 
     state.effects[idx] = effect;
 
@@ -1030,7 +846,7 @@ class App {
       console.log("Unknown Effect", effect);
     }
 
-    this.context.state = { ...state };
+    this.state = { ...state, effects: [...state.effects] };
 
     this.screen.postMessage(
       JSON.stringify({
@@ -1211,13 +1027,15 @@ class App {
 }
 
 window.addEventListener("load", () => {
-  const context = new Context({
-    config: { ...Config.default },
-    state: {},
-    storage: {},
-  });
+  // const context = new Context({
+  //   config: { ...Config.default },
+  //   state: {},
+  //   storage: {},
+  // });
 
-  const app = new App(context);
+  const config = { ...Config.default };
+
+  const app = new App(config);
   const appEl = document.querySelector("sensory-controls");
 
   console.log("Setting App");

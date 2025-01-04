@@ -471,9 +471,9 @@ class App {
 
     // this.rotateColors();
 
-    // document
-    //   .querySelector("#launch")
-    //   .addEventListener("click", this.popout.bind(this));
+    document
+      .querySelector("#launch")
+      .addEventListener("click", this.popout.bind(this));
 
     document
       .querySelector("#add_triangle")
@@ -519,15 +519,24 @@ class App {
     );
 
     window.addEventListener("message", (e) => {
-      let data = JSON.parse(event.data);
-      if (data.action === "update_state") {
-        this.state = data.state;
-        this.saveState();
-      } else if (data.action === "select_shape") {
-        this.selectedShape = data.shape;
-        this.selectedVertex = data.vertex;
+      if (!e.data) {
+        return;
+      }
 
-        // TODO get selected shape and call el.controller.setSelected
+      try {
+        let data = JSON.parse(e.data);
+
+        if (data.action === "update_state") {
+          this.state = data.state;
+          this.saveState();
+        } else if (data.action === "select_shape") {
+          this.selectedShape = data.shape;
+          this.selectedVertex = data.vertex;
+
+          // TODO get selected shape and call el.controller.setSelected
+        }
+      } catch (err) {
+        console.log(e, err);
       }
     });
 

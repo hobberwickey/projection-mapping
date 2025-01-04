@@ -1,56 +1,14 @@
 <template>
-  <template type="loop" iterable="items">
+  <template :for="items">
     <slot-item
+      :idx="$idx"
       :update="update"
       :select="select"
-      :selected="selected"
-      :class="selected === 0 ? 'selected' : ''"
+      :selected="$value"
+      :options="options"
+      :class="selected === $idx ? 'selected': ''"
     ></slot-item>
   </template>
-  <h2>After Loop {{items?.length || 0}}</h2>
-  <!-- <slot-item
-    :idx="0"
-    :items="items"
-    :select="select"
-    :update="update"
-    :class="selected === 0 ? 'selected' : ''"
-  ></slot-item>
-  <slot-item
-    :idx="1"
-    :items="items"
-    :select="select"
-    :update="update"
-    :class="selected === 1 ? 'selected' : ''"
-  ></slot-item>
-  <slot-item
-    :idx="2"
-    :items="items"
-    :select="select"
-    :selected="selected"
-    :update="update"
-    :class="selected === 2 ? 'selected' : ''"
-  ></slot-item>
-  <slot-item
-    :idx="3"
-    :items="items"
-    :select="select"
-    :update="update"
-    :class="selected === 3 ? 'selected' : ''"
-  ></slot-item>
-  <slot-item
-    :idx="4"
-    :items="items"
-    :select="select"
-    :update="update"
-    :class="selected === 4 ? 'selected' : ''"
-  ></slot-item>
-  <slot-item
-    :idx="5"
-    :items="items"
-    :select="select"
-    :update="update"
-    :class="selected === 5 ? 'selected' : ''"
-  ></slot-item> -->
 </template>
 <script>
   class SlotList extends Component {
@@ -58,16 +16,18 @@
       super();
     }
 
-    static get observedProperties() {
-      return ["selected", "select", "update", "items"];
+    connected() {
+      this.listen("selected", (selected) => {
+        // console.log(selected);
+        //   this.querySelectorAll("slot-item").forEach((slot, idx) => {
+        //     console.log("Huh?", idx, selected);
+        //     slot.classList.toggle("selected", idx === selected);
+        //   });
+      });
     }
 
-    connected() {
-      this.listen("selected", "on-select", (selected) => {
-        // this.querySelectorAll("slot-item").forEach((slot, idx) => {
-        //   slot.classList.toggle("selected", selected === idx);
-        // });
-      });
+    static get observedProperties() {
+      return ["selected", "select", "update", "items", "options"];
     }
   }
 </script>

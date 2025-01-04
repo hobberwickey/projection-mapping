@@ -1,8 +1,10 @@
 <template>
-  <div class="select" @click="select(idx)">
-    <div class="select-display">{{label}}</div>
+  <div class="select" @click="setSelected(idx)">
+    <div class="select-display">{{getLabel(selected)}}</div>
     <div class="select-list">
-      <ul class="uk-list"></ul>
+      <ul class="uk-list">
+        <li @click="updateSelection($event)">Empty</li>
+      </ul>
     </div>
     <div class="select-handle" @click="toggleActive($event)">
       <span uk-icon="icon: triangle-down"></span>
@@ -17,21 +19,24 @@
     }
 
     static get observedProperties() {
-      return ["idx", "selected", "items", "select", "update", "label"];
+      return ["idx", "selected", "options", "select", "update"];
     }
 
     connected() {
-      this.listen("items", "items-updated", (items) => {
-        this.querySelector(".select-list ul").innerHTML = "";
-        this.createOption("", "Empty");
-        (items || []).map((item) => {
-          this.createOption(item.id, item.label);
-        });
+      this.listen("selected", (selected) => {
+        this.label = this.options[selected]?.label || "Empty";
       });
 
-      this.listen("selected", "label-handle", (selected) => {
-        this.label = this.items[selected]?.label || "Empty";
-      });
+      for (var i = 0; i < this.options.length; i++) {
+        let effect = this.options[i];
+        let li = document.createElement("li");
+
+        li.innerText = effect.label;
+        li.dataset.value = effect.id;
+        li.addEventListener("click", this.updateSelection.bind(this));
+
+        this.querySelector(".uk-list").append(li);
+      }
     }
 
     createOption(id, label) {
@@ -42,6 +47,7 @@
 
       item.addEventListener("click", this.updateSelection.bind(this));
 
+      console.log("is this happening?")
       this.querySelector(".select-list ul").appendChild(item);
     }
 
@@ -56,8 +62,22 @@
       });
     }
 
+    getLabel(effect) {
+      if (!effect) {
+        return "Empty";
+      }
+
+      let effects = document.querySelector("sensory-controls").app?.effects;
+
+      return effects.find((e) => e.id === effect)?.label || "Empty";
+    }
+
+    setSelected(idx) {
+      this.select(idx);
+    }
+
     updateSelection(e) {
-      this.update(this.idx, e.target.dataset?.value || "");
+      this.update(this.idx, e.target.dataset?.value || null);
     }
   }
 </script>

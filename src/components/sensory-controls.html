@@ -1,6 +1,6 @@
 <template id="sensory-controls">
-  <sc-header :app="app" :storage="storage"></sc-header>
-  <sc-content :app="app" :state="state"></sc-content>
+  <sc-header :app="app"></sc-header>
+  <sc-content :app="app"></sc-content>
   <launch-overlay :app="app"></launch-overlay>
 </template>
 
@@ -13,29 +13,11 @@
     }
 
     static get observedProperties() {
-      return ["app", "state", "config", "storage"];
+      return ["app"];
     }
 
     connected() {
-      this.listen("app", "loader", (app) => {
-        if (!this.loaded) {
-          this.config = app.context.config;
-          this.state = app.context.state;
-          this.storage = app.context.storage;
-
-          app.context.listen("config", (config) => {
-            this.config = config;
-          });
-
-          app.context.listen("state", (state) => {
-            this.state = state;
-          });
-
-          app.context.listen("storage", (storage) => {
-            this.storage = storage;
-          });
-        }
-
+      this.listen("app", (app) => {
         this.loaded = true;
       });
     }

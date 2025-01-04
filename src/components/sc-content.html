@@ -1,40 +1,7 @@
 <template id="sc-content">
   <div class="content uk-flex">
     <div class="uk-width-2-10 objects">
-      <ul>
-        <li class="collapsable">
-          <h2>Scripts</h2>
-          <ul>
-            <li>Script 1</li>
-            <li>Script 2</li>
-            <li>Script 3</li>
-          </ul>
-        </li>
-        <li class="collapsable">
-          <h2>Triangles</h2>
-          <ul>
-            <li>Triangle 1</li>
-            <li>Triangle 2</li>
-            <li>Triangle 3</li>
-          </ul>
-        </li>
-        <li class="collapsable">
-          <h2>Quads</h2>
-          <ul>
-            <li>Quad 1</li>
-            <li>Quad 2</li>
-            <li>Quad 3</li>
-          </ul>
-        </li>
-        <li class="collapsable">
-          <h2>Circles</h2>
-          <ul>
-            <li>Circle 1</li>
-            <li>Circle 2</li>
-            <li>Circle 3</li>
-          </ul>
-        </li>
-      </ul>
+      <object-lists :app="app" :state="state"></object-lists>
     </div>
     <div class="uk-width-8-10 controller">
       <div class="slots uk-width-1-1 uk-flex">
@@ -44,7 +11,8 @@
             :select="selectScript"
             :update="updateScript"
             :selected="selectedScript"
-            :items="[]"
+            :options="app?.scripts || []"
+            :items="state?.scripts || []"
             class="effects uk-grid-collapse"
             uk-grid
           ></slot-list>
@@ -55,7 +23,8 @@
             :select="selectEffect"
             :update="updateEffect"
             :selected="selectedEffect"
-            :items="app?.effects"
+            :options="app?.effects || []"
+            :items="state?.effects || []"
             class="effects uk-grid-collapse"
             uk-grid
           ></slot-list>
@@ -67,8 +36,12 @@
         </div>
         <div class="sliders uk-width-4-10">
           <div>
-            <vertical-range></vertical-range>
-            <vertical-range></vertical-range>
+            <vertical-range
+              :update="setEffectValue.bind(null, 0)"
+            ></vertical-range>
+            <vertical-range
+              :update="setEffectValue.bind(null, 1)"
+            ></vertical-range>
           </div>
         </div>
       </div>
@@ -93,31 +66,31 @@
     }
 
     connected() {
-      this.listen("state", "state-changed", (state) => {
-        // Todo: There's probably a more effecticent way of transfers these bindings
-        this.selectedVideo = state.selected.video;
-        this.selectedEffect = state.selected.effect;
-        this.selectedScript = state.selected.script;
-      });
+      this.listen("app", (app) => {
+        this.state = app.state;
 
-      this.listen("app", "app-loaded", (app) => {
-        console.log("App Loaded:", app.effects)
-      })
+        app.listen("state", (state) => {
+          this.state = state;
+          this.selectedVideo = state.selected.video;
+          this.selectedEffect = state.selected.effect;
+          this.selectedScript = state.selected.script;
+        });
 
-      this.listen("selectedEffect", "select-effect", (selected) => {
-        let slots = this.querySelectorAll("slot-items.effects").forEach(
-          (slot, idx) => {
-            slot.classList.toggle("selected", selected === idx);
-          },
-        );
-      });
+        // this.listen("selectedEffect", (selected) => {
+        //   let slots = this.querySelectorAll("slot-items.effects").forEach(
+        //     (slot, idx) => {
+        //       slot.classList.toggle("selected", selected === idx);
+        //     },
+        //   );
+        // });
 
-      this.listen("selectedScript", "select-script", (selected) => {
-        let slots = this.querySelectorAll("slot-items.scripts").forEach(
-          (slot, idx) => {
-            slot.classList.toggle("selected", selected === idx);
-          },
-        );
+        // this.listen("selectedScript", (selected) => {
+        //   let slots = this.querySelectorAll("slot-items.scripts").forEach(
+        //     (slot, idx) => {
+        //       slot.classList.toggle("selected", selected === idx);
+        //     },
+        //   );
+        // });
       });
     }
 
@@ -126,17 +99,19 @@
     }
 
     updateEffect(idx, effect) {
-      console.log(idx, effect)
       this.app.setEffect(idx, effect);
     }
 
     selectScript(idx) {
-      console.log("Script Selected", idx);
       this.app.updateSelected("script", idx);
     }
 
     updateScript(idx, script) {
       console.log("Script Updated:", idx, effect);
+    }
+
+    setEffectValue(effect, e) {
+      this.app.updateEffect(effect, e.target.value);
     }
   }
 </script>

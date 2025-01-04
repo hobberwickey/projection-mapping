@@ -1,0 +1,98 @@
+<template>
+	<div class="scripts">
+		<label
+			>Scripts <span uk-icon="icon: plus-circle" @click="addScript()"></span
+		></label>
+		<ul class="uk-list">
+			<template :for="scripts">
+				<li>
+					<div class="scripts">
+						<input
+							type="text"
+							:value="$value?.label || ''"
+							@input="updateScript.bind(null, $value)"
+						/>
+						<span
+							uk-icon="icon: file-edit"
+							@click="editScript.bind(null, $value)"
+						></span>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeScript.bind(null, $value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
+	<div class="triangles">
+		<label
+			>Triangles
+			<span
+				uk-icon="icon: plus-circle"
+				@click='addShape.bind(null, "triangle")'
+			></span
+		></label>
+		<ul class="uk-list">
+			<template :for="triangles">
+				<li>
+					<div class="triangle">
+						<input
+							type="text"
+							:value="$value?.label"
+							@input="updateShape.bind(null, $value)"
+						/>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeShape.bind(null, $value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
+</template>
+
+<script>
+	class ObjectList extends Component {
+		constructor() {
+			super();
+		}
+
+		static get observedProperties() {
+			return ["app", "state", "scripts", "triangles", "quads", "rounds"];
+		}
+
+		connected() {
+			this.listen("state", (state) => {
+				this.triangles = state.shapes.filter((s) => s.type === "triangle");
+				this.quads = state.shapes.filter((s) => s.type === "quad");
+				this.rounds = state.shapes.filter((s) => s.type === "round");
+			});
+
+			this.listen("app", (app) => {
+				this.scripts = [...app.scripts];
+			});
+		}
+
+		addShape(type) {
+			this.app.addSh;
+		}
+
+		updateShape(type) {}
+
+		removeShape(idx, type) {}
+
+		editScript() {
+			console.log("Edit Script");
+		}
+
+		addScript() {
+			// this.app.scripts =
+		}
+
+		updateScript(idx, script) {}
+
+		removeScript(idx) {}
+	}
+</script>

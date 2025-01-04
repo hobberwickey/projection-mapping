@@ -24,7 +24,7 @@
 				slot.opacity = this.setOpacity.bind(this);	
 			}
 
-			this.listen("selected", "on-select", (selected) => {
+			this.listen("selected", (selected) => {
 				this.querySelectorAll('video-slot').forEach((slot, idx) => {
 					slot.classList.toggle("selected", selected === idx);
 				})
