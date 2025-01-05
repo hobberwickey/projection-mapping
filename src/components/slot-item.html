@@ -27,7 +27,7 @@
         this.label = this.options[selected]?.label || "Empty";
       });
 
-      for (var i = 0; i < this.options.length; i++) {
+      for (var i = 0; i < (this.options || []).length; i++) {
         let effect = this.options[i];
         let li = document.createElement("li");
 

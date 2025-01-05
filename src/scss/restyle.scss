@@ -21,6 +21,8 @@
 
   --selected-fx-clr: var(--fx-clr-0);
   --selected-grp-clr: var(--grp-clr-0);
+
+  --default-font-size: 16px;
 }
 
 .fancy {
@@ -147,15 +149,18 @@ nav {
   }
 }
 
-slot-list {
+.slot-list {
   box-sizing: border-box;
   padding: 0px 10px !important;
   position: relative;
+  font-size: 0;
 
   slot-item {
+    display: inline-block;
     width: 33.3%;
     margin-top: 10px !important;
     margin-bottom: 10px !important;
+    font-size: var(--default-font-size);
 
     &:nth-child(1) {
       margin-left: 15.6%;

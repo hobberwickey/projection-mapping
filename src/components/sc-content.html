@@ -7,29 +7,36 @@
       <div class="slots uk-width-1-1 uk-flex">
         <div class="uk-width-1-2">
           <label>Script Slots</label>
-          <slot-list
-            :select="selectScript"
-            :update="updateScript"
-            :selected="selectedScript"
-            :options="app?.scripts || []"
-            :items="state?.scripts || []"
-            class="effects uk-grid-collapse"
-            uk-grid
-          ></slot-list>
+          <div class="slot-list">
+            <template :for="state?.scripts || []">
+              <slot-item
+                :idx="$idx"
+                :update="updateScript"
+                :select="selectScript"
+                :selected="$value"
+                :options="app?.scripts || []"
+                :class="selectedScript === $idx ? 'selected': ''"
+              ></slot-item>
+            </template>
+          </div>
         </div>
         <div class="uk-width-1-2">
           <label>Effect Slots</label>
-          <slot-list
-            :select="selectEffect"
-            :update="updateEffect"
-            :selected="selectedEffect"
-            :options="app?.effects || []"
-            :items="state?.effects || []"
-            class="effects uk-grid-collapse"
-            uk-grid
-          ></slot-list>
+          <div class="slot-list">
+            <template :for="state?.effects || []">
+              <slot-item
+                :idx="$idx"
+                :update="updateEffect"
+                :select="selectEffect"
+                :selected="$value"
+                :options="app?.effects || []"
+                :class="selectedEffect === $idx ? 'selected': ''"
+              ></slot-item>
+            </template>
+          </div>
         </div>
       </div>
+
       <div class="controls uk-width-1-1 uk-flex">
         <div class="videos uk-width-6-10">
           <video-slots :app="app" :selected="selectedVideo"></video-slots>
@@ -75,22 +82,6 @@
           this.selectedEffect = state.selected.effect;
           this.selectedScript = state.selected.script;
         });
-
-        // this.listen("selectedEffect", (selected) => {
-        //   let slots = this.querySelectorAll("slot-items.effects").forEach(
-        //     (slot, idx) => {
-        //       slot.classList.toggle("selected", selected === idx);
-        //     },
-        //   );
-        // });
-
-        // this.listen("selectedScript", (selected) => {
-        //   let slots = this.querySelectorAll("slot-items.scripts").forEach(
-        //     (slot, idx) => {
-        //       slot.classList.toggle("selected", selected === idx);
-        //     },
-        //   );
-        // });
       });
     }
 
@@ -111,6 +102,8 @@
     }
 
     setEffectValue(effect, e) {
+      console.log(this)
+
       this.app.updateEffect(effect, e.target.value);
     }
   }
