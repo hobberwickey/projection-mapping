@@ -12,10 +12,10 @@
               <slot-item
                 :idx="$idx"
                 :update="updateScript"
-                :select="selectScript"
                 :selected="$value"
                 :options="app?.scripts || []"
                 :class="selectedScript === $idx ? 'selected': ''"
+                @click="selectItem('script', $idx)"
               ></slot-item>
             </template>
           </div>
@@ -27,10 +27,10 @@
               <slot-item
                 :idx="$idx"
                 :update="updateEffect"
-                :select="selectEffect"
                 :selected="$value"
                 :options="app?.effects || []"
                 :class="selectedEffect === $idx ? 'selected': ''"
+                @click="selectItem('effect', $idx)"
               ></slot-item>
             </template>
           </div>
@@ -39,7 +39,17 @@
 
       <div class="controls uk-width-1-1 uk-flex">
         <div class="videos uk-width-6-10">
-          <video-slots :app="app" :selected="selectedVideo"></video-slots>
+          <div class="uk-child-width-1-3@s uk-grid-collapse" uk-grid>
+            <template :for="new Array(6).fill(null)">
+              <video-slot
+                :idx="$idx"
+                :app="app"
+                :class='selectedVideo === $idx ? "selected" : ""'
+                @click="selectItem('video', $idx)"
+              ></video-slot>
+            </template>
+          </div>
+          <!-- <video-slots :app="app" :selected="selectedVideo"></video-slots> -->
         </div>
         <div class="sliders uk-width-4-10">
           <div>
@@ -85,25 +95,21 @@
       });
     }
 
-    selectEffect(idx) {
-      this.app.updateSelected("effect", idx);
+    selectItem(type, idx) {
+      this.app.updateSelected(type, idx);
     }
 
     updateEffect(idx, effect) {
       this.app.setEffect(idx, effect);
     }
 
-    selectScript(idx) {
-      this.app.updateSelected("script", idx);
-    }
+    renameVideo(idx, value) {}
 
     updateScript(idx, script) {
       console.log("Script Updated:", idx, effect);
     }
 
     setEffectValue(effect, e) {
-      console.log(this)
-
       this.app.updateEffect(effect, e.target.value);
     }
   }

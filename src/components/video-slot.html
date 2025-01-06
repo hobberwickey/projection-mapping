@@ -1,5 +1,5 @@
 <template>
-	<div @click="select(idx)">
+	<div>
 		<div class="left">
 			<div :id="'video-' + idx" class="video-header">
 				<label :for="'video-' + idx">
@@ -52,15 +52,7 @@
 		}
 
 		static get observedProperties() {
-			return [
-				"idx",
-				"video",
-				"select",
-				"update",
-				"rename",
-				"delete",
-				"opacity",
-			];
+			return ["idx", "app", "video"];
 		}
 
 		onChange(e) {
@@ -75,7 +67,7 @@
 			}
 
 			this.loaded = true;
-			this.update(this.idx, e.target.files[0]);
+			this.app.updateVideo(this.idx, e.target.files[0]);
 		}
 
 		onRemove() {
@@ -85,11 +77,11 @@
 			this.querySelector("input[type='file']").disabled = false;
 			this.querySelector(".preview").classList.add("no-video");
 
-			this.delete(this.idx);
+			this.app.removeVideo(this.idx);
 		}
 
 		updateOpacity(e) {
-			this.opacity(this.idx, e.target.value);
+			this.app.updateOpacity(this.idx, e.target.value);
 		}
 	}
 </script>

@@ -204,7 +204,7 @@ class App extends Context {
   }
 
   saveState() {
-    // stub
+    this.state = { ...this.state };
   }
 
   gen_id() {
@@ -551,18 +551,22 @@ class App extends Context {
     //   this.updateEffect.bind(this, "effect_b"),
     // );
 
-    // window.addEventListener("message", (e) => {
-    //   let data = JSON.parse(event.data);
-    //   if (data.action === "update_state") {
-    //     this.state = data.state;
-    //     this.saveState();
-    //   } else if (data.action === "select_shape") {
-    //     this.selectedShape = data.shape;
-    //     this.selectedVertex = data.vertex;
+    window.addEventListener("message", (e) => {
+      try {
+        let data = JSON.parse(e.data);
+        if (data.action === "update_state") {
+          this.state = data.state;
+          this.saveState();
+        } else if (data.action === "select_shape") {
+          this.selectedShape = data.shape;
+          this.selectedVertex = data.vertex;
 
-    //     // TODO get selected shape and call el.controller.setSelected
-    //   }
-    // });
+          // TODO get selected shape and call el.controller.setSelected
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
 
     // document
     //   .querySelector("#download-projects")
@@ -604,7 +608,7 @@ class App extends Context {
     this.state = { ...this.state };
   }
 
-  addShape() {
+  addShape(type) {
     if (!this.screen) {
       return;
     }
@@ -635,7 +639,7 @@ class App extends Context {
     this.saveState();
   }
 
-  removeShape(idx) {
+  removeShape(idx, type) {
     let { shapes } = this.state;
     shapes.splice(idx, 1);
 
@@ -645,10 +649,6 @@ class App extends Context {
         state: this.state,
       }),
     );
-
-    let shapeColumns = document.querySelectorAll(".column.shape");
-    let column = shapeColumns[idx];
-    column.parentNode.removeChild(column);
 
     this.saveState();
   }

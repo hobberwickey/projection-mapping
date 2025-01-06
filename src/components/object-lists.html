@@ -1,4 +1,27 @@
 <template>
+	<div class="triangles">
+		<label
+			>Triangles
+			<span uk-icon="icon: plus-circle" @click='addShape("triangle")'></span
+		></label>
+		<ul class="uk-list">
+			<template :for="triangles">
+				<li>
+					<div class="triangle">
+						<input
+							type="text"
+							:value="$value?.label"
+							@input="updateShape($value)"
+						/>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeShape($value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
 	<div class="scripts">
 		<label
 			>Scripts <span uk-icon="icon: plus-circle" @click="addScript()"></span
@@ -19,32 +42,6 @@
 						<span
 							uk-icon="icon: minus-circle"
 							@click="removeScript.bind(null, $value)"
-						></span>
-					</div>
-				</li>
-			</template>
-		</ul>
-	</div>
-	<div class="triangles">
-		<label
-			>Triangles
-			<span
-				uk-icon="icon: plus-circle"
-				@click='addShape.bind(null, "triangle")'
-			></span
-		></label>
-		<ul class="uk-list">
-			<template :for="triangles">
-				<li>
-					<div class="triangle">
-						<input
-							type="text"
-							:value="$value?.label"
-							@input="updateShape.bind(null, $value)"
-						/>
-						<span
-							uk-icon="icon: minus-circle"
-							@click="removeShape.bind(null, $value)"
 						></span>
 					</div>
 				</li>
@@ -76,19 +73,23 @@
 		}
 
 		addShape(type) {
-			this.app.addSh;
+			this.app.addShape(type);
 		}
 
-		updateShape(type) {}
+		updateShape(type) {
+			console.log("Update Shape");
+		}
 
-		removeShape(idx, type) {}
+		removeShape(idx, type) {
+			this.app.removeShape(idx, type);
+		}
 
 		editScript() {
 			console.log("Edit Script");
 		}
 
 		addScript() {
-			// this.app.scripts =
+			console.lg("Add Script");
 		}
 
 		updateScript(idx, script) {}

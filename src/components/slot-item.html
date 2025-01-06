@@ -1,5 +1,5 @@
 <template>
-  <div class="select" @click="setSelected(idx)">
+  <div class="select">
     <div class="select-display">{{getLabel(selected)}}</div>
     <div class="select-list">
       <ul class="uk-list">
@@ -47,7 +47,7 @@
 
       item.addEventListener("click", this.updateSelection.bind(this));
 
-      console.log("is this happening?")
+      console.log("is this happening?");
       this.querySelector(".select-list ul").appendChild(item);
     }
 
