@@ -199,6 +199,9 @@ module.exports = {
     new WebComponentsLoader(),
   ],
   devServer: {
-    watchFiles: "./src/**/*.html", // to detect changes on all files inside src directory
+    watchFiles: "./src/**/*.html",
+    devMiddleware: {
+      writeToDisk: true,
+    },
   },
 };
