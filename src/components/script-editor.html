@@ -1,0 +1,57 @@
+<!-- TODO Make a modal class -->
+<template>
+	<div class="modal">
+		<div class='container'>
+			<div class='header'>
+
+			</div>
+			<div class='dialog'>
+				<div class="sidebar">
+					
+				</div>
+
+				<div class='editor'>
+					<div class='label'>
+					<div class='code-editor'>
+					  <textarea placeholder="Write your script here" :value='code' @input="onCode($event)"></textarea>
+					  <pre><code class="language-js"></code></pre>
+					</div>
+				</div>
+			</div>
+			<div class='footer'>
+				<div class='btn' @click='save()'>Save</div>
+				<div class='btn' @click='cancel()'>Cancel</div>
+			</div>
+		</div>
+		<div class='overlay'></div>
+	</div>
+</template>
+
+<script>
+	class CodeEditor extends Component {
+		constructor() {
+			super();
+		}
+
+		static get observedProperties() {
+			return ["idx", "label", "code"];
+		}
+
+		onLabel(evt) {
+			this.label = evt.target.value;
+		}
+
+		onCode(evt) {
+			this.querySelector("code").innerHTML = evt.target.value;
+			Prism.highlightElement(this.querySelector("code"));
+		}
+
+		onSave() {
+			
+		}
+
+		onCancel() {
+
+		}
+	}
+</script>

@@ -351,6 +351,7 @@ vertical-range {
   padding: 20px 40px;
   background-color: #2a2a2a;
   min-height: 100vh;
+  position: relative;
 }
 
 .controls {
@@ -611,5 +612,173 @@ video-slot {
     left: 0;
     top: 0;
     cursor: pointer;
+  }
+}
+
+script-editor {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+
+  .modal {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    background-color: white;
+    padding: 20px 20px 60px 20px;
+    box-sizing: border-box;
+
+    .container {
+      max-width: 100%;
+      max-height: 100%;
+
+      .dialog {
+        max-width: 100%;
+        max-height: 100%;
+        font-size: 0;
+
+        .sidebar {
+          width: 35%;
+          height: 100%;
+          overflow: auto;
+          font-size: initial;
+          display: inline-block;
+        }
+
+        .editor {
+          width: 65%;
+          max-height: 100%;
+          font-size: initial;
+          display: inline-block;
+
+          textarea {
+            height: 100%;
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
+}
+
+.code-editor {
+  display: block;
+  position: relative;
+  font-family: monospace;
+  line-height: 1.5;
+  width: 100%;
+  border: solid 1px;
+  background-color: #f5f2f0; // default prismjs theme background color
+
+  textarea {
+    background-color: transparent;
+    color: transparent;
+    caret-color: black;
+    padding: 10px;
+    margin: 0px;
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    width: 100%;
+    border: none;
+  }
+
+  code,
+  pre {
+    pointer-events: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    margin: 0px;
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    background-color: transparent;
+    box-sizing: border-box;
+  }
+}
+
+led-bar {
+  position: absolute;
+  width: 15px;
+  height: 100%;
+
+  & > div {
+    position: relative;
+    width: 100%;
+    height: 16.6%;
+
+    span {
+      position: absolute;
+      display: inline-block;
+      width: 100%;
+    }
+  }
+
+  &#script_lights {
+    top: 0px;
+    left: 0px;
+  }
+
+  &#effect_a_lights {
+    top: 0px;
+    right: 16px;
+  }
+
+  &#effect_b_lights {
+    top: 0px;
+    right: 0px;
+  }
+}
+
+.bar-holder {
+  position: absolute;
+  left: 0;
+  height: 30px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+horizontal-led-bar {
+  position: absolute;
+  width: 100%;
+  height: 25px;
+  font-size: 0;
+
+  & > div {
+    position: relative;
+    display: inline-block;
+    width: 16.6%;
+    height: 100%;
+
+    span {
+      position: absolute;
+      display: inline-block;
+      height: 100%;
+    }
+  }
+
+  &#h_script_lights {
+    top: 0px;
+    left: 0px;
+  }
+
+  &#h_effect_a_lights {
+    top: -15px;
+    left: 0px;
+  }
+
+  &#h_effect_b_lights {
+    top: 0px;
+    left: 0px;
   }
 }
