@@ -8,6 +8,19 @@ const defaultTriangle = [
   [0.5, 0.6],
 ];
 
+const defaultQuad = [
+  [
+    [0.4, 0.4],
+    [0.4, 0.6],
+    [0.6, 0.6],
+  ],
+  [
+    [0.4, 0.4],
+    [0.6, 0.4],
+    [0.6, 0.6],
+  ],
+];
+
 // const defaultQuad =
 
 class App extends Context {
@@ -138,7 +151,7 @@ class App extends Context {
         {
           id: this.gen_id(),
           type: "triangle",
-          label: "Triangle 2",
+          label: "Triangle 1",
           opacity: new Array(config.video_count).fill(0.5),
           tris: [
             {
@@ -489,19 +502,42 @@ class App extends Context {
 
     let { shapes, groups } = this.state;
 
-    let idx = shapes.length;
-    let shape = {
-      id: this.gen_id(),
-      type: "triangle",
-      label: `Triangle ${idx + 1}`,
-      opacity: new Array(this.config.video_count).fill(0.5),
-      points: {
-        input: JSON.parse(JSON.stringify(defaultTriangle)),
-        output: JSON.parse(JSON.stringify(defaultTriangle)),
-      },
-    };
+    let idx = shapes.filter((s) => s.type === type).length;
+    if (type === "triangle") {
+      let shape = {
+        id: this.gen_id(),
+        type: "triangle",
+        label: `Triangle ${idx + 1}`,
+        opacity: new Array(this.config.video_count).fill(0.5),
+        tris: [
+          {
+            input: JSON.parse(JSON.stringify(defaultTriangle)),
+            output: JSON.parse(JSON.stringify(defaultTriangle)),
+          },
+        ],
+      };
 
-    shapes.push(shape);
+      shapes.push(shape);
+    } else if (type === "quad") {
+      let shape = {
+        id: this.gen_id(),
+        type: "quad",
+        label: `Quad ${idx + 1}`,
+        opacity: new Array(this.config.video_count).fill(0.5),
+        tris: [
+          {
+            input: JSON.parse(JSON.stringify(defaultQuad[0])),
+            output: JSON.parse(JSON.stringify(defaultQuad[0])),
+          },
+          {
+            input: JSON.parse(JSON.stringify(defaultQuad[1])),
+            output: JSON.parse(JSON.stringify(defaultQuad[1])),
+          },
+        ],
+      };
+
+      shapes.push(shape);
+    }
 
     this.screen.postMessage(
       JSON.stringify({
