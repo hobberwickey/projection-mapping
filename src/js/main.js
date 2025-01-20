@@ -231,14 +231,14 @@ class App {
           opacity: new Array(config.video_count).fill(0),
           points: {
             input: [
-              [0, 0],
-              [1, 0],
-              [1, 1],
+              [0.1, 0.1],
+              [0.9, 0.1],
+              [0.9, 0.9],
             ],
             output: [
-              [0, 0],
-              [1, 0],
-              [1, 1],
+              [0.1, 0.1],
+              [0.9, 0.1],
+              [0.9, 0.9],
             ],
           },
         },
@@ -249,14 +249,14 @@ class App {
           opacity: new Array(config.video_count).fill(0),
           points: {
             input: [
-              [0, 0],
-              [0, 1],
-              [1, 1],
+              [0.1, 0.1],
+              [0.1, 0.9],
+              [0.9, 0.9],
             ],
             output: [
-              [0, 0],
-              [0, 1],
-              [1, 1],
+              [0.1, 0.1],
+              [0.1, 0.9],
+              [0.9, 0.9],
             ],
           },
         },
@@ -842,7 +842,7 @@ class App {
           let shapeDiff = +value - oldValue;
           let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
 
-          shape.opacity[videoIdx] = newValue;
+          shape.opacity[videoIdx] = Math.max(newValue, 0.05);
         }
 
         group.opacity[videoIdx] = opacity + diff;
@@ -867,7 +867,7 @@ class App {
           diff = +value - oldValue;
         }
         let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-        video.values[selectedEffect][effectIdx] = newValue;
+        video.values[selectedEffect][effectIdx] = Math.max(newValue, 0.05);
       }
 
       let noteIdx = effect === "effect_a" ? 1 : 2;
@@ -990,9 +990,20 @@ class App {
     let selectedGroup = this.selectedGroup;
     let selectedEffect = this.selectedEffect;
 
-    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
-    let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    let opacity = Math.max(
+      this.state.groups[selectedGroup].opacity[selectedVideo],
+      0.05,
+    );
+    let effect_a = Math.max(
+      this.state.videos[selectedVideo].values[selectedEffect][0],
+      0.05,
+    );
+    let effect_b = Math.max(
+      this.state.videos[selectedVideo].values[selectedEffect][1],
+      0.05,
+    );
+
+    console.log(opacity, effect_a, effect_b);
 
     document.querySelectorAll(".inputs input")[0].value = opacity;
     document.querySelectorAll(".inputs input")[1].value = effect_a;
@@ -1019,9 +1030,18 @@ class App {
     let selectedGroup = this.selectedGroup;
     let selectedEffect = this.selectedEffect;
 
-    let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
-    let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    let opacity = Math.max(
+      this.state.groups[selectedGroup].opacity[selectedVideo],
+      0.05,
+    );
+    let effect_a = Math.max(
+      this.state.videos[selectedVideo].values[selectedEffect][0],
+      0.05,
+    );
+    let effect_b = Math.max(
+      this.state.videos[selectedVideo].values[selectedEffect][1],
+      0.05,
+    );
 
     let { sliders } = this.state.notes;
     let notes = Object.keys(sliders.output);
@@ -1146,4 +1166,4 @@ class App {
   // }
 }
 
-new App(Config.default);
+let app = new App(Config.default);
