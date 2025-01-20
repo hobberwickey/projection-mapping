@@ -135,6 +135,8 @@ module.exports = {
   entry: {
     main: "/src/js/main.js",
     rebuild: "/src/js/rebuild.js",
+    rescreen: "/src/js/rescreen.js",
+
     screen: "/src/js/screen.js",
     effects: "/src/js/effects.js",
     styles: ["/src/scss/main.scss"],
@@ -200,8 +202,5 @@ module.exports = {
   ],
   devServer: {
     watchFiles: "./src/**/*.html",
-    devMiddleware: {
-      writeToDisk: true,
-    },
   },
 };
