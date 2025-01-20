@@ -3,6 +3,7 @@
     <title>Project Mapping Control</title>
     <!-- UIkit CSS -->
     <link rel="stylesheet" href="/stylesheets/vendor/uikit.min.css" />
+    <link rel="stylesheet" href="/stylesheets/vendor/prism.css" />
     <link rel="stylesheet" href="/css/restyle.css" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,6 +16,8 @@
     <!-- UIkit JS -->
     <script src="/javascripts/vendor/uikit.min.js"></script>
     <script src="/javascripts/vendor/uikit-icons.min.js"></script>
+
+    <script src="/javascripts/vendor/prism.js"></script>
 
     <!-- <script type="module" src="/components/launch-overlay/index.mjs"></script> -->
   </head>
@@ -30,7 +33,7 @@
       //   let value = {
       //     window: null
       //   }
-        
+
       //   for (var x in window) {
       //     value[x] = null
       //   }
@@ -45,11 +48,11 @@
 
       //   let names = Object.keys(value);
       //   let values = Object.values(value);
-        
+
       //   console.log(scope)
       //   let fn = () => {
       //     return new Function(...[...names, "scope"], `
-      //       console.log(window); 
+      //       console.log(window);
       //       console.log(location);
 
       //       with (scope) {

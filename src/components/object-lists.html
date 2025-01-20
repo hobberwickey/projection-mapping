@@ -22,6 +22,28 @@
 			</template>
 		</ul>
 	</div>
+	<div class="triangles">
+		<label
+			>Quads <span uk-icon="icon: plus-circle" @click='addShape("quad")'></span
+		></label>
+		<ul class="uk-list">
+			<template :for="quads">
+				<li>
+					<div class="quads">
+						<input
+							type="text"
+							:value="$value?.label"
+							@input="updateShape($value)"
+						/>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeShape($value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
 	<div class="scripts">
 		<label
 			>Scripts <span uk-icon="icon: plus-circle" @click="addScript()"></span
@@ -33,15 +55,15 @@
 						<input
 							type="text"
 							:value="$value?.label || ''"
-							@input="updateScript.bind(null, $value)"
+							@input="updateScript($value, $event)"
 						/>
 						<span
 							uk-icon="icon: file-edit"
-							@click="editScript.bind(null, $value)"
+							@click="editScript($idx, $value)"
 						></span>
 						<span
 							uk-icon="icon: minus-circle"
-							@click="removeScript.bind(null, $value)"
+							@click="removeScript($value)"
 						></span>
 					</div>
 				</li>
@@ -69,6 +91,14 @@
 
 			this.listen("app", (app) => {
 				this.scripts = [...app.scripts];
+
+				app.listen("scripts", (scripts) => {
+					this.scripts = [...scripts];
+				});
+			});
+
+			this.listen("scripts", (scripts) => {
+				console.log(scripts);
 			});
 		}
 
@@ -80,16 +110,21 @@
 			console.log("Update Shape");
 		}
 
-		removeShape(idx, type) {
-			this.app.removeShape(idx, type);
+		removeShape(shape) {
+			this.app.removeShape(shape);
 		}
 
-		editScript() {
-			console.log("Edit Script");
+		editScript(idx) {
+			let editor = document.createElement("script-editor");
+			editor.idx = idx;
+			editor.code = this.scripts[idx].code;
+			editor.label = this.scripts[idx].label;
+
+			document.body.appendChild(editor);
 		}
 
 		addScript() {
-			console.lg("Add Script");
+			this.app.addScript();
 		}
 
 		updateScript(idx, script) {}
