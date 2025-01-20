@@ -592,7 +592,6 @@ class App {
         return;
       }
 
-      let { checkPoints } = this.ui;
       let { videos, pause } = this.output;
 
       videos.map((video) => {
@@ -601,8 +600,8 @@ class App {
         }
       });
 
-      // pause.call(this.output);
-      checkPoints.call(this.ui, e);
+      this.ui.select(e);
+      this.ui.startMove();
     });
 
     window.addEventListener("mouseup", () => {
@@ -611,7 +610,6 @@ class App {
       }
 
       let { videos, play } = this.output;
-      let { setSelectedPoint } = this.ui;
 
       videos.map((video, idx) => {
         if (video !== null) {
@@ -619,8 +617,7 @@ class App {
         }
       });
 
-      // play.call(this.output);
-      setSelectedPoint.call(this.ui, null);
+      this.ui.stopMove();
     });
 
     window.addEventListener("mousemove", (e) => {
@@ -628,11 +625,11 @@ class App {
         return;
       }
 
-      let { selectedPoint, movePoint } = this.ui;
+      let { selectedPoint } = this.ui;
       let { videos, drawFrame /*, calculateMatrices*/ } = this.output;
 
       if (selectedPoint !== null) {
-        movePoint.call(this.ui, e);
+        this.ui.movePoint(e);
         // calculateMatrices.call(this.output);
       }
     });
@@ -666,12 +663,24 @@ class App {
       drawUI.call(this.ui);
     });
 
-    window.addEventListener("click", (e) => {
-      if (!this.ui) {
-        return;
-      }
+    // window.addEventListener("click", (e) => {
+    //   if (!this.ui) {
+    //     return;
+    //   }
 
-      this.ui.select(e);
+    //   this.ui.select(e);
+    // });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.keyCode === 16) {
+        this.ui.shiftDown();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.keyCode === 16) {
+        this.ui.shiftUp();
+      }
     });
 
     window.addEventListener("keypress", (e) => {
@@ -684,8 +693,6 @@ class App {
       if (e.keyCode === 32) {
         setLayer.call(this.ui, layer === "input" ? "output" : "input");
         drawUI.call(this.ui);
-      } else {
-        console.log(e.keyCode);
       }
     });
 

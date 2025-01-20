@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>Project Mapping Screen</title>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="/stylesheets/vendor/uikit.min.css" />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+
+    <!-- UIkit JS -->
+    <script src="/javascripts/vendor/uikit.min.js"></script>
+    <script src="/javascripts/vendor/uikit-icons.min.js"></script>
+  </head>
+
+  <body>
+    <div id="screen" class="fullscreen" style="background-color: #000">
+      <section class="videos">
+        <video playsinline loop muted></video>
+        <video playsinline loop muted></video>
+        <video playsinline loop muted></video>
+        <video playsinline loop muted></video>
+        <video playsinline loop muted></video>
+        <video playsinline loop muted></video>
+      </section>
+      <section class="buffers"></section>
+      <section class="context">
+        <canvas width="1280" height="720"></canvas>
+      </section>
+      <section class="ui">
+        <canvas class="canvas" id="ui" width="1280" height="800"></canvas>
+        <div id="fps"></div>
+      </section>
+    </div>
+
+    <script src="/js/rescreen.js"></script>
+  </body>
+</html>

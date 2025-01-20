@@ -9,10 +9,9 @@ export class UI {
       output: [0, 0, 255],
     };
 
-    this.selectedPoint = null;
-    this.selectedShape = null;
-
-    this.selectedPoints = [];
+    this.moving = false;
+    this.shifted = false;
+    this.selected = null;
     this.selectedShapes = [];
 
     this.elements = {
@@ -34,8 +33,20 @@ export class UI {
     this.layer = layer;
   }
 
-  setSelectedPoint(point) {
-    this.selectedPoint = point;
+  startMove() {
+    this.moving = true;
+  }
+
+  stopMove() {
+    this.moving = false;
+  }
+
+  shiftDown() {
+    this.shifted = true;
+  }
+
+  shiftUp() {
+    this.shifted = false;
   }
 
   drawUI() {
@@ -56,6 +67,7 @@ export class UI {
     }
 
     let { shapes } = this.state;
+    let { selectedShape, selectedPoint } = this;
 
     let relX = e.pageX / window.innerWidth;
     let relY = e.pageY / window.innerHeight;
@@ -72,8 +84,6 @@ export class UI {
       let shape = shapes[i];
       let { type } = shapes[i];
 
-      console.log(type);
-
       if (type === "triangle" || type === "quad") {
         let selected = this.checkTriangle(relX, relY, shape, i);
         if (selected !== null) {
@@ -82,14 +92,63 @@ export class UI {
       }
     }
 
+    selectedShapes.sort((a, b) => {
+      return (b.points || []).length - (a.points || []).length;
+    });
+
+    let selected = this.selected;
+    let first = selectedShapes[0] || null;
+    let current = selectedShapes.find((s) => {
+      return (
+        s.shape === selected?.shape &&
+        (s.points || []).every((points) => {
+          return (selected?.points || []).find(
+            (p) => p[0] === points[0] && p[1] === points[1],
+          );
+        })
+      );
+    });
+
     this.selectedShapes = selectedShapes;
+    if (
+      !current ||
+      (first?.points || []).length > (current?.points || []).length ||
+      this.shifted
+    ) {
+      this.selectNext();
+    }
     this.drawUI();
+  }
+
+  selectNext() {
+    let { selected, selectedShapes } = this;
+
+    // console.log(selectedShapes);
+
+    let current = selectedShapes.findIndex((s) => {
+      return (
+        s.shape === selected?.shape &&
+        (s.points || []).every((points) => {
+          return (selected?.points || []).find(
+            (p) => p[0] === points[0] && p[1] === points[1],
+          );
+        })
+      );
+    });
+
+    // console.log(current);
+
+    if (current >= 0) {
+      this.selected = selectedShapes[(current + 1) % selectedShapes.length];
+    } else {
+      this.selected = selectedShapes[0] || null;
+    }
   }
 
   checkTriangle(relX, relY, shape, shapeIdx) {
     let { tris } = shape;
 
-    let points = this.checkTrianglePoints(relX, relY, shape);
+    let points = this.checkTrianglePoints(relX, relY, shape, this.layer);
     if (points.length > 0) {
       return {
         shape: shapeIdx,
@@ -126,8 +185,8 @@ export class UI {
     return null;
   }
 
-  checkTrianglePoints(relX, relY, shape) {
-    let { pointSize, layer } = this;
+  checkTrianglePoints(relX, relY, shape, layer) {
+    let { pointSize } = this;
     let { tris } = shape;
 
     let selected = [];
@@ -191,24 +250,24 @@ export class UI {
 
   drawTri(shape) {
     let shapeIdx = this.state.shapes.indexOf(shape);
-    let selectedShape = this.selectedShapes.find((s) => s.shape === shapeIdx);
 
     let { ctx } = this.elements;
     let { width, height } = ctx.canvas;
     let { tris } = shape;
+    let { selected } = this;
 
     for (var j = 0; j < tris.length; j++) {
       let points = tris[j][this.layer];
 
       for (var k = 0; k < points.length; k++) {
-        let selectedPoint =
-          !!selectedShape &&
-          !!selectedShape.points.find((t) => t[0] === j && t[1] === k);
+        let isSelectedPoint =
+          selected?.shape === shapeIdx &&
+          (selected?.points || []).find((t) => t[0] === j && t[1] === k);
 
         let x = (width * points[k][0]) | 0;
         let y = (height * points[k][1]) | 0;
 
-        this.drawPoint(x, y, selectedPoint);
+        this.drawPoint(x, y, isSelectedPoint);
       }
 
       this.tracePoints(
@@ -216,29 +275,29 @@ export class UI {
         points[0][1],
         points[1][0],
         points[1][1],
-        !!selectedShape,
+        selected?.shape === shapeIdx,
       );
       this.tracePoints(
         points[1][0],
         points[1][1],
         points[2][0],
         points[2][1],
-        !!selectedShape,
+        selected?.shape === shapeIdx,
       );
       this.tracePoints(
         points[2][0],
         points[2][1],
         points[0][0],
         points[0][1],
-        !!selectedShape,
+        selected?.shape === shapeIdx,
       );
     }
   }
 
   drawQuad(shape) {
     let shapeIdx = this.state.shapes.indexOf(shape);
-    let selectedShape = this.selectedShapes.find((s) => s.shape === shapeIdx);
 
+    let { selected } = this;
     let { ctx } = this.elements;
     let { width, height } = ctx.canvas;
     let { tris } = shape;
@@ -247,49 +306,48 @@ export class UI {
       let points = tris[j][this.layer];
 
       for (var k = 0; k < points.length; k++) {
-        let selectedPoint =
-          !!selectedShape &&
-          !!selectedShape.points.find((t) => t[0] === j && t[1] === k);
+        let isSelectedPoint =
+          selected?.shape === shapeIdx &&
+          (selected?.points || []).find((t) => t[0] === j && t[1] === k);
+
         let x = (width * points[k][0]) | 0;
         let y = (height * points[k][1]) | 0;
 
-        this.drawPoint(x, y, selectedPoint);
+        this.drawPoint(x, y, isSelectedPoint);
       }
     }
 
     let points1 = tris[0][this.layer];
     let points2 = tris[1][this.layer];
 
-    this.tracePoints(
+    let isSelectedShape = this.tracePoints(
       points1[0][0],
       points1[0][1],
       points2[1][0],
       points2[1][1],
-      !!selectedShape,
+      selected?.shape === shapeIdx,
     );
-
-    // console.log(points1[0][0], points1[0][1], points2[1][0], points2[1][1]);
 
     this.tracePoints(
       points2[1][0],
       points2[1][1],
       points1[2][0],
       points1[2][1],
-      !!selectedShape,
+      selected?.shape === shapeIdx,
     );
     this.tracePoints(
       points1[2][0],
       points1[2][1],
       points1[1][0],
       points1[1][1],
-      !!selectedShape,
+      selected?.shape === shapeIdx,
     );
     this.tracePoints(
       points1[1][0],
       points1[1][1],
       points1[0][0],
       points1[0][1],
-      !!selectedShape,
+      selected?.shape === shapeIdx,
     );
   }
 
@@ -317,10 +375,6 @@ export class UI {
     ctx.closePath();
   }
 
-  // drawPoints() {
-  //   this.loopPoints(this.drawPoint.bind(this));
-  // }
-
   drawPoint(x, y, selected) {
     let { ctx } = this.elements;
     let { width, height } = ctx.canvas;
@@ -336,10 +390,6 @@ export class UI {
     ctx.fillRect(minX, minY, this.pointSize, this.pointSize);
 
     return true;
-  }
-
-  checkPoints(e) {
-    // this.loopPoints(this.checkPoint.bind(this, e));
   }
 
   checkPoint(e, x, y, objIdx, pntIdx) {
@@ -364,19 +414,25 @@ export class UI {
   }
 
   movePoint(e) {
-    // TODO: THIS is what needs to be calulated per video
+    if (!this.moving || !this.selected) {
+      return;
+    }
 
     let x = e.pageX / window.innerWidth;
     let y = e.pageY / window.innerHeight;
-
     let { shapes } = this.state;
-    let { selectedPoint, layer } = this;
+    let { selected, layer } = this;
 
-    let selectedObject = shapes[selectedPoint[0]].points[layer];
-    let point = selectedObject[selectedPoint[1]];
+    let shape = shapes[selected.shape];
+    let points = selected.points || [];
 
-    point[0] = x;
-    point[1] = y;
+    [x, y] = this.snapPoint(x, y);
+
+    for (let i = 0; i < points.length; i++) {
+      let tri = shape.tris[points[i][0]];
+      tri[layer][points[i][1]][0] = x;
+      tri[layer][points[i][1]][1] = y;
+    }
 
     if (!!window.opener) {
       window.opener.postMessage(
@@ -386,31 +442,46 @@ export class UI {
         }),
       );
     }
-
-    // localStorage.setItem("zones", JSON.stringify(this.zones));
   }
 
-  // loopPoints(fn) {
-  //   let { ctx } = this.elements;
-  //   let { shapes } = this.state;
+  snapPoint(relX, relY) {
+    let { selected } = this;
+    let { shapes } = this.state;
 
-  //   for (var i = 0; i < shapes.length; i++) {
-  //     let pnts = shapes[i].points[this.layer];
+    const getPoint = (match, shape, layer) => {
+      let triIdx = match[0];
+      let pointIdx = match[1];
 
-  //     let width = ctx.canvas.width;
-  //     let height = ctx.canvas.height;
+      let tri = shape.tris[triIdx][layer];
+      let point = tri[pointIdx];
 
-  //     for (var j = 0; j < pnts.length; j++) {
-  //       let pnt = pnts[j];
+      return [...point];
+    };
 
-  //       let x = (width * pnt[0]) | 0;
-  //       let y = (height * pnt[1]) | 0;
+    let oppLayer = this.layer === "input" ? "output" : "input";
+    let matches = this.checkTrianglePoints(
+      relX,
+      relY,
+      shapes[selected.shape],
+      oppLayer,
+    );
 
-  //       let cont = fn(x, y, i, j);
-  //       if (!cont) {
-  //         return;
-  //       }
-  //     }
-  //   }
-  // }
+    if (matches.length > 0) {
+      return getPoint(matches[0], shapes[selected.shape], oppLayer);
+    }
+
+    for (let i = 0; i < shapes.length; i++) {
+      if (i === selected.shape) {
+        continue;
+      }
+
+      let matches = this.checkTrianglePoints(relX, relY, shapes[i], this.layer);
+
+      if (matches.length > 0) {
+        return getPoint(matches[0], shapes[i], this.layer);
+      }
+    }
+
+    return [relX, relY];
+  }
 }
