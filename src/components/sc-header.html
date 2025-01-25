@@ -5,21 +5,25 @@
         <div class="uk-navbar-left">
           <ul class="uk-navbar-nav">
             <li><a href="#" class="fancy">Sensory Controls</a></li>
-            <!-- <li id="add_triangle">
-              <a href="javascript:void(0)" @click="addTriangle()"
-                ><span uk-icon="icon: plus"></span>Add Triangle</a
-              >
-            </li> -->
           </ul>
         </div>
         <div class="uk-navbar-right">
           <ul class="uk-navbar-nav">
             <li id="current-project">
               <div>
-                <a id="save_btn" href="javascript:void(0)"
+                <a
+                  @click="save()"
+                  :class='saved ? "saved" : ""'
+                  id="save_btn"
+                  href="javascript:void(0)"
                   ><span uk-icon="icon: check"></span
                 ></a>
-                <input id="project_name" type="text" value="My Project" />
+                <input
+                  id="project_name"
+                  type="text"
+                  :value="name"
+                  @input="updateName($event)"
+                />
               </div>
             </li>
             <li id="open_menu">
@@ -33,13 +37,24 @@
                   <li>
                     <label>My Projects</label>
                     <ul id="project_list">
-                      <li>No Saved Projects</li>
+                      <template :if="(projects || []).length === 0">
+                        <li>No Saved Projects</li>
+                      </template>
+                      <template :if="(projects || []).length > 0">
+                        <template :for="projects">
+                          <li @click="load($value)">{{$value?.name}}</li>
+                        </template>
+                      </template>
+                      <!-- <template :for="projects">
+                        <li @click="load($value)">{{$value.name}}</li>
+                      </template> -->
                     </ul>
 
                     <a
                       href="javascript:void(0)"
                       id="download-projects"
                       class="btn"
+                      @click="download()"
                     >
                       Download Projects
                     </a>
@@ -82,23 +97,47 @@
     }
 
     static get observedProperties() {
-      return ["app", "projects"];
+      return ["app", "storage", "projects", "saved", "name"];
     }
 
     connected() {
-      // this.listen("app", "loader", () => {
-      //   this.onConnect();
-      // });
+      this.listen("storage", (storage) => {
+        storage.listen("projects", (projects) => {
+          this.projects = projects;
+        });
+
+        storage.listen("saved", (saved) => {
+          this.saved = saved;
+        });
+
+        this.projects = storage.projects;
+      });
+
+      this.listen("app", (app) => {
+        app.listen("name", (name) => {
+          this.name = name;
+        });
+
+        this.name = app.name;
+      });
     }
 
-    onConnect() {
-      // let { context } = this.app;
-
-      
+    load(project) {
+      this.storage.load(project);
     }
 
-    addTriangle() {
-      console.log("Adding triangle");
+    save() {
+      let { id, name, state } = this.app;
+
+      this.storage.save(id, name, state);
+    }
+
+    download() {
+      this.storage.downloadProjects();
+    }
+
+    updateName(e) {
+      this.app.name = (e.target.value || "").trim();
     }
   }
 </script>
