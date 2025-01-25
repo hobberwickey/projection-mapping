@@ -30,6 +30,57 @@
       </section>
     </div>
 
+    <div class="overlay">
+      <div class="header"></div>
+      <div class="msg">
+        <h3>Welcome!</h3>
+        <p>
+          This will be your screen to arrange you videos on. Please drag this
+          tab to your projector or second screen/monitor if you're using one,
+          then enter full screen mode.
+        </p>
+        <p>
+          You can see your shapes drawn on this screen. They will fade away
+          after a few seconds and can be seen again by moving your mouse.
+        </p>
+        <p>
+          To arrange your shapes, drag the shape's corners to where you want
+          them to be. Use the space bar to toggle between the red input layer,
+          and blue output layer. You currently selected shape/corner will be
+          yellow
+        </p>
+        <p>
+          If there is more than one corner or shape overlapping, you can cycle
+          through them by holding shift while you click
+        </p>
+        <p>
+          Additionally, you can move the selected corner using the arrow keys on
+          your keyboard, and you can cycle through the selected shape's corners
+          by hold shift an using the arrow keys. You can also cycle through the
+          shapes on the screen by holding shift and the up or down keys
+        </p>
+        <p>
+          To see this message again after you close it, just press H on your
+          keyboard
+        </p>
+        <p>Have fun!</p>
+      </div>
+      <span class="overlay-close" uk-icon="icon: close"></span>
+    </div>
+
     <script src="/js/rescreen.js"></script>
+    <script>
+      (() => {
+        document.querySelector(".overlay-close").addEventListener("click", () => {
+          document.querySelector(".overlay").style.display = "none";
+        })
+
+        window.addEventListener("keypress", (e) => {
+          if (e.keyCode === 104) {
+            document.querySelector(".overlay").style.display = "block";
+          }
+        })
+      })()
+    </script>
   </body>
 </html>
