@@ -1,87 +1,77 @@
-export class Storage {
-  constructor(context) {
-    this.context = context;
+export class Storage extends Context {
+  constructor(app) {
+    super({
+      saved: false,
+      projects: JSON.parse(localStorage.getItem("projects")) || [],
+    });
+
+    this.app = app;
   }
 
-  save() {
-    let projects = this.getProjects();
-    let idx = projects.findIndex((p) => p.id === this.id);
+  save(id, name, state) {
+    let { projects } = this;
+    let idx = projects.findIndex((p) => p.id === id);
 
     if (idx === -1) {
       projects.push({
-        id: this.id,
-        name: this.name,
-        state: JSON.parse(JSON.stringify(this.state)),
+        id: id,
+        name: name,
+        state: JSON.parse(JSON.stringify(state)),
       });
     } else {
       projects.splice(idx, 1, {
-        id: this.id,
-        name: this.name,
-        state: JSON.parse(JSON.stringify(this.state)),
+        id: id,
+        name: name,
+        state: JSON.parse(JSON.stringify(state)),
       });
     }
 
-    this.updateProjectList();
-    document.querySelector("#save_btn").classList.add("saved");
+    this.projects = [...projects];
+    this.saved = true;
+
     localStorage.setItem("projects", JSON.stringify(projects));
   }
 
-  load(id) {
-    let projects = this.getProjects();
-    let project = projects.find((p) => p.id === id);
+  load(project) {
+    let { app } = this;
+    let { id, name, state } = project;
 
-    this.id = project.id;
-    this.name = project.name;
-    this.state = JSON.parse(JSON.stringify(project.state));
-
-    // Get the project from local storage,
-    // load the id, name, and state
-    // clear all videos
-    this.updateProjectList();
-    this.setEffectValues();
-    this.setValues();
-
-    for (var i = 0; i < this.config.video_count; i++) {
-      this.removeVideo(i);
+    if (!state.shapes[0]?.tris) {
+      console.log("Old format, can't load");
+      return;
     }
 
-    document.querySelectorAll(".table .column.shape").forEach((col) => {
-      col.parentNode.removeChild(col);
-    });
+    app.id = id;
+    app.name = name;
+    app.state = JSON.parse(JSON.stringify(state));
 
-    document.querySelectorAll(".table .column.groups .group").forEach((grp) => {
-      grp.parentNode.removeChild(grp);
-    });
+    app.setEffectValues();
+    app.setValues();
 
-    this.setupGroups();
-
-    document.querySelector("#save_btn").classList.add("saved");
-    document.querySelector("#project_name").value = this.name;
+    for (var i = 0; i < this.app.config.video_count; i++) {
+      app.removeVideo(i);
+    }
   }
 
-  getProjects() {
-    return JSON.parse(localStorage.getItem("projects")) || [];
-  }
+  deleteProject(project) {
+    let { projects } = this;
 
-  deleteProject() {
-    let projects = this.getProjects();
-    let idx = projects.findIndex((p) => p.id === this.id);
-
+    let idx = projects.findIndex((p) => p.id === project.id);
     if (idx !== -1) {
       let project = projects[idx];
       projects.splice(idx, 1);
 
-      if (project.id === this.id) {
+      if (project.id === this.app.id) {
         this.resetState();
       }
     }
 
+    this.projects = [...projects];
     localStorage.setItem("projects", JSON.stringify(projects));
-    this.updateProjectList();
   }
 
   downloadProjects() {
-    let projects = this.getProjects();
+    let { projects } = this;
     let dataStr =
       "data:text/json;charset=utf-8," +
       encodeURIComponent(JSON.stringify(projects, null, 2));
@@ -97,7 +87,7 @@ export class Storage {
   }
 
   uploadProjects(e) {
-    let projects = this.getProjects();
+    let { projects } = this;
 
     if (e.target.files.length > 0) {
       let file = e.target.files[0];
@@ -119,30 +109,31 @@ export class Storage {
         });
 
         localStorage.setItem("projects", JSON.stringify(projects));
-        self.updateProjectList();
       };
 
       reader.readAsText(file);
     }
+
+    this.projects = [...projects];
   }
 
   saveState() {
-    localStorage.setItem("auto", JSON.stringify(this.state));
-    document.querySelector("#save_btn").classList.remove("saved");
+    // localStorage.setItem("auto", JSON.stringify(this.state));
+    // document.querySelector("#save_btn").classList.remove("saved");
   }
 
   resetState() {
-    for (var i = 0; i < this.config.video_count; i++) {
-      this.removeVideo(i);
+    for (var i = 0; i < this.app.config.video_count; i++) {
+      this.app.removeVideo(i);
     }
 
-    this.context.state = this.defaultState();
+    this.app.state = this.app.defaultState();
 
-    if (this.screen !== null) {
-      this.screen.postMessage(
+    if (this.app.screen !== null) {
+      this.app.screen.postMessage(
         JSON.stringify({
           action: "update_state",
-          state: this.context.state,
+          state: this.app.state,
         }),
       );
     }

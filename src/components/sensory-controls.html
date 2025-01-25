@@ -1,5 +1,5 @@
 <template id="sensory-controls">
-  <sc-header :app="app"></sc-header>
+  <sc-header :app="app" :storage="storage"></sc-header>
   <sc-content :app="app"></sc-content>
   <launch-overlay :app="app"></launch-overlay>
 </template>
@@ -13,7 +13,7 @@
     }
 
     static get observedProperties() {
-      return ["app"];
+      return ["app", "storage"];
     }
 
     connected() {
