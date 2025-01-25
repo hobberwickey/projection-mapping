@@ -25,6 +25,31 @@ export class UI {
     };
   }
 
+  resetOpacity() {
+    let { opacity } = this;
+
+    opacity.value = 1;
+    if (opacity.timer !== null) {
+      clearTimeout(opacity.timer);
+    }
+
+    let opacityFn = () => {
+      opacity.value -= 0.02;
+
+      if (opacity.value > 0) {
+        opacity.timer = setTimeout(opacityFn, 30);
+      } else {
+        opacity.value = 0;
+        opacity.timer = null;
+      }
+
+      this.drawUI();
+    };
+
+    opacity.timer = setTimeout(opacityFn, 5000);
+    this.drawUI();
+  }
+
   updateState(state) {
     this.state = state;
   }
@@ -49,6 +74,41 @@ export class UI {
     this.shifted = false;
   }
 
+  handleLeft() {
+    if (!!this.selected && !this.shifted) {
+      this.move([-1, 0]);
+    } else {
+      this.nextPoint(-1);
+    }
+  }
+
+  handleRight() {
+    console.log(!!this.selected, this.shifted);
+    if (!!this.selected && !this.shifted) {
+      return this.move([1, 0]);
+    }
+
+    if (this.shifted) {
+      this.nextPoint(1);
+    }
+  }
+
+  handleUp() {
+    if (!!this.selected && !this.shifted) {
+      this.move([0, -1]);
+    } else {
+      this.nextShape(-1);
+    }
+  }
+
+  handleDown() {
+    if (!!this.selected && !this.shifted) {
+      this.move([0, 1]);
+    } else {
+      this.nextShape(1);
+    }
+  }
+
   drawUI() {
     let { ctx } = this.elements;
     let { width, height } = ctx.canvas;
@@ -56,9 +116,6 @@ export class UI {
     ctx.clearRect(0, 0, width, height);
 
     this.drawShapes();
-
-    // this.drawPoints();
-    // this.tracePoints();
   }
 
   select(e) {
@@ -215,37 +272,34 @@ export class UI {
   }
 
   drawShapes() {
+    let { selected } = this;
     let { shapes } = this.state;
     let { ctx } = this.elements;
     let { width, height } = ctx.canvas;
 
     for (var i = 0; i < shapes.length; i++) {
-      let { type } = shapes[i];
-
-      if (type === "triangle") {
-        this.drawTri(shapes[i]);
+      if (!!selected && selected.shape === i) {
+        continue;
       }
 
-      if (type === "quad") {
-        this.drawQuad(shapes[i]);
-      }
+      this.drawShape(shapes[i]);
     }
 
-    //   for (var j = 0; j < tris.length; j++) {
-    //     let points = tris[j][this.layer];
+    if (!!selected) {
+      this.drawShape(shapes[selected.shape]);
+    }
+  }
 
-    //     if (type !== "ellipse") {
-    //       for (var k = 0; k < points.length; k++) {
-    //         let x = (width * points[k][0]) | 0;
-    //         let y = (height * points[k][1]) | 0;
+  drawShape(shape) {
+    let { type } = shape;
 
-    //         this.drawPoint(x, y);
-    //       }
-    //     } else {
-    //       // TODO: Draw the control points
-    //     }
-    //   }
-    // }
+    if (type === "triangle") {
+      this.drawTri(shape);
+    }
+
+    if (type === "quad") {
+      this.drawQuad(shape);
+    }
   }
 
   drawTri(shape) {
@@ -320,17 +374,17 @@ export class UI {
     let points1 = tris[0][this.layer];
     let points2 = tris[1][this.layer];
 
-    let isSelectedShape = this.tracePoints(
+    this.tracePoints(
       points1[0][0],
       points1[0][1],
-      points2[1][0],
-      points2[1][1],
+      points1[1][0],
+      points1[1][1],
       selected?.shape === shapeIdx,
     );
 
     this.tracePoints(
-      points2[1][0],
-      points2[1][1],
+      points1[1][0],
+      points1[1][1],
       points1[2][0],
       points1[2][1],
       selected?.shape === shapeIdx,
@@ -338,13 +392,13 @@ export class UI {
     this.tracePoints(
       points1[2][0],
       points1[2][1],
-      points1[1][0],
-      points1[1][1],
+      points2[2][0],
+      points2[2][1],
       selected?.shape === shapeIdx,
     );
     this.tracePoints(
-      points1[1][0],
-      points1[1][1],
+      points2[2][0],
+      points2[2][1],
       points1[0][0],
       points1[0][1],
       selected?.shape === shapeIdx,
@@ -413,7 +467,39 @@ export class UI {
     return true;
   }
 
+  move(movement) {
+    this.resetOpacity();
+
+    let x = movement[0];
+    let y = movement[1];
+
+    let { selected } = this;
+    if (!selected || selected.points.length < 1) {
+      return;
+    }
+
+    let shape = this.state.shapes[selected.shape];
+    let points =
+      shape.tris[selected.points[0][0]][this.layer][selected.points[0][1]];
+
+    points[0] += (1 / window.innerWidth) * x;
+    points[1] += (1 / window.innerHeight) * y;
+
+    if (!!window.opener) {
+      window.opener.postMessage(
+        JSON.stringify({
+          action: "update_state",
+          state: this.state,
+        }),
+      );
+    }
+
+    this.drawUI();
+  }
+
   movePoint(e) {
+    this.resetOpacity();
+
     if (!this.moving || !this.selected) {
       return;
     }
@@ -483,5 +569,134 @@ export class UI {
     }
 
     return [relX, relY];
+  }
+
+  nextPoint(interval) {
+    this.resetOpacity();
+
+    if (this.state.shapes.length === 0) {
+      return;
+    }
+
+    let { selected } = this;
+
+    let shape = null;
+    let tri = null;
+    let point = null;
+
+    if (!selected) {
+      shape = 0;
+      tri = 0;
+      point = 2;
+    } else {
+      shape = selected.shape;
+      tri = (selected.points[0] || [])[0] ?? 0;
+      point = (selected.points[0] || [])[1] ?? 2;
+    }
+
+    let type = this.state.shapes[shape].type;
+    if (type === "triangle") {
+      let next = point + interval < 0 ? 2 : (point + interval) % 3;
+
+      this.selected = {
+        shape: shape,
+        points: [[tri, next]],
+      };
+    } else if (type === "quad") {
+      if ((tri === 0 && point === 0) || (tri === 1 && point === 0)) {
+        if (interval > 0) {
+          this.selected = {
+            shape: shape,
+            points: [[0, 1]],
+          };
+        } else {
+          this.selected = {
+            shape: shape,
+            points: [[1, 2]],
+          };
+        }
+      } else if (tri === 0 && point === 1) {
+        if (interval > 0) {
+          this.selected = {
+            shape: shape,
+            points: [
+              [0, 2],
+              [1, 1],
+            ],
+          };
+        } else {
+          this.selected = {
+            shape: shape,
+            points: [
+              [0, 0],
+              [1, 0],
+            ],
+          };
+        }
+      } else if ((tri === 0 && point === 2) || (tri === 1 && point === 1)) {
+        if (interval > 0) {
+          this.selected = {
+            shape: shape,
+            points: [[1, 2]],
+          };
+        } else {
+          this.selected = {
+            shape: shape,
+            points: [[0, 1]],
+          };
+        }
+      } else if (tri === 1 && point === 2) {
+        if (interval > 0) {
+          this.selected = {
+            shape: shape,
+            points: [
+              [0, 0],
+              [1, 0],
+            ],
+          };
+        } else {
+          this.selected = {
+            shape: shape,
+            points: [
+              [0, 2],
+              [1, 1],
+            ],
+          };
+        }
+      }
+    }
+
+    this.drawUI();
+  }
+
+  nextShape(interval) {
+    this.resetOpacity();
+
+    if (this.state.shapes.length === 0) {
+      return;
+    }
+
+    let { selected } = this;
+    let { shapes } = this.state;
+
+    let next;
+    if (!selected) {
+      console.log(shapes);
+      next = interval < 0 ? shapes.length - 1 : 0;
+    } else {
+      next =
+        selected.shape + interval < 0
+          ? shapes.length - 1
+          : (selected.shape + interval) % shapes.length;
+    }
+
+    console.log(next);
+
+    this.selected = {
+      shape: next,
+      points: [],
+    };
+
+    this.drawUI();
   }
 }

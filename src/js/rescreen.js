@@ -625,42 +625,7 @@ class App {
         return;
       }
 
-      let { selectedPoint } = this.ui;
-      let { videos, drawFrame /*, calculateMatrices*/ } = this.output;
-
-      if (selectedPoint !== null) {
-        this.ui.movePoint(e);
-        // calculateMatrices.call(this.output);
-      }
-    });
-
-    window.addEventListener("mousemove", () => {
-      if (!this.ui) {
-        return;
-      }
-
-      let { opacity, drawUI } = this.ui;
-
-      opacity.value = 1;
-      if (opacity.timer !== null) {
-        clearTimeout(opacity.timer);
-      }
-
-      let opacityFn = () => {
-        opacity.value -= 0.02;
-
-        if (opacity.value > 0) {
-          opacity.timer = setTimeout(opacityFn, 30);
-        } else {
-          opacity.value = 0;
-          opacity.timer = null;
-        }
-
-        drawUI.call(this.ui);
-      };
-
-      opacity.timer = setTimeout(opacityFn, 5000);
-      drawUI.call(this.ui);
+      this.ui.movePoint(e);
     });
 
     // window.addEventListener("click", (e) => {
@@ -674,6 +639,22 @@ class App {
     window.addEventListener("keydown", (e) => {
       if (e.keyCode === 16) {
         this.ui.shiftDown();
+      }
+
+      if (e.keyCode === 39) {
+        this.ui.handleRight();
+      }
+
+      if (e.keyCode === 37) {
+        this.ui.handleLeft();
+      }
+
+      if (e.keyCode === 38) {
+        this.ui.handleUp();
+      }
+
+      if (e.keyCode === 40) {
+        this.ui.handleDown();
       }
     });
 

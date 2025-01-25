@@ -10,14 +10,14 @@ const defaultTriangle = [
 
 const defaultQuad = [
   [
-    [0.4, 0.4],
-    [0.4, 0.6],
-    [0.6, 0.6],
+    [0.35, 0.35],
+    [0.65, 0.35],
+    [0.65, 0.65],
   ],
   [
-    [0.4, 0.4],
-    [0.6, 0.4],
-    [0.6, 0.6],
+    [0.35, 0.35],
+    [0.65, 0.65],
+    [0.35, 0.65],
   ],
 ];
 
@@ -118,38 +118,6 @@ class App extends Context {
       shapes: [
         {
           id: this.gen_id(),
-          type: "quad",
-          label: "Quad 1",
-          opacity: new Array(config.video_count).fill(0.5),
-          tris: [
-            {
-              input: [
-                [0.1, 0.1],
-                [0.1, 0.9],
-                [0.9, 0.9],
-              ],
-              output: [
-                [0.1, 0.1],
-                [0.1, 0.9],
-                [0.9, 0.9],
-              ],
-            },
-            {
-              input: [
-                [0.1, 0.1],
-                [0.9, 0.1],
-                [0.9, 0.9],
-              ],
-              output: [
-                [0.1, 0.1],
-                [0.9, 0.1],
-                [0.9, 0.9],
-              ],
-            },
-          ],
-        },
-        {
-          id: this.gen_id(),
           type: "triangle",
           label: "Triangle 1",
           opacity: new Array(config.video_count).fill(0.5),
@@ -164,6 +132,38 @@ class App extends Context {
                 [0.4, 0.4],
                 [0.6, 0.4],
                 [0.5, 0.6],
+              ],
+            },
+          ],
+        },
+        {
+          id: this.gen_id(),
+          type: "quad",
+          label: "Quad 1",
+          opacity: new Array(config.video_count).fill(0.5),
+          tris: [
+            {
+              input: [
+                [0.35, 0.35],
+                [0.65, 0.35],
+                [0.65, 0.65],
+              ],
+              output: [
+                [0.35, 0.35],
+                [0.65, 0.35],
+                [0.65, 0.65],
+              ],
+            },
+            {
+              input: [
+                [0.35, 0.35],
+                [0.65, 0.65],
+                [0.35, 0.65],
+              ],
+              output: [
+                [0.35, 0.35],
+                [0.65, 0.65],
+                [0.35, 0.65],
               ],
             },
           ],
@@ -795,15 +795,13 @@ class App extends Context {
   }
 
   setEffectValues() {
-    let effects = this.state.effects;
-    let effectEls = document.querySelectorAll("#effects > .select");
-
-    for (var i = 0; i < effects.length; i++) {
-      let effect = effects[i];
-      let el = effectEls[i];
-
-      el.controller.setSelected(effect);
-    }
+    // let effects = this.state.effects;
+    // let effectEls = document.querySelectorAll("#effects > .select");
+    // for (var i = 0; i < effects.length; i++) {
+    //   let effect = effects[i];
+    //   let el = effectEls[i];
+    //   el.controller.setSelected(effect);
+    // }
   }
 
   setMidi() {
@@ -954,8 +952,8 @@ window.addEventListener("load", () => {
   const app = new App(config);
   const appEl = document.querySelector("sensory-controls");
 
-  console.log("Setting App");
+  const storage = new Storage(app);
 
-  appEl.color = "red";
+  appEl.storage = storage;
   appEl.app = app;
 });
