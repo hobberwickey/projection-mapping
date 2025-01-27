@@ -96,10 +96,6 @@
 					this.scripts = [...scripts];
 				});
 			});
-
-			this.listen("scripts", (scripts) => {
-				console.log(scripts);
-			});
 		}
 
 		addShape(type) {
@@ -117,6 +113,7 @@
 		editScript(idx) {
 			let editor = document.createElement("script-editor");
 			editor.idx = idx;
+			editor.app = this.app;
 			editor.code = this.scripts[idx].code;
 			editor.label = this.scripts[idx].label;
 

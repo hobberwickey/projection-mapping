@@ -1,4 +1,4 @@
-import { Effects } from "./lib/effects";
+import { Effects } from "./lib/Effects";
 import { UI } from "./lib/ScreenUI";
 
 const shaderMethods = {

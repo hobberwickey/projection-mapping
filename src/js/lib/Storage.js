@@ -33,6 +33,8 @@ export class Storage extends Context {
   }
 
   load(project) {
+    console.log(project);
+
     let { app } = this;
     let { id, name, state } = project;
 
@@ -57,6 +59,7 @@ export class Storage extends Context {
     let { projects } = this;
 
     let idx = projects.findIndex((p) => p.id === project.id);
+    console.log(idx);
     if (idx !== -1) {
       let project = projects[idx];
       projects.splice(idx, 1);

@@ -42,7 +42,13 @@
                       </template>
                       <template :if="(projects || []).length > 0">
                         <template :for="projects">
-                          <li @click="load($value)">{{$value?.name}}</li>
+                          <li @click="load($value)">
+                            <span>{{$value?.name}}</span
+                            ><span
+                              uk-icon="icon:trash"
+                              @click="deleteProject($value, $event)"
+                            ></span>
+                          </li>
                         </template>
                       </template>
                       <!-- <template :for="projects">
@@ -130,6 +136,14 @@
       let { id, name, state } = this.app;
 
       this.storage.save(id, name, state);
+    }
+
+    deleteProject(project, event) {
+      console.log(project, event);
+
+      event.stopPropagation();
+
+      this.storage.deleteProject(project);
     }
 
     download() {

@@ -4,6 +4,9 @@
     <div class="select-list">
       <ul class="uk-list">
         <li @click="updateSelection($event)">Empty</li>
+        <template :for="options">
+          <li @click="updateSelection($value.id)">{{$value.label}}</li>
+        </template>
       </ul>
     </div>
     <div class="select-handle" @click="toggleActive($event)">
@@ -26,29 +29,6 @@
       this.listen("selected", (selected) => {
         this.label = this.options[selected]?.label || "Empty";
       });
-
-      for (var i = 0; i < (this.options || []).length; i++) {
-        let effect = this.options[i];
-        let li = document.createElement("li");
-
-        li.innerText = effect.label;
-        li.dataset.value = effect.id;
-        li.addEventListener("click", this.updateSelection.bind(this));
-
-        this.querySelector(".uk-list").append(li);
-      }
-    }
-
-    createOption(id, label) {
-      let item = document.createElement("li");
-
-      item.dataset.value = id;
-      item.textContent = label;
-
-      item.addEventListener("click", this.updateSelection.bind(this));
-
-      console.log("is this happening?");
-      this.querySelector(".select-list ul").appendChild(item);
     }
 
     toggleActive(e) {
@@ -76,8 +56,8 @@
       this.select(idx);
     }
 
-    updateSelection(e) {
-      this.update(this.idx, e.target.dataset?.value || null);
+    updateSelection(id) {
+      this.update(this.idx, id || null);
     }
   }
 </script>

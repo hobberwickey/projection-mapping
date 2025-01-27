@@ -1,6 +1,6 @@
-import { Config } from "./lib/config";
-import { Effects } from "./lib/effects";
-import { Storage } from "./lib/storage";
+import { Config } from "./lib/Config";
+import { Effects } from "./lib/Effects";
+import { Storage } from "./lib/Storage";
 
 const defaultTriangle = [
   [0.4, 0.4],
@@ -27,7 +27,7 @@ class App extends Context {
   constructor(config) {
     super({
       effects: Effects,
-      scripts: [],
+      scripts: JSON.parse(localStorage.getItem("scripts")) || [],
       state: null,
       id: null,
       name: "My Project",
@@ -105,15 +105,7 @@ class App extends Context {
         return null;
       }),
 
-      groups: new Array(config.group_count).fill().map((_, idx) => {
-        return {
-          id: this.gen_id(),
-          editable: idx !== 0,
-          opacity: new Array(config.video_count).fill(0.5),
-          label: idx === 0 ? "All" : `Group ${idx}`,
-          shapes: [],
-        };
-      }),
+      groups: [],
 
       shapes: [
         {
@@ -377,57 +369,6 @@ class App extends Context {
       return;
     }
 
-    console.log("Launching!");
-
-    // this.rotateColors();
-
-    // document
-    //   .querySelector("#launch")
-    //   .addEventListener("click", this.popout.bind(this));
-
-    // document
-    //   .querySelector("#add_triangle")
-    //   .addEventListener("click", this.addShape.bind(this));
-
-    // document
-    //   .querySelector("#slideout-handle")
-    //   .addEventListener("click", this.toggleSlideout.bind(this));
-
-    // document
-    //   .querySelector("#project_name")
-    //   .addEventListener("input", this.updateProjectName.bind(this));
-
-    // document
-    //   .querySelector("#save_btn")
-    //   .addEventListener("click", this.save.bind(this));
-
-    // document.querySelector(".menu").addEventListener("click", () => {
-    //   UIkit.dropdown(document.querySelector(".menu")).hide(0);
-    // });
-
-    // document
-    //   .querySelector(".menu .upload-projects")
-    //   .addEventListener("change", (e) => {
-    //     e.stopPropagation();
-    //     this.uploadProjects(e);
-    //   });
-
-    // this.updateProjectList();
-
-    // let inputs = document.querySelectorAll(".inputs input[type='range']");
-    // inputs[0].addEventListener(
-    //   "input",
-    //   this.updateEffect.bind(this, "opacity"),
-    // );
-    // inputs[1].addEventListener(
-    //   "input",
-    //   this.updateEffect.bind(this, "effect_a"),
-    // );
-    // inputs[2].addEventListener(
-    //   "input",
-    //   this.updateEffect.bind(this, "effect_b"),
-    // );
-
     window.addEventListener("message", (e) => {
       try {
         let data = JSON.parse(e.data);
@@ -444,22 +385,6 @@ class App extends Context {
         console.log(err);
       }
     });
-
-    // document
-    //   .querySelector("#download-projects")
-    //   .addEventListener("click", () => {
-    //     this.downloadProjects();
-    //   });
-
-    // TODO for disabling all click for MIDI Map Mode
-    // document.addEventListener(
-    //   "click",
-    //   (e) => {
-    //     e.stopPropagation();
-    //     e.preventDefault();
-    //   },
-    //   true,
-    // );
   }
 
   popout() {
@@ -489,10 +414,36 @@ class App extends Context {
     this.scripts = [
       ...this.scripts,
       {
+        id: this.gen_id(),
         label: `Script ${this.scripts.length + 1}`,
         code: "",
       },
     ];
+  }
+
+  updateScript(id, label, code) {
+    let script = this.scripts.find((s) => s.id === id);
+
+    script.label = label;
+    script.code = code;
+
+    this.state.scripts
+      .reduce((a, c, i) => a.concat(c.id === id ? i : []), [])
+      .map((idx) => {
+        this.state.script[idx] = script;
+      });
+
+    this.scripts = [...this.scripts];
+    localStorage.setItem("scripts", this.scripts);
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "update_state",
+        state: this.state,
+      }),
+    );
+
+    this.saveState();
   }
 
   addShape(type) {
@@ -686,14 +637,6 @@ class App extends Context {
 
   toggleVideo(idx) {
     this.selectedVideos[0] = idx;
-    // console.log(idx);
-
-    // if (this.selectedVideos.includes(idx)) {
-    //   this.selectedVideos.splice(this.selectedVideos.indexOf(idx), 1);
-    // } else {
-    //   this.selectedVideos.push(idx);
-    // }
-
     this.setValues();
   }
 
@@ -955,5 +898,6 @@ window.addEventListener("load", () => {
   const storage = new Storage(app);
 
   appEl.storage = storage;
+
   appEl.app = app;
 });

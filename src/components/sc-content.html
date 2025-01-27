@@ -16,7 +16,7 @@
                 :idx="$idx"
                 :update="updateScript"
                 :selected="$value"
-                :options="app?.scripts || []"
+                :options="scripts || []"
                 :class="selectedScript === $idx ? 'selected': ''"
                 @click="selectItem('script', $idx)"
               ></slot-item>
@@ -31,7 +31,7 @@
                 :idx="$idx"
                 :update="updateEffect"
                 :selected="$value"
-                :options="app?.effects || []"
+                :options="effects || []"
                 :class="selectedEffect === $idx ? 'selected': ''"
                 @click="selectItem('effect', $idx)"
               ></slot-item>
@@ -118,12 +118,25 @@
         "selectedVideo",
         "selectedEffect",
         "selectedScript",
+        "effects",
+        "scripts",
       ];
     }
 
     connected() {
       this.listen("app", (app) => {
         this.state = app.state;
+        this.effects = app.effects;
+        this.scripts = app.scripts;
+
+        app.listen("scripts", (scripts) => {
+          this.scripts = scripts;
+          console.log("SCRIPTS:", scripts);
+        });
+
+        app.listen("effects", (effects) => {
+          this.effects = effects;
+        });
 
         app.listen("state", (state) => {
           this.state = state;
@@ -157,38 +170,30 @@
     }
 
     setLEDs(state) {
-    //   const pallet = [
-    //     [0, 0, 255],
-    //     [0, 255, 0],
-    //     [255, 0, 0],
-    //     [0, 255, 255],
-    //     [255, 0, 255],
-    //     [255, 255, 0],
-    //   ];
-
-    //   let scriptLedsEl = this.querySelector("#h_script_lights");
-    //   let effectALedsEl = this.querySelector("#h_effect_a_lights");
-    //   let effectBLedsEl = this.querySelector("#h_effect_b_lights");
-
-    //   let scriptLeds = [];
-    //   let effectALeds = [];
-    //   let effectBLeds = [];
-
-    //   console.log("State:", state);
-
-    //   for (let i = 0; i < 6; i++) {
-    //     let values = state.videos[state.selected.video || 0].values[i];
-
-    //     scriptLeds.push({ color: pallet[i], value: 1 });
-
-    //     effectALeds.push({ color: pallet[i], value: values[0] });
-
-    //     effectBLeds.push({ color: pallet[i], value: values[1] });
-    //   }
-
-    //   scriptLedsEl.leds = scriptLeds;
-    //   effectALedsEl.leds = effectALeds;
-    //   effectBLedsEl.leds = effectBLeds;
+      //   const pallet = [
+      //     [0, 0, 255],
+      //     [0, 255, 0],
+      //     [255, 0, 0],
+      //     [0, 255, 255],
+      //     [255, 0, 255],
+      //     [255, 255, 0],
+      //   ];
+      //   let scriptLedsEl = this.querySelector("#h_script_lights");
+      //   let effectALedsEl = this.querySelector("#h_effect_a_lights");
+      //   let effectBLedsEl = this.querySelector("#h_effect_b_lights");
+      //   let scriptLeds = [];
+      //   let effectALeds = [];
+      //   let effectBLeds = [];
+      //   console.log("State:", state);
+      //   for (let i = 0; i < 6; i++) {
+      //     let values = state.videos[state.selected.video || 0].values[i];
+      //     scriptLeds.push({ color: pallet[i], value: 1 });
+      //     effectALeds.push({ color: pallet[i], value: values[0] });
+      //     effectBLeds.push({ color: pallet[i], value: values[1] });
+      //   }
+      //   scriptLedsEl.leds = scriptLeds;
+      //   effectALedsEl.leds = effectALeds;
+      //   effectBLedsEl.leds = effectBLeds;
     }
   }
 </script>
