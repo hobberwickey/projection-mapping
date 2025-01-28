@@ -50,6 +50,9 @@
 					this.scripts = [...scripts];
 				});
 			});
+
+			this.querySelector("code").innerHTML = this.escapeHTML(this.code);
+			Prism.highlightElement(this.querySelector("code"));
 		}
 
 		onLabel(evt) {
@@ -57,10 +60,16 @@
 			this.app.updateScript(script.id, this.label, this.code);
 		}
 
+		escapeHTML(text) {
+			return text
+				.replace(/\</g, "&lt;")
+				.replace(/\>/g, "&gt;")
+		}
+
 		onCode(evt) {
 			this.error = null;
 
-			this.querySelector("code").innerHTML = evt.target.value;
+			this.querySelector("code").innerHTML = this.escapeHTML(evt.target.value);
 			Prism.highlightElement(this.querySelector("code"));
 
 			this.code = evt.target.value;
