@@ -105,7 +105,15 @@ class App extends Context {
         return null;
       }),
 
-      groups: [],
+      groups: new Array(config.group_count).fill().map((_, idx) => {
+        return {
+          id: this.gen_id(),
+          editable: idx !== 0,
+          opacity: new Array(config.video_count).fill(0.5),
+          label: idx === 0 ? "All" : `Group ${idx}`,
+          shapes: [],
+        };
+      }),
 
       shapes: [
         {
@@ -428,13 +436,19 @@ class App extends Context {
     script.code = code;
 
     this.state.scripts
-      .reduce((a, c, i) => a.concat(c.id === id ? i : []), [])
+      .reduce((a, c, i) => {
+        if (c !== null) {
+          return a.concat(c.id === id ? i : []);
+        } else {
+          return a;
+        }
+      }, [])
       .map((idx) => {
         this.state.script[idx] = script;
       });
 
     this.scripts = [...this.scripts];
-    localStorage.setItem("scripts", this.scripts);
+    localStorage.setItem("scripts", JSON.stringify(this.scripts));
 
     this.screen.postMessage(
       JSON.stringify({
