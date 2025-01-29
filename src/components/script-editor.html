@@ -56,6 +56,8 @@
 		}
 
 		onLabel(evt) {
+			let script = this.app.scripts[this.idx];
+			
 			this.label = evt.target.value;
 			this.app.updateScript(script.id, this.label, this.code);
 		}

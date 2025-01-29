@@ -734,6 +734,35 @@ class App extends Context {
     this.setValues();
   }
 
+  setScript(idx, script_id) {
+    let script = this.scripts.find((s) => s.id === script_id);
+    if (!script) {
+      return;
+    }
+
+    let { state } = this;
+
+    state.scripts[idx] = script;
+
+    console.log(state);
+
+    this.state = { ...state, scripts: [...state.scripts] };
+
+    console.log(this.state);
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "set_script",
+        scriptIdx: idx,
+        script: script,
+        state: state,
+      }),
+    );
+
+    this.saveState();
+    // this.setValues();
+  }
+
   setValues() {
     // let selectedVideo = this.selectedVideos[0];
     // let selectedGroup = this.selectedGroup;

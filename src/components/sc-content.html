@@ -161,8 +161,9 @@
 
     renameVideo(idx, value) {}
 
-    updateScript(idx, script) {
-      console.log("Script Updated:", idx, effect);
+    updateScript(idx, script_id) {
+      console.log(idx, script_id)
+      this.app.setScript(idx, script_id);
     }
 
     setEffectValue(effect, e) {

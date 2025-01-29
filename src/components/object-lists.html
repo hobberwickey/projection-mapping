@@ -84,6 +84,8 @@
 
 		connected() {
 			this.listen("state", (state) => {
+				console.log(state)
+
 				this.triangles = state.shapes.filter((s) => s.type === "triangle");
 				this.quads = state.shapes.filter((s) => s.type === "quad");
 				this.rounds = state.shapes.filter((s) => s.type === "round");
@@ -124,7 +126,9 @@
 			this.app.addScript();
 		}
 
-		updateScript(idx, script) {}
+		updateScript(idx, script) {
+			
+		}
 
 		removeScript(idx) {}
 	}

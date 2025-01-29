@@ -65,6 +65,8 @@ class Output {
     this.glAttrs = new Array(6).fill(null);
     // this.matrices = [];
 
+    this.scripts = new Array(6).fill(null);
+
     this.gl = null;
     this.attrs = {
       main: null,
@@ -139,7 +141,14 @@ class Output {
   step() {
     let len = this.videos.length - 1;
 
-    for (var i = len; i >= 0; i--) {
+    for (let i = 0; i < 6; i++) {
+      let script = this.scripts[i];
+      if (script !== null) {
+        script(this.state);
+      }
+    }
+
+    for (let i = len; i >= 0; i--) {
       if (this.videos[i] !== null) {
         this.drawFrame(i);
       }
@@ -557,6 +566,14 @@ class Output {
       }
     }
   }
+
+  setScript(idx, script) {
+    let fn = new Function("state", script.code);
+
+    console.log(idx, script, fn);
+
+    this.scripts[idx] = fn;
+  }
 }
 
 class App {
@@ -699,6 +716,11 @@ class App {
             let { effectIdx, effect, state } = data;
 
             this.output.setEffect.call(this.output, effectIdx, effect);
+            this.setState(state);
+          } else if (data.action === "set_script") {
+            let { scriptIdx, script, state } = data;
+
+            this.output.setScript.call(this.output, scriptIdx, script);
             this.setState(state);
           }
         } else {
