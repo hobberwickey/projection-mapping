@@ -73,6 +73,7 @@
       (() => {
         document.querySelector(".overlay-close").addEventListener("click", () => {
           document.querySelector(".overlay").style.display = "none";
+          localStorage.setItem("help_hidden", true);
         })
 
         window.addEventListener("keypress", (e) => {
@@ -80,6 +81,11 @@
             document.querySelector(".overlay").style.display = "block";
           }
         })
+
+        let helpHidden = localStorage.getItem("help_hidden");
+        if (!!helpHidden) {
+          document.querySelector(".overlay").style.display = "none";
+        }
       })()
     </script>
   </body>
