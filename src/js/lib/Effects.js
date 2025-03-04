@@ -5,7 +5,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Playback Speed",
 		effect_b: "Start Offset",
-		defaults: [0.5, 0.05],
+		defaults: [0.5, 0],
 		shader: null,
 	},
 	{
@@ -14,7 +14,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Hue",
 		effect_b: "Sensitivity",
-		defaults: [0.05, 0.05],
+		defaults: [0, 0],
 		shader: `
 	    precision mediump float;
 	    varying vec2 v_texcoord;
@@ -25,11 +25,6 @@ export const Effects = [
 	    uniform vec2 u_dimensions; 
 	    uniform mediump float u_opacity;
 	    uniform vec2 u_effect;
-
-	    vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) 
-	    {
-	      return a + b*cos( 6.28318*(c*t+d) );
-	    }
 
 	    vec3 rgb2hsv(vec3 c)
 	    {
@@ -55,12 +50,75 @@ export const Effects = [
 	  `,
 	},
 	{
+		id: "brightness_opacity",
+		label: "Brightness Opacity",
+		opacity: "Opacity",
+		effect_a: "Brightness",
+		effect_b: "Sensitivity",
+		defaults: [0, 0],
+		shader: `
+	    precision mediump float;
+	    varying vec2 v_texcoord;
+	    uniform sampler2D u_texture;
+
+	    float PI = 3.14159265358;
+
+	    uniform vec2 u_dimensions; 
+	    uniform mediump float u_opacity;
+	    uniform vec2 u_effect;
+
+	    vec3 rgb2hsl( in vec3 c ){
+			  float h = 0.0;
+				float s = 0.0;
+				float l = 0.0;
+				float r = c.r;
+				float g = c.g;
+				float b = c.b;
+				float cMin = min( r, min( g, b ) );
+				float cMax = max( r, max( g, b ) );
+
+				l = ( cMax + cMin ) / 2.0;
+				if ( cMax > cMin ) {
+					float cDelta = cMax - cMin;
+			        
+			        //s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
+					s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
+			        
+					if ( r == cMax ) {
+						h = ( g - b ) / cDelta;
+					} else if ( g == cMax ) {
+						h = 2.0 + ( b - r ) / cDelta;
+					} else {
+						h = 4.0 + ( r - g ) / cDelta;
+					}
+
+					if ( h < 0.0) {
+						h += 6.0;
+					}
+					h = h / 6.0;
+				}
+				return vec3( h, s, l );
+			}
+
+	    void main() {
+	      vec4 color = texture2D(u_texture, v_texcoord);
+	      vec3 hsl = rgb2hsl(vec3(color[0], color[1], color[2]));
+
+	      float brightness_target = u_effect[0];
+	      float brightness_dist = 1.0 - (min(abs(hsl[2] - brightness_target), 1.0 - abs(hsl[2] - brightness_target)) / 0.5);
+	      float brightness_opacity =  sin(pow(brightness_dist, 2.0) * (PI / 2.0));
+
+	      gl_FragColor = vec4(color[0], color[1], color[2], 1.0 - brightness_opacity * (u_effect[1]));
+	    }
+	  `,
+	},
+	{
 		id: "cosine_palette",
 		label: "Cosine Palette",
 		opacity: "Opacity",
 		effect_a: "Intensity",
 		effect_b: "Shift",
-		defaults: [0.05, 0.05],
+		defaults: [0, 0],
 		shader: `
 	    precision mediump float;
 	    varying vec2 v_texcoord;
@@ -106,7 +164,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Pixel Size",
 		effect_b: "Pallete Depth",
-		defaults: [0.05, 0.05],
+		defaults: [0, 0],
 		shader: `
 		  precision mediump float;
 		  varying vec2 v_texcoord;
@@ -134,7 +192,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "Horizontal",
 		effect_b: "Vertical",
-		defaults: [0.05, 0.05],
+		defaults: [0, 0],
 		shader: `
 		  precision mediump float;
 		  varying vec2 v_texcoord;
@@ -158,7 +216,7 @@ export const Effects = [
 		opacity: "Opacity",
 		effect_a: "X-Zoom",
 		effect_b: "Y-Zoom",
-		defaults: [0.05, 0.05],
+		defaults: [0, 0],
 		shader: `
 			precision mediump float;
 		  varying vec2 v_texcoord;
