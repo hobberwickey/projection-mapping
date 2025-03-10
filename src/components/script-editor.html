@@ -16,16 +16,19 @@
 					<div class="code-box">
 						<textarea
 							placeholder="Write your script here"
-							:value="code"
+							@keydown="onKeyDown($event)"
 							@input="onCode($event)"
-						></textarea>
+							@scroll="onScroll($event)"
+						>
+{{code}}</textarea
+						>
 						<pre><code class="language-js"></code></pre>
 					</div>
 				</div>
 			</div>
 			<div class="footer">
-				<div class="btn" @click="onSave()">Save</div>
-				<div class="btn" @click="onCancel()">Cancel</div>
+				<div class="btn" @click="onSave()">{{ dirty ? "Save" : "Saved" }}</div>
+				<div class="btn" @click="onCancel()">Close</div>
 			</div>
 		</div>
 		<div class="overlay"></div>
@@ -39,10 +42,11 @@
 		}
 
 		static get observedProperties() {
-			return ["app", "idx", "label", "code", "scripts", "error"];
+			return ["app", "idx", "label", "code", "scripts", "error", "dirty"];
 		}
 
 		connected() {
+			this.dirty = false;
 			this.listen("app", (app) => {
 				this.scripts = [...app.scripts];
 
@@ -57,15 +61,37 @@
 
 		onLabel(evt) {
 			let script = this.app.scripts[this.idx];
-			
+
 			this.label = evt.target.value;
 			this.app.updateScript(script.id, this.label, this.code);
 		}
 
 		escapeHTML(text) {
-			return text
-				.replace(/\</g, "&lt;")
-				.replace(/\>/g, "&gt;")
+			return text.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
+		}
+
+		onKeyDown(evt) {
+			let el = evt.target;
+			let code = el.value;
+
+			if (evt.key == "Tab") {
+				evt.preventDefault();
+
+				let before_tab = code.slice(0, el.selectionStart); // text before tab
+				let after_tab = code.slice(el.selectionEnd, el.value.length); // text after tab
+				let cursor_pos = el.selectionStart + 2;
+				let tabbedCode = before_tab + "  " + after_tab;
+
+				this.querySelector("code").innerHTML = this.escapeHTML(tabbedCode);
+				Prism.highlightElement(this.querySelector("code"));
+
+				this.code = tabbedCode;
+
+				el.selectionStart = cursor_pos;
+				el.selectionEnd = cursor_pos;
+
+				this.dirty = true;
+			}
 		}
 
 		onCode(evt) {
@@ -75,20 +101,23 @@
 			Prism.highlightElement(this.querySelector("code"));
 
 			this.code = evt.target.value;
+			this.dirty = true;
+		}
+
+		onScroll(evt) {
+			this.querySelector(".code-box pre").scrollTop = evt.target.scrollTop;
 		}
 
 		onSave() {
 			let script = this.app.scripts[this.idx];
-			let state = JSON.parse(JSON.stringify(this.app.state));
 
 			try {
-				let validation = new Function("state", this.code)(state);
+				this.app.updateScript(script.id, this.label, this.code);
 			} catch (err) {
 				this.error = err;
-				return;
 			}
 
-			this.app.updateScript(script.id, this.label, this.code);
+			this.dirty = false;
 		}
 
 		onCancel() {

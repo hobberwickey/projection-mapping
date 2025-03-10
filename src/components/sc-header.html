@@ -139,8 +139,6 @@
     }
 
     deleteProject(project, event) {
-      console.log(project, event);
-
       event.stopPropagation();
 
       this.storage.deleteProject(project);

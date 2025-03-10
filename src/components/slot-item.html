@@ -3,7 +3,7 @@
     <div class="select-display">{{getLabel(selected)}}</div>
     <div class="select-list">
       <ul class="uk-list">
-        <li @click="updateSelection($event)">Empty</li>
+        <li @click="updateSelection(null)">Empty</li>
         <template :for="options">
           <li @click="updateSelection($value.id)">{{$value.label}}</li>
         </template>
@@ -27,6 +27,8 @@
 
     connected() {
       this.listen("selected", (selected) => {
+        console.log(selected);
+
         this.label = this.options[selected]?.label || "Empty";
       });
     }
@@ -42,14 +44,13 @@
       });
     }
 
-    getLabel(effect) {
-      if (!effect) {
+    getLabel(id) {
+      if (!id) {
         return "Empty";
       }
 
-      let effects = document.querySelector("sensory-controls").app?.effects;
-
-      return effects.find((e) => e.id === effect)?.label || "Empty";
+      let item = this.options.find((o) => o.id === id);
+      return item?.label || "Empty";
     }
 
     setSelected(idx) {
@@ -57,6 +58,8 @@
     }
 
     updateSelection(id) {
+      console.log(id);
+
       this.update(this.idx, id || null);
     }
   }

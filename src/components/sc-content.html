@@ -90,9 +90,11 @@
         <div class="sliders uk-width-4-10">
           <div>
             <vertical-range
+              :value="Array.isArray(values) ? values[0] : 0"
               :update="setEffectValue.bind(null, 0)"
             ></vertical-range>
             <vertical-range
+              :value="Array.isArray(values) ? values[1] : 0"
               :update="setEffectValue.bind(null, 1)"
             ></vertical-range>
           </div>
@@ -120,10 +122,13 @@
         "selectedScript",
         "effects",
         "scripts",
+        "values",
       ];
     }
 
     connected() {
+      this.values = [0.5, 0.5];
+
       this.listen("app", (app) => {
         this.state = app.state;
         this.effects = app.effects;
@@ -131,7 +136,6 @@
 
         app.listen("scripts", (scripts) => {
           this.scripts = scripts;
-          console.log("SCRIPTS:", scripts);
         });
 
         app.listen("effects", (effects) => {
@@ -143,11 +147,10 @@
           this.selectedVideo = state.selected.video;
           this.selectedEffect = state.selected.effect;
           this.selectedScript = state.selected.script;
+          this.values = [...this.app.getSelectedValues()];
 
-          this.setLEDs(state);
+          console.log(this.values);
         });
-
-        this.setLEDs(app.state);
       });
     }
 
@@ -162,39 +165,13 @@
     renameVideo(idx, value) {}
 
     updateScript(idx, script_id) {
-      console.log(idx, script_id)
       this.app.setScript(idx, script_id);
     }
 
-    setEffectValue(effect, e) {
-      this.app.updateEffect(effect, e.target.value);
+    setEffectValue(idx, e) {
+      this.app.updateValue(idx, e.target.value);
     }
 
-    setLEDs(state) {
-      //   const pallet = [
-      //     [0, 0, 255],
-      //     [0, 255, 0],
-      //     [255, 0, 0],
-      //     [0, 255, 255],
-      //     [255, 0, 255],
-      //     [255, 255, 0],
-      //   ];
-      //   let scriptLedsEl = this.querySelector("#h_script_lights");
-      //   let effectALedsEl = this.querySelector("#h_effect_a_lights");
-      //   let effectBLedsEl = this.querySelector("#h_effect_b_lights");
-      //   let scriptLeds = [];
-      //   let effectALeds = [];
-      //   let effectBLeds = [];
-      //   console.log("State:", state);
-      //   for (let i = 0; i < 6; i++) {
-      //     let values = state.videos[state.selected.video || 0].values[i];
-      //     scriptLeds.push({ color: pallet[i], value: 1 });
-      //     effectALeds.push({ color: pallet[i], value: values[0] });
-      //     effectBLeds.push({ color: pallet[i], value: values[1] });
-      //   }
-      //   scriptLedsEl.leds = scriptLeds;
-      //   effectALedsEl.leds = effectALeds;
-      //   effectBLedsEl.leds = effectBLeds;
-    }
+    setLEDs(state) {}
   }
 </script>

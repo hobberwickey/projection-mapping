@@ -479,11 +479,14 @@ export class UI {
     }
 
     let shape = this.state.shapes[selected.shape];
-    let points =
-      shape.tris[selected.points[0][0]][this.layer][selected.points[0][1]];
 
-    points[0] += (1 / window.innerWidth) * x;
-    points[1] += (1 / window.innerHeight) * y;
+    for (let i = 0; i < selected.points.length; i++) {
+      let points =
+        shape.tris[selected.points[i][0]][this.layer][selected.points[i][1]];
+
+      points[0] += (1 / window.innerWidth) * x;
+      points[1] += (1 / window.innerHeight) * y;
+    }
 
     if (!!window.opener) {
       window.opener.postMessage(

@@ -81,10 +81,16 @@ script-editor {
   font-family: monospace;
   line-height: 1.5;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
   border: solid 1px;
   background-color: #f5f2f0; // default prismjs theme background color
 
   textarea {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+
     background-color: transparent;
     color: transparent;
     caret-color: black;
@@ -95,22 +101,33 @@ script-editor {
     line-height: inherit;
     width: 100%;
     border: none;
+
+    &::selection {
+      color: transparent;
+    }
   }
 
   code,
   pre {
+    position: relative;
+    display: block;
     pointer-events: none;
-    position: absolute;
-    top: 0px;
-    left: 0px;
     width: 100%;
-    height: 100%;
-    padding: 10px;
     margin: 0px;
     font-size: inherit;
     font-family: inherit;
     line-height: inherit;
     background-color: transparent;
     box-sizing: border-box;
+  }
+
+  pre {
+    height: 100%;
+    padding: 0px;
+  }
+
+  code {
+    padding: 10px;
+    height: auto;
   }
 }

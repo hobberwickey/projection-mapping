@@ -5,7 +5,7 @@
 			min="0"
 			max="1"
 			step="0.01"
-			value="0.5"
+			:value="value ?? 0.5"
 			@input="update($event)"
 		/>
 	</div>
@@ -18,7 +18,11 @@
 		}
 
 		static get observedProperties() {
-			return ["update"];
+			return ["update", "value"];
+
+			this.listen("value", (value) => {
+				console.log("Value Updated")
+			})
 		}
 	}
 </script>

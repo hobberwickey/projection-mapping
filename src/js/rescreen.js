@@ -1,5 +1,6 @@
 import { Effects } from "./lib/Effects";
 import { UI } from "./lib/ScreenUI";
+import { ScriptTemplate } from "./lib/ScriptTemplate";
 
 const shaderMethods = {
   pal: `
@@ -34,7 +35,6 @@ const vertexShaderSrc = `
    
   void main() {
     gl_Position = vec4(a_position * vec2(1, u_flipY), 0.0, 1.0);
-    // gl_Position = vec4(a_position, 0.0, 1.0);
     v_texcoord = a_texcoord;
   }
 `;
@@ -58,6 +58,7 @@ class Output {
   constructor(state) {
     this.pending_state = state;
     this.state = state;
+    this.epoch = Date.now();
 
     this.videos = new Array(6).fill(null);
     this.contexts = new Array(6).fill(null);
@@ -65,7 +66,19 @@ class Output {
     this.glAttrs = new Array(6).fill(null);
     // this.matrices = [];
 
-    this.scripts = new Array(6).fill(null);
+    this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
+      (a, c) => {
+        a[c.id] = new Function(
+          "state",
+          "effect_a",
+          "effect_b",
+          ScriptTemplate(c.code),
+        );
+
+        return a;
+      },
+      {},
+    );
 
     this.gl = null;
     this.attrs = {
@@ -102,13 +115,13 @@ class Output {
 
     for (var i = 0; i < this.state.videos.length; i++) {
       let video = this.state.videos[i];
-      let next = state.videos[i];
+      let next = state;
 
       for (var j = 0; j < state.effects.length; j++) {
         let effect = Effects.find((e) => e.id === state.effects[j]);
         if (!!effect && effect.id === "video_controls") {
-          let prev = video.values[j];
-          let curr = next.values[j];
+          let prev = state.values.effects[i][j];
+          let curr = next.values.effects[i][j];
 
           let vid = this.videos[i];
           if (!!vid) {
@@ -140,25 +153,29 @@ class Output {
 
   step() {
     let len = this.videos.length - 1;
+    let state = JSON.parse(JSON.stringify(this.state));
 
+    state.elapsed = Date.now() - this.epoch;
     for (let i = 0; i < 6; i++) {
-      let script = this.scripts[i];
-      if (script !== null) {
-        script(this.state);
+      let script_id = state.scripts[i];
+      if (script_id !== null) {
+        let script = this.scripts[script_id];
+        let values = state.values.scripts[i];
+        script(state, values[0], values[1]);
       }
     }
 
     for (let i = len; i >= 0; i--) {
       if (this.videos[i] !== null) {
-        this.drawFrame(i);
+        this.drawFrame(i, state);
       }
     }
 
     window.requestAnimationFrame(this.step.bind(this));
   }
 
-  drawFrame(idx) {
-    let { videos, shapes } = this.state;
+  drawFrame(idx, state) {
+    let { videos, shapes, values } = state;
 
     // Get the context
     let gl = this.gl;
@@ -173,6 +190,7 @@ class Output {
 
     // Get the video and it's HTML element
     let video = videos[idx];
+    let vals = values.effects[idx];
     let videoEl = this.videos[idx];
     let texture = this.textures[idx];
 
@@ -196,15 +214,7 @@ class Output {
       );
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
-      this.drawShapes(
-        gl,
-        videoEl,
-        idx,
-        effects[i],
-        shapes,
-        video.values[i],
-        -1,
-      );
+      this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
 
       gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer % 2]);
       activeBuffer++;
@@ -567,12 +577,19 @@ class Output {
     }
   }
 
-  setScript(idx, script) {
-    let fn = new Function("state", script.code);
+  updateScript(scriptId) {
+    let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
+    let script = scripts.find((s) => s.id === scriptId);
 
-    console.log(idx, script, fn);
+    console.log(scriptId, scripts);
 
-    this.scripts[idx] = fn;
+    this.scripts[scriptId] = new Function(
+      "state",
+      "effect_a",
+      "effect_b",
+      "previous_value",
+      ScriptTemplate(script.code),
+    );
   }
 }
 
@@ -718,10 +735,14 @@ class App {
             this.output.setEffect.call(this.output, effectIdx, effect);
             this.setState(state);
           } else if (data.action === "set_script") {
-            let { scriptIdx, script, state } = data;
+            let { scriptIdx, scriptId, state } = data;
 
-            this.output.setScript.call(this.output, scriptIdx, script);
+            this.output.setScript.call(this.output, scriptIdx, scriptId);
             this.setState(state);
+          } else if (data.action === "update_script") {
+            let { script_id, state } = data;
+
+            this.output.updateScript.call(this.output, script_id);
           }
         } else {
           let { loadVideo } = this.output;
