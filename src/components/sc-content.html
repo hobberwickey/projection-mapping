@@ -1,0 +1,177 @@
+<template id="sc-content">
+  <div class="content uk-flex">
+    <div class="uk-width-2-10 objects">
+      <object-lists :app="app" :state="state"></object-lists>
+    </div>
+    <div class="uk-width-8-10 controller">
+      <!-- <led-bar id="script_lights"></led-bar> -->
+      <!-- <horizontal-led-bar id="h_script_lights"></horizontal-led-bar> -->
+
+      <div class="slots uk-width-1-1 uk-flex">
+        <div class="uk-width-1-2">
+          <label>Script Slots</label>
+          <div class="slot-list">
+            <template :for="state?.scripts || []">
+              <slot-item
+                :idx="$idx"
+                :update="updateScript"
+                :selected="$value"
+                :options="scripts || []"
+                :class="selectedScript === $idx ? 'selected': ''"
+                @click="selectItem('script', $idx)"
+              ></slot-item>
+            </template>
+          </div>
+        </div>
+        <div class="uk-width-1-2">
+          <label>Effect Slots</label>
+          <div class="slot-list">
+            <template :for="state?.effects || []">
+              <slot-item
+                :idx="$idx"
+                :update="updateEffect"
+                :selected="$value"
+                :options="effects || []"
+                :class="selectedEffect === $idx ? 'selected': ''"
+                @click="selectItem('effect', $idx)"
+              ></slot-item>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="bar-holder">
+        <horizontal-led-bar id="h_effect_a_lights"></horizontal-led-bar>
+        <horizontal-led-bar id="h_effect_b_lights"></horizontal-led-bar>
+      </div> -->
+
+      <div class="controls uk-width-1-1 uk-flex">
+        <div class="videos uk-width-6-10">
+          <div class="uk-child-width-1-3@s uk-grid-collapse" uk-grid>
+            <video-slot
+              :idx="0"
+              :app="app"
+              :class='selectedVideo === 0 ? "selected" : ""'
+              @click="selectItem('video', 0)"
+            ></video-slot>
+            <video-slot
+              :idx="1"
+              :app="app"
+              :class='selectedVideo === 1 ? "selected" : ""'
+              @click="selectItem('video', 1)"
+            ></video-slot>
+            <video-slot
+              :idx="2"
+              :app="app"
+              :class='selectedVideo === 2 ? "selected" : ""'
+              @click="selectItem('video', 2)"
+            ></video-slot>
+            <video-slot
+              :idx="3"
+              :app="app"
+              :class='selectedVideo === 3 ? "selected" : ""'
+              @click="selectItem('video', 3)"
+            ></video-slot>
+            <video-slot
+              :idx="4"
+              :app="app"
+              :class='selectedVideo === 4 ? "selected" : ""'
+              @click="selectItem('video', 4)"
+            ></video-slot>
+            <video-slot
+              :idx="5"
+              :app="app"
+              :class='selectedVideo === 5 ? "selected" : ""'
+              @click="selectItem('video', 5)"
+            ></video-slot>
+          </div>
+          <!-- <video-slots :app="app" :selected="selectedVideo"></video-slots> -->
+        </div>
+        <div class="sliders uk-width-4-10">
+          <div>
+            <vertical-range
+              :value="Array.isArray(values) ? values[0] : 0"
+              :update="setEffectValue.bind(null, 0)"
+            ></vertical-range>
+            <vertical-range
+              :value="Array.isArray(values) ? values[1] : 0"
+              :update="setEffectValue.bind(null, 1)"
+            ></vertical-range>
+          </div>
+        </div>
+      </div>
+
+      <!-- <led-bar id="effect_a_lights"></led-bar>
+      <led-bar id="effect_b_lights"></led-bar> -->
+    </div>
+  </div>
+</template>
+
+<script>
+  class SCContent extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return [
+        "app",
+        "state",
+        "selectedVideo",
+        "selectedEffect",
+        "selectedScript",
+        "effects",
+        "scripts",
+        "values",
+      ];
+    }
+
+    connected() {
+      this.values = [0.5, 0.5];
+
+      this.listen("app", (app) => {
+        this.state = app.state;
+        this.effects = app.effects;
+        this.scripts = app.scripts;
+
+        app.listen("scripts", (scripts) => {
+          this.scripts = scripts;
+        });
+
+        app.listen("effects", (effects) => {
+          this.effects = effects;
+        });
+
+        app.listen("state", (state) => {
+          this.state = state;
+          this.selectedVideo = state.selected.video;
+          this.selectedEffect = state.selected.effect;
+          this.selectedScript = state.selected.script;
+          this.values = [...this.app.getSelectedValues()];
+
+          console.log(this.values);
+        });
+      });
+    }
+
+    selectItem(type, idx) {
+      this.app.updateSelected(type, idx);
+    }
+
+    updateEffect(idx, effect) {
+      this.app.setEffect(idx, effect);
+    }
+
+    renameVideo(idx, value) {}
+
+    updateScript(idx, script_id) {
+      this.app.setScript(idx, script_id);
+    }
+
+    setEffectValue(idx, e) {
+      this.app.updateValue(idx, e.target.value);
+    }
+
+    setLEDs(state) {}
+  }
+</script>

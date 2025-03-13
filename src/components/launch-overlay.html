@@ -1,0 +1,33 @@
+<template>
+  <div class="launch-overlay">
+    <h1 class="fance">Sensory Controls</h1>
+    <div id="launch">
+      <a href="javascript:void(0)" @click="launch()"
+        ><span uk-icon="icon: play"></span>Launch</a
+      >
+      <p>
+        To get started, click the launch button and drag the opened window onto
+        your projector. Return to this window to configure and control the
+        projection
+      </p>
+      <slot name="extra"></slot>
+    </div>
+  </div>
+</template>
+
+<script>
+  class LaunchOverlay extends Component {
+    static get observedProperties() {
+      return ["app"];
+    }
+
+    constructor() {
+      super();
+    }
+
+    launch() {
+      this.app.popout();
+      this.style.display = "none";
+    }
+  }
+</script>

@@ -1,0 +1,25 @@
+<template id="sensory-controls">
+  <sc-header :app="app" :storage="storage"></sc-header>
+  <sc-content :app="app"></sc-content>
+  <launch-overlay :app="app"></launch-overlay>
+</template>
+
+<script>
+  class SensoryControls extends Component {
+    constructor() {
+      super();
+
+      this.loaded = false;
+    }
+
+    static get observedProperties() {
+      return ["app", "storage"];
+    }
+
+    connected() {
+      this.listen("app", (app) => {
+        this.loaded = true;
+      });
+    }
+  }
+</script>

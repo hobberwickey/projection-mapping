@@ -1,0 +1,155 @@
+<template id="sc-header">
+  <nav class="uk-navbar-container">
+    <div class="uk-container">
+      <div uk-navbar>
+        <div class="uk-navbar-left">
+          <ul class="uk-navbar-nav">
+            <li><a href="#" class="fancy">Sensory Controls</a></li>
+          </ul>
+        </div>
+        <div class="uk-navbar-right">
+          <ul class="uk-navbar-nav">
+            <li id="current-project">
+              <div>
+                <a
+                  @click="save()"
+                  :class='saved ? "saved" : ""'
+                  id="save_btn"
+                  href="javascript:void(0)"
+                  ><span uk-icon="icon: check"></span
+                ></a>
+                <input
+                  id="project_name"
+                  type="text"
+                  :value="name"
+                  @input="updateName($event)"
+                />
+              </div>
+            </li>
+            <li id="open_menu">
+              <div>
+                <a href="javascript:void(0)"
+                  ><span uk-icon="icon: menu"></span
+                ></a>
+              </div>
+              <div class="menu uk-width-medium" uk-dropdown="mode: click">
+                <ul class="uk-list">
+                  <li>
+                    <label>My Projects</label>
+                    <ul id="project_list">
+                      <template :if="(projects || []).length === 0">
+                        <li>No Saved Projects</li>
+                      </template>
+                      <template :if="(projects || []).length > 0">
+                        <template :for="projects">
+                          <li @click="load($value)">
+                            <span>{{$value?.name}}</span
+                            ><span
+                              uk-icon="icon:trash"
+                              @click="deleteProject($value, $event)"
+                            ></span>
+                          </li>
+                        </template>
+                      </template>
+                      <!-- <template :for="projects">
+                        <li @click="load($value)">{{$value.name}}</li>
+                      </template> -->
+                    </ul>
+
+                    <a
+                      href="javascript:void(0)"
+                      id="download-projects"
+                      class="btn"
+                      @click="download()"
+                    >
+                      Download Projects
+                    </a>
+                    <div class="upload-projects">
+                      <div class="upload-wrapper">
+                        <label class="btn" for="upload-projects">
+                          Upload Projects
+                        </label>
+                        <input type="file" id="upload-projects" />
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <label>About</label>
+                    <ul class="uk-list">
+                      <li>Overview</li>
+                      <li>Mapping</li>
+                      <li>Effects</li>
+                      <li>Groups</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<script>
+  class SCHeader extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedAttributes() {
+      return [];
+    }
+
+    static get observedProperties() {
+      return ["app", "storage", "projects", "saved", "name"];
+    }
+
+    connected() {
+      this.listen("storage", (storage) => {
+        storage.listen("projects", (projects) => {
+          this.projects = projects;
+        });
+
+        storage.listen("saved", (saved) => {
+          this.saved = saved;
+        });
+
+        this.projects = storage.projects;
+      });
+
+      this.listen("app", (app) => {
+        app.listen("name", (name) => {
+          this.name = name;
+        });
+
+        this.name = app.name;
+      });
+    }
+
+    load(project) {
+      this.storage.load(project);
+    }
+
+    save() {
+      let { id, name, state } = this.app;
+
+      this.storage.save(id, name, state);
+    }
+
+    deleteProject(project, event) {
+      event.stopPropagation();
+
+      this.storage.deleteProject(project);
+    }
+
+    download() {
+      this.storage.downloadProjects();
+    }
+
+    updateName(e) {
+      this.app.name = (e.target.value || "").trim();
+    }
+  }
+</script>

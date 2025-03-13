@@ -1,0 +1,66 @@
+<template>
+  <div class="select">
+    <div class="select-display">{{getLabel(selected)}}</div>
+    <div class="select-list">
+      <ul class="uk-list">
+        <li @click="updateSelection(null)">Empty</li>
+        <template :for="options">
+          <li @click="updateSelection($value.id)">{{$value.label}}</li>
+        </template>
+      </ul>
+    </div>
+    <div class="select-handle" @click="toggleActive($event)">
+      <span uk-icon="icon: triangle-down"></span>
+    </div>
+  </div>
+</template>
+
+<script>
+  class SlotList extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return ["idx", "selected", "options", "select", "update"];
+    }
+
+    connected() {
+      this.listen("selected", (selected) => {
+        console.log(selected);
+
+        this.label = this.options[selected]?.label || "Empty";
+      });
+    }
+
+    toggleActive(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.querySelector(".select").classList.add("active");
+
+      window.addEventListener("click", () => {
+        this.querySelector(".select").classList.remove("active");
+      });
+    }
+
+    getLabel(id) {
+      if (!id) {
+        return "Empty";
+      }
+
+      let item = this.options.find((o) => o.id === id);
+      return item?.label || "Empty";
+    }
+
+    setSelected(idx) {
+      this.select(idx);
+    }
+
+    updateSelection(id) {
+      console.log(id);
+
+      this.update(this.idx, id || null);
+    }
+  }
+</script>

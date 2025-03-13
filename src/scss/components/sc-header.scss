@@ -1,0 +1,25 @@
+sc-header {
+	#project_list {
+		li {
+			padding-right: 20px;
+			span {
+				display: inline-block;
+				vertical-align: middle;
+
+				&:first-child {
+					width: 100%;
+				}
+
+				&:last-child {
+					width: 20px;
+					margin-right: -20px;
+				}
+
+				svg {
+					width: 20px;
+					height: 20px;
+				}
+			}
+		}
+	}
+}

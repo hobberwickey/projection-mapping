@@ -1,0 +1,133 @@
+<template>
+	<div class="triangles">
+		<label
+			>Triangles
+			<span uk-icon="icon: plus-circle" @click='addShape("triangle")'></span
+		></label>
+		<ul class="uk-list">
+			<template :for="triangles">
+				<li>
+					<div class="triangle">
+						<input
+							type="text"
+							:value="$value?.label"
+							@input="updateShape($value)"
+						/>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeShape($value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
+	<div class="triangles">
+		<label
+			>Quads <span uk-icon="icon: plus-circle" @click='addShape("quad")'></span
+		></label>
+		<ul class="uk-list">
+			<template :for="quads">
+				<li>
+					<div class="quads">
+						<input
+							type="text"
+							:value="$value?.label"
+							@input="updateShape($value)"
+						/>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeShape($value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
+	<div class="scripts">
+		<label
+			>Scripts <span uk-icon="icon: plus-circle" @click="addScript()"></span
+		></label>
+		<ul class="uk-list">
+			<template :for="scripts">
+				<li>
+					<div class="scripts">
+						<input
+							type="text"
+							:value="$value?.label || ''"
+							@input="updateScript($value, $event)"
+						/>
+						<span
+							uk-icon="icon: file-edit"
+							@click="editScript($idx, $value)"
+						></span>
+						<span
+							uk-icon="icon: minus-circle"
+							@click="removeScript($value)"
+						></span>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</div>
+</template>
+
+<script>
+	class ObjectList extends Component {
+		constructor() {
+			super();
+		}
+
+		static get observedProperties() {
+			return ["app", "state", "scripts", "triangles", "quads", "rounds"];
+		}
+
+		connected() {
+			this.listen("state", (state) => {
+				this.triangles = state.shapes.filter((s) => s.type === "triangle");
+				this.quads = state.shapes.filter((s) => s.type === "quad");
+				this.rounds = state.shapes.filter((s) => s.type === "round");
+			});
+
+			this.listen("app", (app) => {
+				this.scripts = [...app.scripts];
+
+				app.listen("scripts", (scripts) => {
+					this.scripts = [...scripts];
+				});
+			});
+		}
+
+		addShape(type) {
+			this.app.addShape(type);
+		}
+
+		updateShape(type) {
+			console.log("Update Shape");
+		}
+
+		removeShape(shape) {
+			this.app.removeShape(shape);
+		}
+
+		editScript(idx) {
+			let editor = document.createElement("script-editor");
+			editor.idx = idx;
+			editor.app = this.app;
+			editor.code = this.scripts[idx].code;
+			editor.label = this.scripts[idx].label;
+
+			document.body.appendChild(editor);
+		}
+
+		addScript() {
+			this.app.addScript();
+		}
+
+		updateScript(idx, script) {
+			
+		}
+
+		removeScript(idx) {}
+	}
+</script>

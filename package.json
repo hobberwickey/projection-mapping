@@ -23,9 +23,12 @@
   "devDependencies": {
     "css-loader": "^7.1.2",
     "glob": "^11.0.0",
+    "jsdom": "^25.0.1",
     "sass": "^1.79.5",
     "sass-loader": "^16.0.2",
     "style-loader": "^4.0.0",
-    "webpack-fix-style-only-entries": "^0.6.1"
+    "webpack-dev-server": "^5.2.0",
+    "webpack-remove-empty-scripts": "^1.0.4",
+    "webpack-watch-files-plugin": "^1.2.1"
   }
 }
