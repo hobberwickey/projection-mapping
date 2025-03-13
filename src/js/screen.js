@@ -421,6 +421,7 @@ class UI {
 
 class Output {
   constructor(state) {
+    this.pending_state = state;
     this.state = state;
 
     this.videos = new Array(6).fill(null);
@@ -434,8 +435,6 @@ class Output {
       main: null,
 
       effects: [],
-      textures: [],
-      buffers: [],
     };
 
     this.isPlaying = false;
@@ -454,6 +453,16 @@ class Output {
   }
 
   updateState(state) {
+    this.pending_state = state;
+
+    this.setState();
+  }
+
+  setState() {
+    this.state = this.pending_state;
+
+    let state = this.state;
+
     for (var i = 0; i < this.state.videos.length; i++) {
       let video = this.state.videos[i];
       let next = state.videos[i];
@@ -477,8 +486,6 @@ class Output {
         }
       }
     }
-
-    this.state = state;
   }
 
   play() {
@@ -523,25 +530,26 @@ class Output {
     // Get the video and it's HTML element
     let video = videos[idx];
     let videoEl = this.videos[idx];
+    let texture = this.textures[idx];
 
     // Skip if video isn't playing
     if (videoEl.currentTime === 0) {
       return;
     }
 
-    let texture = this.textures[idx];
-    let { buffers, textures } = texture.frameBuffer;
-
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, attrs, texture, videoEl);
+    this.updateTexture(gl, texture, videoEl);
     // Loop through the effects and draw each to a framebuffer
     let activeBuffer = 0;
-    for (var i = 0; i < effects.length; i++) {
+    for (let i = 0; i < effects.length; i++) {
       if (!effects[i]) {
         continue;
       }
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, buffers[activeBuffer % 2]);
+      gl.bindFramebuffer(
+        gl.FRAMEBUFFER,
+        texture.attrs.buffers[activeBuffer % 2],
+      );
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
       this.drawShapes(
@@ -554,13 +562,14 @@ class Output {
         -1,
       );
 
-      gl.bindTexture(gl.TEXTURE_2D, textures[activeBuffer % 2]);
+      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer % 2]);
       activeBuffer++;
     }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, 1280, 720);
+    // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
     this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
   }
 
@@ -630,58 +639,6 @@ class Output {
       gl.uniform1i(attrs.uniforms.sampler, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
-  }
-
-  updateTexture(gl, attrs, texture, video) {
-    if (video.currentTime === 0) {
-      return;
-    }
-
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
-
-    let fb = texture.frameBuffer;
-
-    // On the first update, create the frame buffers
-    if (fb.textures.length < 2 && fb.buffers.length < 2) {
-      for (let i = 0; i < 2; i++) {
-        const bufferTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, bufferTexture);
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          level,
-          internalFormat,
-          srcFormat,
-          srcType,
-          video,
-        );
-
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-        let frameBuffer = this.initFrameBuffer(gl, bufferTexture);
-
-        fb.textures.push(bufferTexture);
-        fb.buffers.push(frameBuffer);
-      }
-    }
-
-    gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      internalFormat,
-      srcFormat,
-      srcType,
-      video,
-    );
-
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   }
 
   createShader(gl, type, source) {
@@ -766,13 +723,7 @@ class Output {
     );
 
     this.textures = new Array(6).fill(null).map((t) => {
-      return {
-        texture: this.initTexture(this.gl),
-        frameBuffer: {
-          buffers: [],
-          textures: [],
-        },
-      };
+      return this.initTexture(this.gl);
     });
 
     if (this.attrs.main !== null) {
@@ -806,12 +757,12 @@ class Output {
     //   console.log("Couldn't find video:", video);
     //   return;
     // }
+
     // gl.canvas.width = video.videoWidth;
     // gl.canvas.height = video.videoHeight;
-    //
-    // this.gl.viewport(0, 0, 1280, 720);
-    // this.gl.clearColor(0, 0, 0, 1);
-    // this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    this.gl.viewport(0, 0, 1280, 720);
+    this.gl.clearColor(0, 0, 0, 1);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
 
   initTexture(gl) {
@@ -849,7 +800,64 @@ class Output {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-    return texture;
+    return {
+      src: texture,
+      attrs: {
+        textures: [],
+        buffers: [],
+      },
+    };
+  }
+
+  updateTexture(gl, texture, video) {
+    if (video.currentTime === 0) {
+      return;
+    }
+
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+
+    const { attrs } = texture;
+    if (attrs.textures.length < 2 && attrs.buffers.length < 2) {
+      console.log("Creating Buffers");
+      for (let i = 0; i < 2; i++) {
+        const bufferTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, bufferTexture);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          level,
+          internalFormat,
+          srcFormat,
+          srcType,
+          video,
+        );
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+        let frameBuffer = this.initFrameBuffer(gl, bufferTexture);
+
+        attrs.textures.push(bufferTexture);
+        attrs.buffers.push(frameBuffer);
+      }
+    }
+
+    gl.bindTexture(gl.TEXTURE_2D, texture.src);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      internalFormat,
+      srcFormat,
+      srcType,
+      video,
+    );
+
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   }
 
   initFrameBuffer(gl, texture) {
@@ -1068,7 +1076,11 @@ class Output {
 
   removeVideo(idx) {
     let video = this.videos[idx];
+
     // let gl = this.contexts[idx];
+
+    this.textures[idx] = null;
+    this.textures[idx] = this.initTexture(this.gl);
 
     if (!!video) {
       video.pause();
