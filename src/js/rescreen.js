@@ -29,10 +29,9 @@ const vertexShaderSrc = `
   attribute vec2 a_texcoord;
 
   uniform float u_flipY;
-  // uniform mat3 u_matrix;
-    
+
   varying vec2 v_texcoord;
-   
+  
   void main() {
     gl_Position = vec4(a_position * vec2(1, u_flipY), 0.0, 1.0);
     v_texcoord = a_texcoord;
@@ -48,8 +47,52 @@ const fragmentShader = `
   uniform mediump float u_opacity;
   uniform vec2 u_effect;
 
+  // For quads
+  uniform float u_quad;
+  uniform vec2 u_vertex_a;
+  uniform vec2 u_vertex_b;
+  uniform vec2 u_vertex_c;
+  uniform vec2 u_vertex_d;
+  
+  float cross2d( in vec2 a, in vec2 b ) { 
+    return a.x*b.y - a.y*b.x; 
+  }
+
+  vec2 invBilinear( in vec2 p, in vec2 a, in vec2 b, in vec2 c, in vec2 d ) {
+    vec2 e = b-a;
+    vec2 f = d-a;
+    vec2 g = a-b+c-d;
+    vec2 h = p-a;
+        
+    float k2 = cross2d( g, f );
+    float k1 = cross2d( e, f ) + cross2d( h, g );
+    float k0 = cross2d( h, e );
+    
+    float w = k1*k1 - 4.0*k0*k2;
+    if( w<=0.001 ) return vec2(-1.0);
+    w = sqrt( w );
+
+    // will fail for k0=0, which is only on the ba edge 
+    if(k0<=0.001&&k0>=-0.001) return vec2(-1.0);
+    
+    float v = 2.0*k0/(-k1 - w); 
+    if( v<0.0 || v>1.0 ) v = 2.0*k0/(-k1 + w);
+
+    float ta = (e.x + g.x*v);
+    ta+=0.001*(1.-abs(sign(ta)));
+    float u = (h.x - f.x*v)/ta;
+    
+    if( u<0.0 || u>1.0 || v<0.0 || v>1.0 ) return vec2(-1.0);
+    
+    return vec2( u, v );
+  }
+
   void main() {
-    vec4 color = texture2D(u_texture, v_texcoord);
+    // if (u_quad == 1.0) {
+    vec2 coord = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
+    // }
+
+    vec4 color = texture2D(u_texture, coord);
     gl_FragColor = vec4(color[0], color[1], color[2], u_opacity * color[3]);
   }
 `;
@@ -213,6 +256,7 @@ class Output {
         texture.attrs.buffers[activeBuffer % 2],
       );
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      // gl.clear(gl.DEPTH_BUFFER_BIT);
 
       this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
 
@@ -238,6 +282,21 @@ class Output {
 
     for (var i = 0; i < shapes.length; i++) {
       let tris = shapes[i].tris;
+
+      // if (shapes[i].type === "quad") {
+      let vert_a = [tris[0].output[0][0], tris[0].output[0][1]];
+      let vert_b = [tris[0].output[1][0], tris[0].output[1][1]];
+      let vert_c = [tris[0].output[2][0], tris[0].output[2][1]];
+      let vert_d = [tris[1].output[2][0], tris[1].output[2][1]];
+
+      gl.uniform1f(attrs.uniforms.quad, 1);
+      gl.uniform2fv(attrs.uniforms.vert_a, vert_a);
+      gl.uniform2fv(attrs.uniforms.vert_b, vert_b);
+      gl.uniform2fv(attrs.uniforms.vert_c, vert_c);
+      gl.uniform2fv(attrs.uniforms.vert_d, vert_d);
+      // } else {
+      //   gl.uniform1f(attrs.uniforms.quad, 0);
+      // }
 
       for (var j = 0; j < tris.length; j++) {
         // If we're rendering an effect to a frame buffer,
@@ -360,6 +419,12 @@ class Output {
           opacity: gl.getUniformLocation(program, "u_opacity"),
           effect: gl.getUniformLocation(program, "u_effect"),
           dimensions: gl.getUniformLocation(program, "u_dimensions"),
+
+          quad: gl.getUniformLocation(program, "u_quad"),
+          vert_a: gl.getUniformLocation(program, "u_vertex_a"),
+          vert_b: gl.getUniformLocation(program, "u_vertex_b"),
+          vert_c: gl.getUniformLocation(program, "u_vertex_c"),
+          vert_d: gl.getUniformLocation(program, "u_vertex_d"),
         },
       };
 
