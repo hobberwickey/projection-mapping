@@ -49,10 +49,15 @@ const fragmentShader = `
 
   // For quads
   uniform float u_quad;
+  uniform vec2 u_translate;
+  uniform vec2 u_scale;
+  
   uniform vec2 u_vertex_a;
   uniform vec2 u_vertex_b;
   uniform vec2 u_vertex_c;
   uniform vec2 u_vertex_d;
+
+  
   
   float cross2d( in vec2 a, in vec2 b ) { 
     return a.x*b.y - a.y*b.x; 
@@ -89,10 +94,13 @@ const fragmentShader = `
 
   void main() {
     // if (u_quad == 1.0) {
-    vec2 coord = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
+    vec2 coords = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
     // }
 
-    vec4 color = texture2D(u_texture, coord);
+    vec2 scaled = vec2(coords[0] * u_scale[0], coords[1] * u_scale[1]);
+    vec2 translated = vec2(scaled[0] + u_translate[0], scaled[1] + u_translate[1]);
+    
+    vec4 color = texture2D(u_texture, translated);
     gl_FragColor = vec4(color[0], color[1], color[2], u_opacity * color[3]);
   }
 `;
@@ -283,25 +291,36 @@ class Output {
     for (var i = 0; i < shapes.length; i++) {
       let tris = shapes[i].tris;
 
-      // if (shapes[i].type === "quad") {
-      let vert_a = [tris[0].output[0][0], tris[0].output[0][1]];
-      let vert_b = [tris[0].output[1][0], tris[0].output[1][1]];
-      let vert_c = [tris[0].output[2][0], tris[0].output[2][1]];
-      let vert_d = [tris[1].output[2][0], tris[1].output[2][1]];
+      if (shapes[i].type === "quad") {
+        let vert_a = [tris[0].output[0][0], tris[0].output[0][1]];
+        let vert_b = [tris[0].output[1][0], tris[0].output[1][1]];
+        let vert_c = [tris[0].output[2][0], tris[0].output[2][1]];
+        let vert_d = [tris[1].output[2][0], tris[1].output[2][1]];
 
-      gl.uniform1f(attrs.uniforms.quad, 1);
-      gl.uniform2fv(attrs.uniforms.vert_a, vert_a);
-      gl.uniform2fv(attrs.uniforms.vert_b, vert_b);
-      gl.uniform2fv(attrs.uniforms.vert_c, vert_c);
-      gl.uniform2fv(attrs.uniforms.vert_d, vert_d);
-      // } else {
-      //   gl.uniform1f(attrs.uniforms.quad, 0);
-      // }
+        let translate = [tris[0].input[0][0], tris[0].input[0][1]];
+        let scale = [
+          tris[0].input[1][0] - tris[0].input[0][0],
+          tris[0].input[2][1] - tris[0].input[1][1],
+        ];
+
+        gl.uniform1f(attrs.uniforms.quad, 1);
+        gl.uniform2fv(attrs.uniforms.vert_a, vert_a);
+        gl.uniform2fv(attrs.uniforms.vert_b, vert_b);
+        gl.uniform2fv(attrs.uniforms.vert_c, vert_c);
+        gl.uniform2fv(attrs.uniforms.vert_d, vert_d);
+
+        gl.uniform2fv(attrs.uniforms.translate, translate);
+        gl.uniform2fv(attrs.uniforms.scale, scale);
+
+        console.log(translate, scale);
+      } else {
+        gl.uniform1f(attrs.uniforms.quad, 0);
+      }
 
       for (var j = 0; j < tris.length; j++) {
         // If we're rendering an effect to a frame buffer,
         // use the same points for the input and output
-        let pnts = tris[j].input;
+        let pnts = tris[j].output;
         let oPnts = tris[j].input;
         // If we're rendering the final output use the output points
         if (flip === 1) {
@@ -310,20 +329,17 @@ class Output {
 
         let opacity = shapes[i].opacity[idx];
 
-        // Convert from 0,1 to -1,1 coords
-        let positions = [
-          oPnts[0][0] * 2 - 1,
-          oPnts[0][1] * -2 + 1,
-          oPnts[1][0] * 2 - 1,
-          oPnts[1][1] * -2 + 1,
-          oPnts[2][0] * 2 - 1,
-          oPnts[2][1] * -2 + 1,
-        ];
-
         gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.position);
         gl.bufferData(
           gl.ARRAY_BUFFER,
-          new Float32Array(positions),
+          new Float32Array([
+            oPnts[0][0] * 2 - 1,
+            oPnts[0][1] * -2 + 1,
+            oPnts[1][0] * 2 - 1,
+            oPnts[1][1] * -2 + 1,
+            oPnts[2][0] * 2 - 1,
+            oPnts[2][1] * -2 + 1,
+          ]),
           gl.DYNAMIC_DRAW,
         );
 
@@ -421,6 +437,8 @@ class Output {
           dimensions: gl.getUniformLocation(program, "u_dimensions"),
 
           quad: gl.getUniformLocation(program, "u_quad"),
+          translate: gl.getUniformLocation(program, "u_translate"),
+          scale: gl.getUniformLocation(program, "u_scale"),
           vert_a: gl.getUniformLocation(program, "u_vertex_a"),
           vert_b: gl.getUniformLocation(program, "u_vertex_b"),
           vert_c: gl.getUniformLocation(program, "u_vertex_c"),
