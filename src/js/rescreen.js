@@ -58,12 +58,14 @@ const fragmentShader = `
   uniform vec2 u_vertex_d;
 
   
-  
+  // Credit to https://www.shadertoy.com/view/lsBSDm for the invBilinear function
   float cross2d( in vec2 a, in vec2 b ) { 
     return a.x*b.y - a.y*b.x; 
   }
 
   vec2 invBilinear( in vec2 p, in vec2 a, in vec2 b, in vec2 c, in vec2 d ) {
+    vec2 res = vec2(-1.0);
+
     vec2 e = b-a;
     vec2 f = d-a;
     vec2 g = a-b+c-d;
@@ -73,34 +75,42 @@ const fragmentShader = `
     float k1 = cross2d( e, f ) + cross2d( h, g );
     float k0 = cross2d( h, e );
     
-    float w = k1*k1 - 4.0*k0*k2;
-    if( w<=0.001 ) return vec2(-1.0);
-    w = sqrt( w );
+    if( abs(k2)<0.001 ) {
+        res = vec2( (h.x*k1+f.x*k0)/(e.x*k1-g.x*k0), -k0/k1 );
+    } else {
+      float w = k1*k1 - 4.0*k0*k2;
+      if ( w<0.0 ) return vec2(-1.0);
+      w = sqrt( w );
 
-    // will fail for k0=0, which is only on the ba edge 
-    if(k0<=0.001&&k0>=-0.001) return vec2(-1.0);
+      float ik2 = 0.5/k2;
+      float v = (-k1 - w)*ik2;
+      float u = (h.x - f.x*v)/(e.x + g.x*v);
+      
+      if( u<0.0 || u>1.0 || v<0.0 || v>1.0 ) {
+        v = (-k1 + w)*ik2;
+        u = (h.x - f.x*v)/(e.x + g.x*v);
+      }
+      res = vec2( u, v );
+    }
     
-    float v = 2.0*k0/(-k1 - w); 
-    if( v<0.0 || v>1.0 ) v = 2.0*k0/(-k1 + w);
-
-    float ta = (e.x + g.x*v);
-    ta+=0.001*(1.-abs(sign(ta)));
-    float u = (h.x - f.x*v)/ta;
-    
-    if( u<0.0 || u>1.0 || v<0.0 || v>1.0 ) return vec2(-1.0);
-    
-    return vec2( u, v );
-  }
+    return res;
+}
 
   void main() {
+    vec2 coords;
+
     // if (u_quad == 1.0) {
-    vec2 coords = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
+      vec2 lerped = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
+      vec2 scaled = vec2(lerped[0] * u_scale[0], lerped[1] * u_scale[1]);
+      vec2 translated = vec2(scaled[0] + u_translate[0], scaled[1] + u_translate[1]);
+
+      coords = translated;
+    // } else {
+    //   coords = v_texcoord
     // }
 
-    vec2 scaled = vec2(coords[0] * u_scale[0], coords[1] * u_scale[1]);
-    vec2 translated = vec2(scaled[0] + u_translate[0], scaled[1] + u_translate[1]);
     
-    vec4 color = texture2D(u_texture, translated);
+    vec4 color = texture2D(u_texture, coords);
     gl_FragColor = vec4(color[0], color[1], color[2], u_opacity * color[3]);
   }
 `;
