@@ -99,15 +99,15 @@ const fragmentShader = `
   void main() {
     vec2 coords;
 
-    // if (u_quad == 1.0) {
+    if (u_quad == 1.0) {
       vec2 lerped = invBilinear(v_texcoord, u_vertex_a, u_vertex_b, u_vertex_c, u_vertex_d);
       vec2 scaled = vec2(lerped[0] * u_scale[0], lerped[1] * u_scale[1]);
       vec2 translated = vec2(scaled[0] + u_translate[0], scaled[1] + u_translate[1]);
 
       coords = translated;
-    // } else {
-    //   coords = v_texcoord
-    // }
+    } else {
+      coords = v_texcoord;
+    }
 
     
     vec4 color = texture2D(u_texture, coords);
@@ -301,7 +301,7 @@ class Output {
     for (var i = 0; i < shapes.length; i++) {
       let tris = shapes[i].tris;
 
-      if (shapes[i].type === "quad") {
+      if (flip === 1 && shapes[i].type === "quad") {
         let vert_a = [tris[0].output[0][0], tris[0].output[0][1]];
         let vert_b = [tris[0].output[1][0], tris[0].output[1][1]];
         let vert_c = [tris[0].output[2][0], tris[0].output[2][1]];
@@ -321,8 +321,6 @@ class Output {
 
         gl.uniform2fv(attrs.uniforms.translate, translate);
         gl.uniform2fv(attrs.uniforms.scale, scale);
-
-        console.log(translate, scale);
       } else {
         gl.uniform1f(attrs.uniforms.quad, 0);
       }
@@ -330,10 +328,11 @@ class Output {
       for (var j = 0; j < tris.length; j++) {
         // If we're rendering an effect to a frame buffer,
         // use the same points for the input and output
-        let pnts = tris[j].output;
+        let pnts = tris[j].input;
         let oPnts = tris[j].input;
         // If we're rendering the final output use the output points
         if (flip === 1) {
+          pnts = tris[j].output;
           oPnts = tris[j].output;
         }
 
