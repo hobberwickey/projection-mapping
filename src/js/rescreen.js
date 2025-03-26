@@ -332,7 +332,10 @@ class Output {
         let oPnts = tris[j].input;
         // If we're rendering the final output use the output points
         if (flip === 1) {
-          pnts = tris[j].output;
+          if (shapes[i].type === "quad") {
+            pnts = tris[j].output;
+          }
+
           oPnts = tris[j].output;
         }
 
