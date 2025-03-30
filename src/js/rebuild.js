@@ -193,11 +193,17 @@ class App extends Context {
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
 
+          console.log("Input");
           entry[1].onmidimessage = (e) => {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            console.log(note, velocity);
+            let opacityNotes = this.config.midi.buttons.opacity;
+            for (var i = 0; i < opacityNotes.length; i++) {
+              if (+note === +opacityNotes[i]) {
+                this.updateOpacity(i, velocity / 127);
+              }
+            }
           };
         }
 

@@ -55,10 +55,11 @@ export class LEDs extends Context {
 			}
 		}
 
-		debounce(() => {
-			for (let i = 0; i < output.length; i++) {
-				this.output.send(output[i]);
-			}
-		}, 100);
+		// debounce(() => {
+		for (let i = 0; i < output.length; i++) {
+			console.log(output[i]);
+			this.output.send(output[i]);
+		}
+		// }, 100);
 	}
 }
