@@ -18,7 +18,7 @@ void buttonInit() {
   }
 }
 
-void toggleHandler(int idx) {
+void buttonHandler(int idx) {
   int prevState = prevButtonStates[idx];
   int pinState = digitalRead(buttonPins[idx]);
   
@@ -28,7 +28,7 @@ void toggleHandler(int idx) {
     MidiUSB.flush();
   } else if ((pinState == LOW) && (prevState == 1)) {
     prevButtonStates[idx] = 0;
-    noteOn(0, buttonNotes[idx], 64); 
+    noteOn(0, buttonNotes[idx], 127); 
     MidiUSB.flush();
   }
 }

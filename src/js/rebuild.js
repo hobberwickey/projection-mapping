@@ -193,18 +193,36 @@ class App extends Context {
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
 
-          console.log("Input");
           entry[1].onmidimessage = (e) => {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            let opacityNotes = this.config.midi.buttons.opacity;
+            let { midi } = this.config;
+
+            let opacityNotes = midi.buttons.opacity;
             for (var i = 0; i < opacityNotes.length; i++) {
               if (+note === +opacityNotes[i]) {
                 this.updateOpacity(i, velocity / 127);
               }
             }
+
+            let layerNotes = midi.buttons.select;
+            for (var i = 0; i < layerNotes.length; i++) {
+              if (+note === +layerNotes[i] && velocity === 64) {
+                this.updateSelected("video", i);
+              }
+            }
           };
+        }
+
+        for (const entry of this.midiAccess.outputs) {
+          if (entry[1].name === "Arduino Micro") {
+            this.midiOutput = entry[1];
+          }
+
+          if (entry[1].name === "Sensory Controller") {
+            this.midiOutput = entry[1];
+          }
         }
 
         if (entry[1].name === "Arduino Micro") {
@@ -359,16 +377,6 @@ class App extends Context {
               // input.dispatchEvent(new Event("input", { bubbles: true }));
             }
           };
-        }
-      }
-
-      for (const entry of this.midiAccess.outputs) {
-        if (entry[1].name === "Arduino Micro") {
-          this.midiOutput = entry[1];
-        }
-
-        if (entry[1].name === "Sensory Controller") {
-          this.midiOutput = entry[1];
         }
       }
 

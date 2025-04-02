@@ -1,143 +1,111 @@
 #include <MIDIUSB.h>
 
-// #include <FastLED.h>
-// #define NUM_LEDS 120
-// #define DATA_PIN A11
-// CRGB leds[NUM_LEDS];
+#include "midi-out.h"
+#include "leds.h"
+#include "knobs.h"
+#include "buttons.h"
+#include "sliders.h"
+#include "rotary-encoders.h"
 
-int sliderPins[1][3] = {
-  {A7,22,23},
-};
-int sliderValues[2] = {
-  127, 0
-};
-// 0 = idle, 1=moving
-int sliderStates[2] = {
-  1, 1
-};
-int sliderNotes[2] = {
-  40, 41
-};
+//////////////////// 
+/////// Pins ///////
+////////////////////
 
-int sliderInputNotes[2] = {
-  42, 43
-};
+///// Sliders //////
+// A0, 11, 12
+// A1, 10, 9
 
-unsigned long sliderTimer;
+////// Knobs ///////
+// A2
+// A3
+// A4
+// A5
+// A6
+// A7
 
-// void setup() {
-//   for (int i=0; i<1; i++) {
-//     pinMode(sliderPins[i][0], INPUT);
-//     pinMode(sliderPins[i][1], OUTPUT);
-//     pinMode(sliderPins[i][2], OUTPUT);
-//   }
-// }
+///// Buttons //////
+// 7
+// 6
+// 5
+// 4
+// 3
+// 2
 
-// void handleMidiIn(int header, int note, int velocity) {
-//   for (int i=0; i<1; i++) {
-//     if (note == sliderInputNotes[i]) {
-//       sliderValues[i] = velocity;
-//       sliderStates[i] = 1;
-//     }
-//   }
-// }
+////// Rotary //////
+// 41, 40
+// 39, 38
 
-// void noteOn(byte channel, byte pitch, byte velocity) {
-//   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
-//   MidiUSB.sendMIDI(noteOn);
-// }
+/////// LEDS ///////
+// 32
 
-// void noteOff(byte channel, byte pitch, byte velocity) {
-//   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
-//   MidiUSB.sendMIDI(noteOff);
-// }
-
-// void controlChange(byte channel, byte control, byte value) {
-//   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
-//   MidiUSB.sendMIDI(event);
-// }
-
-void motorizedSliderInit() {
-  for (int i=0; i<1; i++) {
-    pinMode(sliderPins[i][0], INPUT);
-    pinMode(sliderPins[i][1], OUTPUT);
-    pinMode(sliderPins[i][2], OUTPUT);
-  }
+void setup() {
+  // motorizedSliderInit();
+  ledsInit();
+  buttonInit();
+  knobInit();
 }
 
-void sliderHandler(int idx) {
-  int sensorValue = analogRead(sliderPins[idx][0]);
+void handleMidiIn(int header, int note, int velocity) {
+  // for (int i=0; i<1; i++) {
+  //   if (note == sliderInputNotes[i]) {
+  //     sliderValues[i] = velocity;
+  //     sliderStates[i] = 1;
+  //   }
+  // }
+
+  int shouldSetLEDS = 0;
   
-  int min = 15;
-  int max = 1010;
-  int velocity = map(sensorValue, min, max, 0, 127);
-
-  if (sliderStates[idx] == 0) {
-    if (velocity - sliderValues[idx] < 1) {
-      controlChange(0, 40, velocity);
-      MidiUSB.flush();
-
-      sliderValues[idx] = velocity;
+  for (int i=0; i<3; i++) {
+    if (note == selectedNotes[i]) {
+      selectedValues[i] = velocity;
+      shouldSetLEDS = 1;
     }
-  } else {
-    while (velocity < sliderValues[idx]) {
-      sensorValue = analogRead(sliderPins[idx][0]);
-      velocity = map(sensorValue, min, max, 0, 127);
-
-      digitalWrite(sliderPins[idx][1], LOW);
-      digitalWrite(sliderPins[idx][2], LOW);
-      
-      delayMicroseconds(1000);
-      
-      digitalWrite(sliderPins[idx][1], LOW);
-      digitalWrite(sliderPins[idx][2], HIGH);
-
-      delayMicroseconds(1000);
+  }
+  
+  for (int i=0; i<6; i++) {
+    if (note == opacityNotes[i]) {
+      opacityValues[i] = velocity;
+      shouldSetLEDS = 1;
     }
+  }
 
-    while (velocity > sliderValues[idx]) {
-      sensorValue = analogRead(sliderPins[idx][0]);
-      velocity = map(sensorValue, min, max, 0, 127);
-
-      digitalWrite(sliderPins[idx][1], LOW);
-      digitalWrite(sliderPins[idx][2], LOW);
-
-      delayMicroseconds(1000);
-      
-      digitalWrite(sliderPins[idx][1], HIGH);
-      digitalWrite(sliderPins[idx][2], LOW);
-
-      delayMicroseconds(1000);
+  for (int i=0; i<12; i++) {
+    if (note == effectNotes[i]) {
+        effectValues[i] = velocity;
+        shouldSetLEDS = 1;
     }
+  }
 
-    if (velocity - sliderValues[idx] < 1) {
-      digitalWrite(sliderPins[idx][1], LOW);
-      digitalWrite(sliderPins[idx][2], LOW);
-      sliderStates[idx] = 0;
-
-      controlChange(0, 40, velocity);
-      MidiUSB.flush();
-    }
+  if (shouldSetLEDS == 1) {
+    setLEDS();
   }
 }
 
-// 1 - VCC
-// 2 - Signal
-// 3 - Ground
+void loop() {
+  midiEventPacket_t rx;
 
-// void loop() {
-//   midiEventPacket_t rx;
+  // for (int i=0; i<6; i++) {
+  //   toggleHandler(i);
+  // }
 
-//   for (int i=0; i<1; i++) {
-//     sliderHandler(i);
-//   }
+  // for (int i=0; i<1; i++) {
+  //   sliderHandler(i);
+  // }
 
-//   do {
-//     rx = MidiUSB.read();
-//     if (rx.header != 0) {
-//       handleMidiIn(rx.byte1, rx.byte2, rx.byte3);
-//     }
-//   } while (rx.header != 0);
+  for (int i=0; i<1; i++) {
+    knobHandler(i);
+  }
 
-//   delay(100);
-// }
+  for (int i=0; i<1; i++) {
+    buttonHandler(i);
+  }
+
+  do {
+    rx = MidiUSB.read();
+    if (rx.header != 0) {
+      handleMidiIn(rx.byte1, rx.byte2, rx.byte3);
+    }
+  } while (rx.header != 0);
+
+  delay(100);
+}
