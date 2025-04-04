@@ -27,7 +27,7 @@ int selectedValues[3] = {
 
 int opacityValues[6] = {
   // Initial layer opacity
-  64, 127, 0, 0, 0, 0
+  0, 0, 0, 0, 0, 0
 };
 
 int effectValues[12] = {

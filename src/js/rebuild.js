@@ -28,6 +28,11 @@ const defaultQuad = [
 
 class App extends Context {
   constructor(config) {
+    try {
+      JSON.parse(localStorage.getItem("scripts")) || [];
+    } catch (e) {
+      console.log("Error parsing scripts");
+    }
     super({
       effects: Effects,
       scripts: JSON.parse(localStorage.getItem("scripts")) || [],
@@ -197,6 +202,8 @@ class App extends Context {
             let note = e.data[1];
             let velocity = e.data[2];
 
+            console.log(note, velocity);
+
             let { midi } = this.config;
 
             let opacityNotes = midi.buttons.opacity;
@@ -210,6 +217,31 @@ class App extends Context {
             for (var i = 0; i < layerNotes.length; i++) {
               if (+note === +layerNotes[i] && velocity === 64) {
                 this.updateSelected("video", i);
+              }
+            }
+
+            let effectSelectNote = midi.selectors.select[0];
+            if (+note === +effectSelectNote) {
+              let current = this.state.selected.effect ?? 0;
+              if (velocity === 127) {
+                let next = current - 1 < 0 ? 5 : current - 1;
+                this.updateSelected("effect", next);
+              } else {
+                let next = (current + 1) % 6;
+                this.updateSelected("effect", next);
+              }
+            }
+
+            // TODO: Switch this over to script
+            let scriptSelectNote = midi.selectors.select[1];
+            if (+note === +scriptSelectNote) {
+              let current = this.state.selected.effect ?? 0;
+              if (velocity === 127) {
+                let next = current - 1 < 0 ? 5 : current - 1;
+                this.updateSelected("effect", next);
+              } else {
+                let next = (current + 1) % 6;
+                this.updateSelected("effect", next);
               }
             }
           };

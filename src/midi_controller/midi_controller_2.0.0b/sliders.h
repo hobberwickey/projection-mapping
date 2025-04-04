@@ -7,10 +7,10 @@
 // CRGB leds[NUM_LEDS];
 
 int sliderPins[1][3] = {
-  {A7,22,23},
+  {A0,11,12},
 };
 int sliderValues[2] = {
-  127, 0
+  0, 0
 };
 // 0 = idle, 1=moving
 int sliderStates[2] = {

@@ -43,6 +43,7 @@ void setup() {
   ledsInit();
   buttonInit();
   knobInit();
+  rotaryInit();
 }
 
 void handleMidiIn(int header, int note, int velocity) {
@@ -84,10 +85,6 @@ void handleMidiIn(int header, int note, int velocity) {
 void loop() {
   midiEventPacket_t rx;
 
-  // for (int i=0; i<6; i++) {
-  //   toggleHandler(i);
-  // }
-
   // for (int i=0; i<1; i++) {
   //   sliderHandler(i);
   // }
@@ -99,6 +96,10 @@ void loop() {
   for (int i=0; i<1; i++) {
     buttonHandler(i);
   }
+
+  // for (int i=0; i<1; i++) {
+  //   rotaryHandler(i);
+  // }
 
   do {
     rx = MidiUSB.read();

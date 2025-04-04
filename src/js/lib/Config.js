@@ -19,7 +19,7 @@ export const Config = {
 
 			selectors: {
 				click: [20, 21],
-				select: [31, 32],
+				select: [30, 31],
 			},
 
 			sliders: [
