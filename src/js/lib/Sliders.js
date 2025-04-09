@@ -10,6 +10,7 @@ export class Sliders extends Context {
 
 		this.output = output;
 		this.input = input;
+		this.paused = null;
 	}
 
 	updateConfig(config) {
@@ -38,10 +39,12 @@ export class Sliders extends Context {
 			output.push([144, slider2, (values[1] * 127) | 0]);
 		}
 
-		debounce(() => {
+		// debounce(() => {
+		if (this.paused === null) {
 			for (let i = 0; i < output.length; i++) {
 				this.output.send(output[i]);
 			}
-		}, 100);
+		}
+		// }, 100);
 	}
 }

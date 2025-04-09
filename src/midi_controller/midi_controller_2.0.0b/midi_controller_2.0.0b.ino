@@ -39,7 +39,7 @@
 // 32
 
 void setup() {
-  // motorizedSliderInit();
+  motorizedSliderInit();
   ledsInit();
   buttonInit();
   knobInit();
@@ -47,12 +47,12 @@ void setup() {
 }
 
 void handleMidiIn(int header, int note, int velocity) {
-  // for (int i=0; i<1; i++) {
-  //   if (note == sliderInputNotes[i]) {
-  //     sliderValues[i] = velocity;
-  //     sliderStates[i] = 1;
-  //   }
-  // }
+  for (int i=0; i<1; i++) {
+    if (note == sliderInputNotes[i]) {
+      sliderValues[i] = velocity;
+      sliderStates[i] = 1;
+    }
+  }
 
   int shouldSetLEDS = 0;
   
@@ -85,21 +85,21 @@ void handleMidiIn(int header, int note, int velocity) {
 void loop() {
   midiEventPacket_t rx;
 
-  // for (int i=0; i<1; i++) {
-  //   sliderHandler(i);
-  // }
-
   for (int i=0; i<1; i++) {
-    knobHandler(i);
-  }
-
-  for (int i=0; i<1; i++) {
-    buttonHandler(i);
+    sliderHandler(i);
   }
 
   // for (int i=0; i<1; i++) {
-  //   rotaryHandler(i);
+  //   knobHandler(i);
   // }
+
+  // for (int i=0; i<1; i++) {
+  //   buttonHandler(i);
+  // }
+
+  for (int i=0; i<1; i++) {
+    rotaryHandler(i);
+  }
 
   do {
     rx = MidiUSB.read();
