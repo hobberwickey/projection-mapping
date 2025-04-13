@@ -6,15 +6,16 @@
 // #define DATA_PIN A11
 // CRGB leds[NUM_LEDS];
 
-int sliderPins[1][3] = {
+int sliderPins[2][3] = {
   {A0,11,12},
+  {A1,9,10}
 };
 int sliderValues[2] = {
   0, 0
 };
 // 0 = idle, 1=moving
 int sliderStates[2] = {
-  0, 0
+  1, 1
 };
 int sliderNotes[2] = {
   40, 41
@@ -108,14 +109,14 @@ void sliderHandler(int idx) {
     digitalWrite(sliderPins[idx][2], LOW);
     sliderValues[idx] = velocity;
 
-    controlChange(0, 40, velocity);
+    controlChange(0, sliderNotes[idx], velocity);
     MidiUSB.flush();
     // }
   }
 }
 
 void motorizedSliderInit() {
-  for (int i=0; i<1; i++) {
+  for (int i=0; i<2; i++) {
     pinMode(sliderPins[i][0], INPUT);
     pinMode(sliderPins[i][1], OUTPUT);
     pinMode(sliderPins[i][2], OUTPUT);

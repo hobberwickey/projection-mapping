@@ -12,7 +12,7 @@ int knobNotes[6] = {
 };
 
 void knobInit() {
-  for (int i=0; i<1; i++) {
+  for (int i=0; i<6; i++) {
     pinMode(knobPins[i], INPUT);
   }
 }

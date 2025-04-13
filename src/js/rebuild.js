@@ -242,18 +242,18 @@ class App extends Context {
             // TODO: Switch this over to script
             let scriptSelectNote = midi.selectors.select[1];
             if (+note === +scriptSelectNote) {
-              let current = this.state.selected.effect ?? 0;
+              let current = this.state.selected.script ?? 0;
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
-                this.updateSelected("effect", next);
+                this.updateSelected("script", next);
               } else {
                 let next = (current + 1) % 6;
-                this.updateSelected("effect", next);
+                this.updateSelected("script", next);
               }
             }
 
             let sliderNotes = midi.sliders[0];
-            for (var i = 0; i < opacityNotes.length; i++) {
+            for (var i = 0; i < sliderNotes.length; i++) {
               if (+note === +sliderNotes[i]) {
                 let { effect, script } = this.state.selected;
 

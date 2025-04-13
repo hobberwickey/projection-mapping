@@ -32,11 +32,13 @@ export class Sliders extends Context {
 			let values =
 				state.values.effects[state.selected.video ?? 0][state.selected.effect];
 
-			let slider1 = sliders[1][0];
-			output.push([144, slider1, (values[0] * 127) | 0]);
+			for (let i = 0; i < 2; i++) {
+				let slider1 = sliders[i][0];
+				output.push([144, slider1, (values[0] * 127) | 0]);
 
-			let slider2 = sliders[1][1];
-			output.push([144, slider2, (values[1] * 127) | 0]);
+				let slider2 = sliders[i][1];
+				output.push([144, slider2, (values[1] * 127) | 0]);
+			}
 		}
 
 		// debounce(() => {
