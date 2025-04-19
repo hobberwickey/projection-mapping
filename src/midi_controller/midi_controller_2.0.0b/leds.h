@@ -1,5 +1,5 @@
 #include <FastLED.h>
-#define NUM_LEDS 96
+#define NUM_LEDS 120
 #define DATA_PIN A9
 CRGB leds[NUM_LEDS];
 
@@ -35,6 +35,15 @@ int effectValues[12] = {
   0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0
 };
+
+// int effectColors[6][3] = {
+//   {31, 119, 178},
+//   {52, 159, 45},
+//   {224, 26, 30},
+//   {255, 128, 0},
+//   {106, 61, 153},
+//   {175, 87, 40}
+// };
 
 void ledsInit() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS); 
@@ -147,7 +156,7 @@ void setLEDS() {
   //     int b  = effectColors[colorIdx][2];
 
   //     int value = effectValues[i][j];
-  //     int pixel = 48 + (i * 12) + j;
+  //     int pixel = 96 + (i * 12) + j;
       
   //     if (value == 127) {
   //       r = 10; 

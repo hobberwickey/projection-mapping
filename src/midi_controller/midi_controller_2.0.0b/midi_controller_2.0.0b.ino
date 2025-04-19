@@ -36,7 +36,7 @@
 // 39, 38
 
 /////// LEDS ///////
-// 32
+// A9
 
 void setup() {
   motorizedSliderInit();

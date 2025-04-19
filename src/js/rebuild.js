@@ -194,7 +194,7 @@ class App extends Context {
     const onMIDISuccess = (midiAccess) => {
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
       for (const entry of this.midiAccess.inputs) {
-        // console.log(entry[1]);
+        console.log(entry[1]);
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
 

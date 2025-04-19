@@ -15,7 +15,7 @@ int sliderValues[2] = {
 };
 // 0 = idle, 1=moving
 int sliderStates[2] = {
-  1, 1
+  0, 0
 };
 int sliderNotes[2] = {
   40, 41
@@ -60,10 +60,12 @@ unsigned long sliderTimer;
 // }
 
 void sliderHandler(int idx) {
+  // return;
+  
   int sensorValue = analogRead(sliderPins[idx][0]);
   
-  int min = 15;
-  int max = 989;
+  int max = 15;
+  int min = 989;
   int velocity = map(sensorValue, min, max, 0, 127);
 
   if (sliderStates[idx] == 0) {
@@ -83,8 +85,8 @@ void sliderHandler(int idx) {
       velocity = map(sensorValue, min, max, 0, 127);
 
       if (velocity < sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], LOW);
-        digitalWrite(sliderPins[idx][2], HIGH);
+        digitalWrite(sliderPins[idx][1], HIGH);
+        digitalWrite(sliderPins[idx][2], LOW);
         delayMicroseconds(1000);
       }
     }
@@ -98,8 +100,8 @@ void sliderHandler(int idx) {
       velocity = map(sensorValue, min, max, 0, 127);
 
       if (velocity > sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], HIGH);
-        digitalWrite(sliderPins[idx][2], LOW);  
+        digitalWrite(sliderPins[idx][1], LOW);
+        digitalWrite(sliderPins[idx][2], HIGH);  
         delayMicroseconds(1000);
       }
     }
