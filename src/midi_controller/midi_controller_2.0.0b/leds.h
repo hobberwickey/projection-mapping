@@ -3,6 +3,29 @@
 #define DATA_PIN A9
 CRGB leds[NUM_LEDS];
 
+int idxs[120] = {
+  6, 7, 0, 1, 2, 3, 4, 5,
+  14, 15, 8, 9, 10, 11, 12, 13,
+  22, 23, 16, 17, 18, 19, 20, 21, 
+  26, 27, 28, 29, 30, 31, 24, 25,
+  34, 35, 36, 37, 38, 39, 32, 33,
+  42, 43, 44, 45, 46, 47, 40, 41,
+  95, 94, 93, 92,
+  88, 89, 90, 91,
+  87, 86, 85, 84,
+  80, 81, 82, 83, 
+  79, 78, 77, 76,
+  72, 73, 74, 75,
+  71, 70, 69, 68,
+  64, 65, 66, 67,
+  63, 62, 61, 60,
+  56, 57, 58, 59,
+  55, 54, 53, 52,
+  48, 49, 50, 51, 
+  96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 
+  108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119
+};
+
 int selectedNotes[3] = { 
   // 50: script
   // 51: effect
@@ -61,7 +84,7 @@ void setLEDS() {
     
     bool isSelected = selectedValues[2] == i;
     for (int j=0; j<8; j++) {
-      int pixel = offset + j;
+      int pixel = idxs[offset + j];
       int intensity = floor(value / 12);
 
       leds[pixel].r = 0; 
@@ -95,32 +118,32 @@ void setLEDS() {
   } 
 
   for (int i=0; i<12; i++) {
+    // Check if selected
     bool isValueSelected = selectedValues[0] == floor(i / 2) || selectedValues[1] == floor(i / 2);
-    bool flip = i % 2 != 0;
-
-    int value = effectValues[i];
-    int offset = (i * 4) + 48;
     
-    int slotIndex = offset;
-    if (flip) {
-      slotIndex += 3;
-    }
+    // Get the value
+    int value = effectValues[i];
+    
+    // Get the 0-119 index
+    int offset = (i * 4) + 48;
 
+    // The actual pixel index
+    int pixel = idxs[offset];
+
+    // Set the selector row
     if (isValueSelected) {
-      leds[slotIndex].r = 10;
-      leds[slotIndex].g = 10;
-      leds[slotIndex].b = 10;
+      leds[pixel].r = 10;
+      leds[pixel].g = 10;
+      leds[pixel].b = 10;
     } else {
-      leds[slotIndex].r = 0;
-      leds[slotIndex].g = 0;
-      leds[slotIndex].b = 0;
+      leds[pixel].r = 0;
+      leds[pixel].g = 0;
+      leds[pixel].b = 0;
     }
 
+    // Set the effect pixels
     for (int j=0; j<3; j++) {
-      int pixel = slotIndex + (j + 1);
-      if (flip) {
-        pixel = slotIndex - (j + 1);
-      }
+      int pixel = idxs[offset + (j + 1)];
       int intensity = floor(value / 42);
 
       leds[pixel].r = 0; 
@@ -143,6 +166,44 @@ void setLEDS() {
         leds[pixel].r = 0;
         leds[pixel].g = 0;
         leds[pixel].b = 0;
+      }
+    }
+  }
+
+  for (int i=0; i<6; i++) {
+    if (selectedValues[1] == i) {
+      int pixel = idxs[(i * 2) + 96];
+
+      for (int j=0; j<2; j++) {
+        leds[pixel + j].r = selectedColor[0] * 12;
+        leds[pixel + j].g = selectedColor[1] * 12;
+        leds[pixel + j].b = selectedColor[2] * 12;
+      }
+    } else {
+      int pixel = idxs[(i * 2) + 96];
+
+      for (int j=0; j<2; j++) {
+        leds[pixel + j].r = 0;
+        leds[pixel + j].g = 0;
+        leds[pixel + j].b = 0;
+      }
+    }
+
+    if (selectedValues[0] == i) {
+      int pixel = idxs[(i * 2) + 96 + 12];
+
+      for (int j=0; j<2; j++) {
+        leds[pixel + j].r = selectedColor[0] * 12;
+        leds[pixel + j].g = selectedColor[1] * 12;
+        leds[pixel + j].b = selectedColor[2] * 12;
+      }
+    } else {
+      int pixel = idxs[(i * 2) + 96 + 12];
+
+      for (int j=0; j<2; j++) {
+        leds[pixel + j].r = 0;
+        leds[pixel + j].g = 0;
+        leds[pixel + j].b = 0;
       }
     }
   }
