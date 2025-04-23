@@ -120,6 +120,9 @@ void setLEDS() {
   for (int i=0; i<12; i++) {
     // Check if selected
     bool isValueSelected = selectedValues[0] == floor(i / 2) || selectedValues[1] == floor(i / 2);
+
+    // set the color
+    int* currentColor = isValueSelected ? selectedColor : deselectedColor;
     
     // Get the value
     int value = effectValues[i];
@@ -132,9 +135,9 @@ void setLEDS() {
 
     // Set the selector row
     if (isValueSelected) {
-      leds[pixel].r = 10;
-      leds[pixel].g = 10;
-      leds[pixel].b = 10;
+      leds[pixel].r = currentColor[0] * 12;
+      leds[pixel].g = currentColor[1] * 12;
+      leds[pixel].b = currentColor[2] * 12;
     } else {
       leds[pixel].r = 0;
       leds[pixel].g = 0;
@@ -151,17 +154,13 @@ void setLEDS() {
       leds[pixel].b = 0;
 
       if (j < intensity) {
-        leds[pixel].r = 12 * brightness;
-        if (isValueSelected) {
-          leds[pixel].g = 12 * brightness;
-          leds[pixel].b = 12 * brightness;
-        }
+        leds[pixel].r = currentColor[0] * 12 * brightness;
+        leds[pixel].g = currentColor[1] * 12 * brightness;
+        leds[pixel].b = currentColor[2] * 12 * brightness;
       } else if (j == intensity) {
-        leds[pixel].r = floor((value % 42) / 3);
-        if (isValueSelected) {
-          leds[pixel].g = floor((value % 42) / 3);
-          leds[pixel].b = floor((value % 42) / 3);
-        }
+        leds[pixel].r = currentColor[0] * floor((value % 42) / 3);
+        leds[pixel].g = currentColor[1] * floor((value % 42) / 3);
+        leds[pixel].b = currentColor[2] * floor((value % 42) / 3);
       } else if (j > intensity) {
         leds[pixel].r = 0;
         leds[pixel].g = 0;

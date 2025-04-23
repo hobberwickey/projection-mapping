@@ -46,7 +46,7 @@ void setup() {
   rotaryInit();
 }
 
-void handleMidiIn(int header, int note, int velocity) {
+int handleMidiIn(int header, int note, int velocity) {
   for (int i=0; i<2; i++) {
     if (note == sliderInputNotes[i]) {
       sliderValues[i] = velocity;
@@ -77,9 +77,10 @@ void handleMidiIn(int header, int note, int velocity) {
     }
   }
 
-  if (shouldSetLEDS == 1) {
-    setLEDS();
-  }
+  return shouldSetLEDS;
+  // if (shouldSetLEDS == 1) {
+  //   setLEDS();
+  // }
 }
 
 void loop() {
@@ -101,12 +102,17 @@ void loop() {
     rotaryHandler(i);
   }
 
+  int shouldSetLEDS = 0;
   do {
     rx = MidiUSB.read();
     if (rx.header != 0) {
-      handleMidiIn(rx.byte1, rx.byte2, rx.byte3);
+      shouldSetLEDS = max(handleMidiIn(rx.byte1, rx.byte2, rx.byte3), shouldSetLEDS);
     }
   } while (rx.header != 0);
+
+  if (shouldSetLEDS == 1) {
+    setLEDS();
+  }
 
   delay(100);
 }
