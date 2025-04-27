@@ -27,8 +27,6 @@
 
     connected() {
       this.listen("selected", (selected) => {
-        console.log(selected);
-
         this.label = this.options[selected]?.label || "Empty";
       });
     }

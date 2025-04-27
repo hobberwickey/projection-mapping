@@ -13,12 +13,12 @@
           <div class="slot-list">
             <template :for="state?.scripts || []">
               <slot-item
-                :idx="$idx"
+                :idx="order[$idx]"
                 :update="updateScript"
                 :selected="$value"
                 :options="scripts || []"
-                :class="selectedScript === $idx ? 'selected': ''"
-                @click="selectItem('script', $idx)"
+                :class="selectedScript === order[$idx] ? 'selected': ''"
+                @click="selectItem('script', order[$idx])"
               ></slot-item>
             </template>
           </div>
@@ -28,12 +28,12 @@
           <div class="slot-list">
             <template :for="state?.effects || []">
               <slot-item
-                :idx="$idx"
+                :idx="order[$idx]"
                 :update="updateEffect"
                 :selected="$value"
                 :options="effects || []"
-                :class="selectedEffect === $idx ? 'selected': ''"
-                @click="selectItem('effect', $idx)"
+                :class="selectedEffect === order[$idx] ? 'selected': ''"
+                @click="selectItem('effect', order[$idx])"
               ></slot-item>
             </template>
           </div>
@@ -120,6 +120,7 @@
         "selectedVideo",
         "selectedEffect",
         "selectedScript",
+        "order",
         "effects",
         "scripts",
         "values",
@@ -127,7 +128,8 @@
     }
 
     connected() {
-      this.values = [0.5, 0.5];
+      this.order = [0, 1, 5, 2, 4, 3];
+      this.values = [0, 0];
 
       this.listen("app", (app) => {
         this.state = app.state;
@@ -155,6 +157,7 @@
     }
 
     selectItem(type, idx) {
+      console.log(idx, this.order[idx]);
       this.app.updateSelected(type, idx);
     }
 

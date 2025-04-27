@@ -239,7 +239,6 @@ class App extends Context {
               }
             }
 
-            // TODO: Switch this over to script
             let scriptSelectNote = midi.selectors.select[1];
             if (+note === +scriptSelectNote) {
               let current = this.state.selected.script ?? 0;

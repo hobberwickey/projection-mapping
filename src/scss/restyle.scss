@@ -233,6 +233,9 @@ nav {
 
       .select-display {
         padding: 5px 50px 5px 10px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
 
       .select-list {
