@@ -66,7 +66,7 @@ void sliderHandler(int idx) {
   
   int max = 15;
   int min = 989;
-  int velocity = map(sensorValue, min, max, 0, 127);
+  int velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
 
   if (sliderStates[idx] == 0) {
     if (abs(velocity - sliderValues[idx]) > 1) {
@@ -82,7 +82,7 @@ void sliderHandler(int idx) {
       delayMicroseconds(1000);
       
       sensorValue = analogRead(sliderPins[idx][0]);
-      velocity = map(sensorValue, min, max, 0, 127);
+      velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
 
       if (velocity < sliderValues[idx]) {
         digitalWrite(sliderPins[idx][1], HIGH);
@@ -97,7 +97,7 @@ void sliderHandler(int idx) {
       delayMicroseconds(1000);
 
       sensorValue = analogRead(sliderPins[idx][0]);
-      velocity = map(sensorValue, min, max, 0, 127);
+      velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
 
       if (velocity > sliderValues[idx]) {
         digitalWrite(sliderPins[idx][1], LOW);
