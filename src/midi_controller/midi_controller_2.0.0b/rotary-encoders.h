@@ -47,12 +47,12 @@ void rotaryHandler(int idx) {
   
   if (val & DIR_CW) { // Means pin A Changed first - We're Rotating Clockwise
     controlChange(0, rotaryNotes[idx], 0);   // Channel 0, middle C, normal velocity
-    MidiUSB.flush();
+    // MidiUSB.flush();
   }
       
   if (val & DIR_CCW) {
     controlChange(0, rotaryNotes[idx], 127);   // Channel 0, middle C, normal velocity
-    MidiUSB.flush();
+    // MidiUSB.flush();
   }
 
   rotaryPinStates[idx] = val;

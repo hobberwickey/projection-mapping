@@ -114,5 +114,6 @@ void loop() {
     setLEDS();
   }
 
-  delay(100);
+  MidiUSB.flush();
+  delay(1);
 }

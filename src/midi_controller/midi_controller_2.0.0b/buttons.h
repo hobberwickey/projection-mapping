@@ -25,10 +25,10 @@ void buttonHandler(int idx) {
   if ((pinState == HIGH) && (prevState == 0)) {
     prevButtonStates[idx] = 1;
     noteOff(0, buttonNotes[idx], 64);
-    MidiUSB.flush();
+    // MidiUSB.flush();
   } else if ((pinState == LOW) && (prevState == 1)) {
     prevButtonStates[idx] = 0;
     noteOn(0, buttonNotes[idx], 127); 
-    MidiUSB.flush();
+    // MidiUSB.flush();
   }
 }

@@ -26,7 +26,7 @@ void knobHandler(int idx) {
 
   if (abs(knobValues[idx] - velocity) > 5) {
     controlChange(0, knobNotes[idx], velocity);
-    MidiUSB.flush();
+    // MidiUSB.flush();
     knobValues[idx] = velocity;
   }
 }
