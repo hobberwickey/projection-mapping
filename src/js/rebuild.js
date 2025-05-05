@@ -256,6 +256,7 @@ class App extends Context {
               if (+note === +sliderNotes[i]) {
                 let { effect, script } = this.state.selected;
 
+                clearTimeout(this.sliders.paused);
                 this.sliders.paused = setTimeout(() => {
                   this.sliders.paused = null;
                 }, 100);
