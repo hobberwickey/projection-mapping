@@ -13,14 +13,14 @@ const defaultTriangle = [
 
 const defaultQuad = [
   [
-    [0.35, 0.35],
-    [0.65, 0.35],
-    [0.65, 0.65],
+    [0, 0],
+    [1, 0],
+    [1, 1],
   ],
   [
-    [0.35, 0.35],
-    [0.65, 0.65],
-    [0.35, 0.65],
+    [0, 0],
+    [1, 1],
+    [0, 1],
   ],
 ];
 
@@ -73,8 +73,11 @@ class App extends Context {
 
   saveState() {
     this.state = { ...this.state };
-    this.leds.updateState(this.state);
-    this.sliders.updateState(this.state);
+
+    if (!!this.midiOutput) {
+      this.leds.updateState(this.state);
+      this.sliders.updateState(this.state);
+    }
   }
 
   gen_id() {
@@ -132,26 +135,26 @@ class App extends Context {
           tris: [
             {
               input: [
-                [0.35, 0.35],
-                [0.65, 0.35],
-                [0.65, 0.65],
+                [0, 0],
+                [1, 0],
+                [1, 1],
               ],
               output: [
-                [0.05, 0.05],
-                [0.95, 0.05],
-                [0.95, 0.95],
+                [0, 0],
+                [1, 0],
+                [1, 1],
               ],
             },
             {
               input: [
-                [0.35, 0.35],
-                [0.65, 0.65],
-                [0.35, 0.65],
+                [0, 0],
+                [1, 1],
+                [0, 1],
               ],
               output: [
-                [0.05, 0.05],
-                [0.95, 0.95],
-                [0.05, 0.95],
+                [0, 0],
+                [1, 1],
+                [0, 1],
               ],
             },
           ],
@@ -216,6 +219,10 @@ class App extends Context {
             let opacityNotes = midi.buttons.opacity;
             for (var i = 0; i < opacityNotes.length; i++) {
               if (+note === +opacityNotes[i]) {
+                clearTimeout(this.sliders.paused);
+                this.sliders.paused = setTimeout(() => {
+                  this.sliders.paused = null;
+                }, 100);
                 this.updateOpacity(i, velocity / 127);
               }
             }
@@ -223,6 +230,10 @@ class App extends Context {
             let layerNotes = midi.buttons.select;
             for (var i = 0; i < layerNotes.length; i++) {
               if (+note === +layerNotes[i] && velocity === 64) {
+                clearTimeout(this.sliders.paused);
+                this.sliders.paused = setTimeout(() => {
+                  this.sliders.paused = null;
+                }, 100);
                 this.updateSelected("video", i);
               }
             }
@@ -230,6 +241,11 @@ class App extends Context {
             let effectSelectNote = midi.selectors.select[0];
             if (+note === +effectSelectNote) {
               let current = this.state.selected.effect ?? 0;
+
+              clearTimeout(this.sliders.paused);
+              this.sliders.paused = setTimeout(() => {
+                this.sliders.paused = null;
+              }, 100);
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
                 this.updateSelected("effect", next);
@@ -242,6 +258,11 @@ class App extends Context {
             let scriptSelectNote = midi.selectors.select[1];
             if (+note === +scriptSelectNote) {
               let current = this.state.selected.script ?? 0;
+
+              clearTimeout(this.sliders.paused);
+              this.sliders.paused = setTimeout(() => {
+                this.sliders.paused = null;
+              }, 100);
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
                 this.updateSelected("script", next);
@@ -456,7 +477,12 @@ class App extends Context {
     const onMIDIFailure = (msg) => {
       console.error(`Failed to get MIDI access - ${msg}`);
     };
-    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+
+    if (!!navigator.requestMIDIAccess) {
+      navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+    } else {
+      console.log("No Midi Access");
+    }
   }
 
   launch() {
