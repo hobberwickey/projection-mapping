@@ -240,4 +240,161 @@ export const Effects = [
 		  }
 		`,
 	},
+	{
+		id: "shift",
+		label: "Shift",
+		opacity: "Opacity",
+		effect_a: "X-Shift",
+		effect_b: "Y-Shift",
+		defaults: [0.0, 0.0],
+		shader: `
+			precision mediump float;
+		  varying vec2 v_texcoord;
+		  uniform sampler2D u_texture;
+
+		  uniform vec2 u_dimensions; 
+		  uniform mediump float u_opacity;
+		  uniform vec2 u_effect;
+
+		  void main() {
+		    vec2 shift_coords = vec2(
+		    	v_texcoord[0] - u_effect[0], 
+		    	v_texcoord[1] - u_effect[1]
+		    );
+
+				// if (shift_coords[0] > 1.0) {
+				// 	shift_coords[0] = shift_coords[0] - 1.0;
+				// }
+
+				// if (shift_coords[1] > 1.0) {
+				// 	shift_coords[1] = shift_coords[1] - 1.0;
+				// }
+				
+				if (shift_coords[0] < 0.0) {
+					shift_coords[0] = 1.0 + shift_coords[0];
+				}
+
+				if (shift_coords[1] < 0.0) {
+					shift_coords[1] = 1.0 + shift_coords[1];
+				}
+
+		    gl_FragColor = texture2D(u_texture, shift_coords);
+		  }
+		`,
+	},
+	{
+		id: "color_adjust",
+		label: "Color Adjust",
+		opacity: "Opacity",
+		effect_a: "Desaturate",
+		effect_b: "Bit Depth",
+		defaults: [0, 0],
+		shader: `
+			precision mediump float;
+		  varying vec2 v_texcoord;
+		  uniform sampler2D u_texture;
+
+		  uniform vec2 u_dimensions; 
+		  uniform mediump float u_opacity;
+		  uniform vec2 u_effect;
+
+		  vec3 rgb2hsl( in vec3 c ){
+			  float h = 0.0;
+				float s = 0.0;
+				float l = 0.0;
+				float r = c.r;
+				float g = c.g;
+				float b = c.b;
+				float cMin = min( r, min( g, b ) );
+				float cMax = max( r, max( g, b ) );
+
+				l = ( cMax + cMin ) / 2.0;
+				if ( cMax > cMin ) {
+					float cDelta = cMax - cMin;
+			        
+					s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
+			        
+					if ( r == cMax ) {
+						h = ( g - b ) / cDelta;
+					} else if ( g == cMax ) {
+						h = 2.0 + ( b - r ) / cDelta;
+					} else {
+						h = 4.0 + ( r - g ) / cDelta;
+					}
+
+					if ( h < 0.0) {
+						h += 6.0;
+					}
+					h = h / 6.0;
+				}
+				return vec3( h, s, l );
+			}
+
+			float hue2rgb(float p, float q, float t) {
+			  if (t < 0.0) {
+			    t += 1.0;
+			  }
+			  if (t > 1.0) {
+			    t -= 1.0;
+			  }
+			  if (t < 1.0 / 6.0) {
+			    return p + (q - p) * 6.0 * t;
+			  }
+			  if (t < 1.0 / 2.0) {
+			    return q;
+			  }
+			  if (t < 2.0 / 3.0) {
+			    return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+			  }
+
+			  return p;
+			}
+
+			vec3 hsl2rgb( vec3 c){
+				float r = 0.0;
+				float g = 0.0;
+				float b = 0.0;
+
+				if (c[1] == 0.0) {
+					r = g = b = c[2];
+				} else {
+					float q = c[2] < 0.5 ? c[2] * (1.0 + c[1]) : c[2] + c[1] - c[2] * c[1];
+					float p = 2.0 * c[2] - q;
+
+					r = hue2rgb(p, q, c[0] + 1.0 / 3.0);
+					g = hue2rgb(p, q, c[0]);
+					b = hue2rgb(p, q, c[0] - 1.0 / 3.0);
+				}
+
+				return vec3(r, g, b);
+			}
+
+			float rShift(float n, float s) {
+				return float(floor(n / pow(2.0, s))); 
+			}
+
+			float lShift(float n, float s) {
+				return float(floor(n * pow(2.0, s)));
+			}
+
+			vec3 bitReduction(vec3 c, float s) {
+				float r = rShift(c[0] * 255.0, s) / rShift(255.0, s);
+				float g = rShift(c[1] * 255.0, s) / rShift(255.0, s);
+				float b = rShift(c[2] * 255.0, s) / rShift(255.0, s);
+
+				return vec3(r, g, b);
+			}
+
+	    void main() {
+	      vec4 color = texture2D(u_texture, v_texcoord);
+	      vec3 hsl = rgb2hsl(vec3(color[0], color[1], color[2]));
+				vec3 desaturated = hsl2rgb(vec3(hsl[0], hsl[1] * (1.0 - u_effect[0]), hsl[2]));
+
+				float reduction = floor(u_effect[1] * 7.0);
+				vec3 reduced = bitReduction(desaturated, reduction);
+
+		    gl_FragColor = vec4(reduced[0], reduced[1], reduced[2], color[3]);
+		  }
+		`,
+	},
 ];
