@@ -488,6 +488,33 @@ export class UI {
       points[1] += (1 / window.innerHeight) * y;
     }
 
+    if (shape.type === "quad" && this.layer === "input") {
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 1) {
+        shape.tris[0][this.layer][0][1] += (1 / window.innerHeight) * y;
+        shape.tris[1][this.layer][0][1] += (1 / window.innerHeight) * y;
+        shape.tris[0][this.layer][2][0] += (1 / window.innerWidth) * x;
+        shape.tris[1][this.layer][1][0] += (1 / window.innerWidth) * x;
+      }
+
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 0) {
+        shape.tris[0][this.layer][1][1] += (1 / window.innerHeight) * y;
+        shape.tris[1][this.layer][2][0] += (1 / window.innerWidth) * x;
+      }
+
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 2) {
+        shape.tris[1][this.layer][2][1] += (1 / window.innerHeight) * y;
+        shape.tris[0][this.layer][1][0] += (1 / window.innerWidth) * x;
+      }
+
+      if (selected.points[0][0] === 1 && selected.points[0][1] === 2) {
+        shape.tris[0][this.layer][2][1] += (1 / window.innerHeight) * y;
+        shape.tris[1][this.layer][1][1] += (1 / window.innerHeight) * y;
+
+        shape.tris[0][this.layer][0][0] += (1 / window.innerWidth) * x;
+        shape.tris[1][this.layer][0][0] += (1 / window.innerWidth) * x;
+      }
+    }
+
     if (!!window.opener) {
       window.opener.postMessage(
         JSON.stringify({
@@ -521,6 +548,33 @@ export class UI {
       let tri = shape.tris[points[i][0]];
       tri[layer][points[i][1]][0] = x;
       tri[layer][points[i][1]][1] = y;
+    }
+
+    if (shape.type === "quad" && this.layer === "input") {
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 1) {
+        shape.tris[0][this.layer][0][1] = y;
+        shape.tris[1][this.layer][0][1] = y;
+        shape.tris[0][this.layer][2][0] = x;
+        shape.tris[1][this.layer][1][0] = x;
+      }
+
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 0) {
+        shape.tris[0][this.layer][1][1] = y;
+        shape.tris[1][this.layer][2][0] = x;
+      }
+
+      if (selected.points[0][0] === 0 && selected.points[0][1] === 2) {
+        shape.tris[1][this.layer][2][1] = y;
+        shape.tris[0][this.layer][1][0] = x;
+      }
+
+      if (selected.points[0][0] === 1 && selected.points[0][1] === 2) {
+        shape.tris[0][this.layer][2][1] = y;
+        shape.tris[1][this.layer][1][1] = y;
+
+        shape.tris[0][this.layer][0][0] = x;
+        shape.tris[1][this.layer][0][0] = x;
+      }
     }
 
     if (!!window.opener) {
