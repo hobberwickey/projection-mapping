@@ -212,17 +212,14 @@ class App extends Context {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            console.log(note, velocity);
+            // console.log(note, velocity);
 
             let { midi } = this.config;
 
             let opacityNotes = midi.buttons.opacity;
             for (var i = 0; i < opacityNotes.length; i++) {
               if (+note === +opacityNotes[i]) {
-                clearTimeout(this.sliders.paused);
-                this.sliders.paused = setTimeout(() => {
-                  this.sliders.paused = null;
-                }, 100);
+                // this.sliders.pauseIn();
                 this.updateOpacity(i, velocity / 127);
               }
             }
@@ -230,10 +227,7 @@ class App extends Context {
             let layerNotes = midi.buttons.select;
             for (var i = 0; i < layerNotes.length; i++) {
               if (+note === +layerNotes[i] && velocity === 64) {
-                clearTimeout(this.sliders.paused);
-                this.sliders.paused = setTimeout(() => {
-                  this.sliders.paused = null;
-                }, 100);
+                this.sliders.pauseIn();
                 this.updateSelected("video", i);
               }
             }
@@ -242,10 +236,7 @@ class App extends Context {
             if (+note === +effectSelectNote) {
               let current = this.state.selected.effect ?? 0;
 
-              clearTimeout(this.sliders.paused);
-              this.sliders.paused = setTimeout(() => {
-                this.sliders.paused = null;
-              }, 100);
+              this.sliders.pauseIn();
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
                 this.updateSelected("effect", next);
@@ -259,10 +250,7 @@ class App extends Context {
             if (+note === +scriptSelectNote) {
               let current = this.state.selected.script ?? 0;
 
-              clearTimeout(this.sliders.paused);
-              this.sliders.paused = setTimeout(() => {
-                this.sliders.paused = null;
-              }, 100);
+              this.sliders.pauseIn();
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
                 this.updateSelected("script", next);
@@ -272,22 +260,20 @@ class App extends Context {
               }
             }
 
-            let sliderNotes = midi.sliders[0];
-            for (var i = 0; i < sliderNotes.length; i++) {
-              if (+note === +sliderNotes[i]) {
-                let { effect, script } = this.state.selected;
+            if (!this.sliders.input_paused) {
+              let sliderNotes = midi.sliders[0];
+              for (var i = 0; i < sliderNotes.length; i++) {
+                if (+note === +sliderNotes[i]) {
+                  let { effect, script } = this.state.selected;
 
-                clearTimeout(this.sliders.paused);
-                this.sliders.paused = setTimeout(() => {
-                  this.sliders.paused = null;
-                }, 100);
+                  this.sliders.pauseOut();
+                  if (effect !== null) {
+                    this.updateEffectValue(i, velocity / 127);
+                  }
 
-                if (effect !== null) {
-                  this.updateEffectValue(i, velocity / 127);
-                }
-
-                if (script !== null) {
-                  this.updateEffectValue(i, velocity / 127);
+                  if (script !== null) {
+                    this.updateEffectValue(i, velocity / 127);
+                  }
                 }
               }
             }
