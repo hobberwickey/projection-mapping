@@ -71,22 +71,24 @@
     <script src="/js/rescreen.js"></script>
     <script>
       (() => {
-        document.querySelector(".overlay-close").addEventListener("click", () => {
-          document.querySelector(".overlay").style.display = "none";
-          localStorage.setItem("help_hidden", true);
-        })
+        document
+          .querySelector(".overlay-close")
+          .addEventListener("click", () => {
+            document.querySelector(".overlay").style.display = "none";
+            localStorage.setItem("help_hidden", true);
+          });
 
         window.addEventListener("keypress", (e) => {
           if (e.keyCode === 104) {
             document.querySelector(".overlay").style.display = "block";
           }
-        })
+        });
 
         let helpHidden = localStorage.getItem("help_hidden");
         if (!!helpHidden) {
           document.querySelector(".overlay").style.display = "none";
         }
-      })()
+      })();
     </script>
   </body>
 </html>
