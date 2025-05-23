@@ -10,7 +10,31 @@ export class Sliders extends Context {
 
 		this.output = output;
 		this.input = input;
-		this.paused = null;
+
+		this.output_paused = null;
+		this.input_paused = null;
+	}
+
+	pauseOut(fn) {
+		clearTimeout(this.output_paused);
+		this.output_paused = setTimeout(() => {
+			if (!!fn) {
+				fn();
+			}
+
+			this.output_paused = null;
+		}, 100);
+	}
+
+	pauseIn(fn) {
+		clearTimeout(this.input_paused);
+		this.input_paused = setTimeout(() => {
+			if (!!fn) {
+				fn();
+			}
+
+			this.input_paused = null;
+		}, 100);
 	}
 
 	updateConfig(config) {
@@ -41,12 +65,10 @@ export class Sliders extends Context {
 			}
 		}
 
-		// debounce(() => {
-		if (this.paused === null) {
+		if (this.output_paused === null) {
 			for (let i = 0; i < output.length; i++) {
 				this.output.send(output[i]);
 			}
 		}
-		// }, 100);
 	}
 }
