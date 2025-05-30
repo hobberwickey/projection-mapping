@@ -10,6 +10,18 @@ export const ScriptTemplate = function (script) {
 			      min +
 			      (1 + Math.sin((perc * 360 * Math.PI) / 180)) * ((max - min) / 2)
 			    );
+				},
+				tri: function() {
+					return Math.abs(perc - 0.5) * (max - min) * 2 + min;
+				},
+				saw: function() {
+					return perc * (max - min) + min;
+				},
+				square: function() {
+					return Math.round(perc) * (max - min) + min;
+				},
+				noise: function() {
+					return Math.floor(Math.random() * (max - min + 1)) + min;
 				}
 			}
 		}
@@ -29,7 +41,11 @@ export const ScriptTemplate = function (script) {
 			}
 		}
 
-		const setShapeOpacity  = function(shapes, videos, opacity)  {
+		const getVideoOpacity = function(video) {
+			return state.videos[video].opacity;
+		}
+
+		const setShapeOpacity = function(shapes, videos, opacity)  {
 			if (!Array.isArray(shapes)) {
 				shapes = [shapes];
 			}
@@ -39,7 +55,7 @@ export const ScriptTemplate = function (script) {
 			}
 
 			for (let i=0; i<shapes.length; i++) {
-				let shape = state.shapes[i];
+				let shape = state.shapes[shapes[i]];
 
 				for (var j=0; j<videos.length; j++) {
 					let video = videos[j];
@@ -47,6 +63,48 @@ export const ScriptTemplate = function (script) {
 					shape.opacity[video] = opacity;
 				}
 			}
+		}
+
+		const getShapeOpacity = function(shape, video) {
+			return state.shapes[shape].opacity[video];
+		}
+
+		const getEffectById = function(id) {
+			let effects = [];
+			for (var i=0; i<state.effects.length; i++) {
+				if (state.effects[i] === id) {
+					effects.push(i);
+				}
+			}
+
+			return effects;
+		}
+
+		const setEffectValues = function(effects, videos, x, y) {
+			if (!Array.isArray(videos)) {
+				videos = [videos];
+			}
+
+			if (!Array.isArray(effects)) {
+				effects = [effects];
+			}
+
+			for (var i=0; i<videos.length; i++) {
+				for (var j=0; j<effects.length; j++) {
+					if (x !== null) {
+						state.values.effects[videos[i]][effects[j]][0] = x;
+					}
+
+					if (y !== null) {
+						state.values.effects[videos[i]][effects[j]][1] = y;
+					}
+				}
+			}
+		}
+
+		const getEffectValues = function(effect, video) {
+			console.log("Effect", effect, "Video", video)
+			return state.values.effects[video][effect];
 		}
 
 		const setInputPoints = function(shapes, fn) {
