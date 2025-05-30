@@ -1,127 +1,138 @@
 <!-- TODO Make a modal class -->
 <template>
-	<div class="modal">
-		<div class="container">
-			<div class="header"></div>
-			<div class="dialog">
-				<div class="sidebar"></div>
+  <div class="modal">
+    <div class="container">
+      <div class="header"></div>
+      <div class="dialog">
+        <div class="sidebar">
+          <api-docs />
+        </div>
 
-				<div class="editor">
-					<div class="label">
-						<input type="text" :value="label || ''" @input="onLabel($event)" />
-					</div>
-					<div :class='!!error ? "error " : "error hidden"'>
-						{{(error || '').toString()}}
-					</div>
-					<div class="code-box">
-						<textarea
-							placeholder="Write your script here"
-							@keydown="onKeyDown($event)"
-							@input="onCode($event)"
-							@scroll="onScroll($event)"
-						>
+        <div class="editor">
+          <div class="label">
+            <input type="text" :value="label || ''" @input="onLabel($event)" />
+          </div>
+          <div :class='!!error ? "error " : "error hidden"'>
+            {{(error || '').toString()}}
+          </div>
+          <div class="code-box">
+            <textarea
+              placeholder="Write your script here"
+              @keydown="onKeyDown($event)"
+              @input="onCode($event)"
+              @scroll="onScroll($event)"
+            >
 {{code}}</textarea
-						>
-						<pre><code class="language-js"></code></pre>
-					</div>
-				</div>
-			</div>
-			<div class="footer">
-				<div class="btn" @click="onSave()">{{ dirty ? "Save" : "Saved" }}</div>
-				<div class="btn" @click="onCancel()">Close</div>
-			</div>
-		</div>
-		<div class="overlay"></div>
-	</div>
+            >
+            <pre><code class="language-js"></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="btn" @click="onSave()">{{ dirty ? "Save" : "Saved" }}</div>
+        <div class="btn" @click="onCancel()">Close</div>
+      </div>
+    </div>
+    <div class="overlay"></div>
+  </div>
 </template>
 
 <script>
-	class CodeEditor extends Component {
-		constructor() {
-			super();
-		}
+  class CodeEditor extends Component {
+    constructor() {
+      super();
+    }
 
-		static get observedProperties() {
-			return ["app", "idx", "label", "code", "scripts", "error", "dirty"];
-		}
+    static get observedProperties() {
+      return ["app", "idx", "label", "code", "scripts", "error", "dirty"];
+    }
 
-		connected() {
-			this.dirty = false;
-			this.listen("app", (app) => {
-				this.scripts = [...app.scripts];
+    connected() {
+      this.dirty = false;
+      this.listen("app", (app) => {
+        this.scripts = [...app.scripts];
 
-				app.listen("scripts", (scripts) => {
-					this.scripts = [...scripts];
-				});
-			});
+        app.listen("scripts", (scripts) => {
+          this.scripts = [...scripts];
+        });
+      });
 
-			this.querySelector("code").innerHTML = this.escapeHTML(this.code);
-			Prism.highlightElement(this.querySelector("code"));
-		}
+      this.querySelector(".code-box code").innerHTML = this.escapeHTML(
+        this.code,
+      );
+      Prism.highlightElement(this.querySelector(".code-box code"));
 
-		onLabel(evt) {
-			let script = this.app.scripts[this.idx];
+      this.querySelectorAll(".sidebar code").forEach((c) => {
+        Prism.highlightElement(c);
+      });
+    }
 
-			this.label = evt.target.value;
-			this.app.updateScript(script.id, this.label, this.code);
-		}
+    onLabel(evt) {
+      let script = this.app.scripts[this.idx];
 
-		escapeHTML(text) {
-			return text.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
-		}
+      this.label = evt.target.value;
+      this.app.updateScript(script.id, this.label, this.code);
+    }
 
-		onKeyDown(evt) {
-			let el = evt.target;
-			let code = el.value;
+    escapeHTML(text) {
+      return text.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
+    }
 
-			if (evt.key == "Tab") {
-				evt.preventDefault();
+    onKeyDown(evt) {
+      let el = evt.target;
+      let code = el.value;
 
-				let before_tab = code.slice(0, el.selectionStart); // text before tab
-				let after_tab = code.slice(el.selectionEnd, el.value.length); // text after tab
-				let cursor_pos = el.selectionStart + 2;
-				let tabbedCode = before_tab + "  " + after_tab;
+      if (evt.key == "Tab") {
+        evt.preventDefault();
 
-				this.querySelector("code").innerHTML = this.escapeHTML(tabbedCode);
-				Prism.highlightElement(this.querySelector("code"));
+        let before_tab = code.slice(0, el.selectionStart); // text before tab
+        let after_tab = code.slice(el.selectionEnd, el.value.length); // text after tab
+        let cursor_pos = el.selectionStart + 2;
+        let tabbedCode = before_tab + "  " + after_tab;
 
-				this.code = tabbedCode;
+        this.querySelector(".code-box code").innerHTML =
+          this.escapeHTML(tabbedCode);
+        Prism.highlightElement(this.querySelector(".code-box code"));
 
-				el.selectionStart = cursor_pos;
-				el.selectionEnd = cursor_pos;
+        this.code = tabbedCode;
 
-				this.dirty = true;
-			}
-		}
+        el.selectionStart = cursor_pos;
+        el.selectionEnd = cursor_pos;
 
-		onCode(evt) {
-			this.error = null;
+        this.dirty = true;
+      }
+    }
 
-			this.querySelector("code").innerHTML = this.escapeHTML(evt.target.value);
-			Prism.highlightElement(this.querySelector("code"));
+    onCode(evt) {
+      this.error = null;
 
-			this.code = evt.target.value;
-			this.dirty = true;
-		}
+      this.querySelector(".code-box code").innerHTML = this.escapeHTML(
+        evt.target.value,
+      );
+      Prism.highlightElement(this.querySelector(".code-box code"));
 
-		onScroll(evt) {
-			this.querySelector(".code-box pre").scrollTop = evt.target.scrollTop;
-		}
+      this.code = evt.target.value;
+      this.dirty = true;
+    }
 
-		onSave() {
-			let script = this.app.scripts[this.idx];
+    onScroll(evt) {
+      this.querySelector(".code-box pre").scrollTop = evt.target.scrollTop;
+    }
 
-			try {
-				this.app.updateScript(script.id, this.label, this.code);
-			} catch (err) {
-				this.error = err;
-			}
+    onSave() {
+      let script = this.app.scripts[this.idx];
 
-			this.dirty = false;
-		}
+      try {
+        this.app.updateScript(script.id, this.label, this.code);
+      } catch (err) {
+        this.error = err;
+      }
 
-		onCancel() {
-			this.parentNode.removeChild(this);
-		}
-	}
+      this.dirty = false;
+    }
+
+    onCancel() {
+      this.parentNode.removeChild(this);
+    }
+  }
 </script>
