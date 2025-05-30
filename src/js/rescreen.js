@@ -131,8 +131,8 @@ class Output {
       (a, c) => {
         a[c.id] = new Function(
           "state",
-          "effect_a",
-          "effect_b",
+          "effect_x",
+          "effect_y",
           ScriptTemplate(c.code),
         );
 
@@ -680,8 +680,8 @@ class Output {
 
     this.scripts[scriptId] = new Function(
       "state",
-      "effect_a",
-      "effect_b",
+      "effect_x",
+      "effect_y",
       "previous_value",
       ScriptTemplate(script.code),
     );

@@ -272,7 +272,7 @@ class App extends Context {
                   }
 
                   if (script !== null) {
-                    this.updateEffectValue(i, velocity / 127);
+                    this.updateScriptValue(i, velocity / 127);
                   }
                 }
               }
@@ -566,8 +566,8 @@ class App extends Context {
     let stateClone = JSON.parse(JSON.stringify(this.state));
     let validation = new Function(
       "state",
-      "effect_a",
-      "effect_b",
+      "effect_x",
+      "effect_y",
       "previous_value",
       ScriptTemplate(code),
     )(stateClone, 0, 0, undefined);
@@ -855,8 +855,6 @@ class App extends Context {
     let { state } = this;
 
     state.effects[idx] = effect;
-
-    console.log(state.values);
 
     let fx = this.effects.find((e) => e.id === effect);
     if (!!fx) {
