@@ -333,6 +333,7 @@ class Component extends HTMLElement {
           // who's values have been removed
           let previouslyCreated = binding.attrs[attr].created || [];
           for (let i = 0; i < previouslyCreated.length; i++) {
+            // console.log(previouslyCreated[i], previouslyCreated[i].parentNode);
             previouslyCreated[i].parentNode.removeChild(previouslyCreated[i]);
           }
 
@@ -354,7 +355,7 @@ class Component extends HTMLElement {
               this.__render__(ctx, true);
 
               // Keep track of created items
-              created.push(...item.children);
+              created.push(...item.childNodes);
 
               // append then render
               frag.append(item);
@@ -454,7 +455,7 @@ class Component extends HTMLElement {
             this.__render__(ctx, true);
 
             // Keep track of created items
-            created.push(...item.children);
+            created.push(...item.childNodes);
 
             // append then render
             frag.append(item);
@@ -554,7 +555,7 @@ class Component extends HTMLElement {
   __render__(ctx, log) {
     let values = ctx.__get_values__(ctx);
 
-    for (var i = 0; i < ctx.__bindings__.length; i++) {
+    for (let i = 0; i < ctx.__bindings__.length; i++) {
       let binding = ctx.__bindings__[i];
       let el = binding.el;
 
