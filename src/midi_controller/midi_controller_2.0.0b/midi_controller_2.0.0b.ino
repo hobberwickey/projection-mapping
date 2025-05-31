@@ -38,6 +38,8 @@
 /////// LEDS ///////
 // A9
 
+int calibrated = 0;
+
 void setup() {
   motorizedSliderInit();
   ledsInit();
@@ -83,7 +85,26 @@ int handleMidiIn(int header, int note, int velocity) {
   // }
 }
 
+
+
 void loop() {
+  if (calibrated == 0) {
+    calibrateLEDS();
+    calibrateSliders();
+
+    if (millis() > 5000) {
+      calibrated = 1;
+      resetLEDS();
+      resetSliders();
+
+      delay(1);
+      return;
+    }
+
+    delay(1);
+    return;
+  }
+
   midiEventPacket_t rx;
 
   for (int i=0; i<2; i++) {

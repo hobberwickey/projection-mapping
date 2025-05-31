@@ -72,6 +72,26 @@ void ledsInit() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS); 
 }
 
+void calibrateLEDS() {
+  for (int i=0; i<NUM_LEDS; i++) {
+    leds[i].r = 10;
+    leds[i].g = 10;
+    leds[i].b = 10;
+  }
+
+  FastLED.show();
+}
+
+void resetLEDS() {
+  for (int i=0; i<NUM_LEDS; i++) {
+    leds[i].r = 0;
+    leds[i].g = 0;
+    leds[i].b = 0;
+  }
+
+  FastLED.show();
+}
+
 void setLEDS() {
   // Brightness factor
   int brightness = 1;
