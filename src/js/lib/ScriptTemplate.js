@@ -11,6 +11,12 @@ export const ScriptTemplate = function (script) {
 			      (1 + Math.sin((perc * 360 * Math.PI) / 180)) * ((max - min) / 2)
 			    );
 				},
+				cos: function() {
+					return (
+			      min +
+			      (1 + Math.cos((perc * 360 * Math.PI) / 180)) * ((max - min) / 2)
+			    );
+				},
 				tri: function() {
 					return Math.abs(perc - 0.5) * (max - min) * 2 + min;
 				},
