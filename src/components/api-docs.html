@@ -1,62 +1,62 @@
 <template>
-	<div class="api-docs">
-		<h2>Script API Documentation</h2>
-		<ul uk-accordion="multiple: true">
-			<li class="uk-open">
-				<a class="uk-accordion-title" href>Intro</a>
-				<div class="uk-accordion-content">
-					<p>
-						With scripts you can programmatically control almost any aspect of
-						the state of your projection while it's running using javascript.
-					</p>
-					<p>
-						You can also use either of the X/Y sliders with your scripts to
-						adjust parameters on the fly as well.
-					</p>
-					<p>
-						Below are descriptions of the variables available to your scripts,
-						the methods availble, a description of LFOs and how to use them, and
-						a detailed map of the state object.
-					</p>
-				</div>
-			</li>
-			<li>
-				<a class="uk-accordion-title">Available Variables:</a>
-				<div class="uk-accordion-content">
-					<ul class="uk-list methods">
-						<li>
-							<label>state</label>
-							<p>
-								An object representing the current state of the system (more on
-								the state's structure
-								<a href="#state-structure">below</a>)
-							</p>
-						</li>
-						<li>
-							<label>effect_x</label>
-							<p>The current values of the X slider</p>
-						</li>
-						<li>
-							<label>effect_y</label>
-							<p>The current values of the Y slider</p>
-						</li>
-					</ul>
-				</div>
-			</li>
-			<li>
-				<a class="uk-accordion-title">Methods:</a>
-				<div class="uk-accordion-content">
-					<ul class="uk-list methods" uk-accordion="multiple: true">
-						<li>
-							<label class="uk-accordion-title">lfo(min, max, interval)</label>
-							<div class="uk-accordion-content">
-								<p>
-									Creates and returns an LFO (low frequency ossilator) object
-									for transitioning properies over time (more
-									<a href="lfos">Below</a>)
-								</p>
-								<div class="example">
-									<pre>
+  <div class="api-docs">
+    <h2>Script API Documentation</h2>
+    <ul uk-accordion="multiple: true">
+      <li class="uk-open">
+        <a class="uk-accordion-title" href>Intro</a>
+        <div class="uk-accordion-content">
+          <p>
+            With scripts you can programmatically control almost any aspect of
+            the state of your projection while it's running using javascript.
+          </p>
+          <p>
+            You can also use either of the X/Y sliders with your scripts to
+            adjust parameters on the fly as well.
+          </p>
+          <p>
+            Below are descriptions of the variables available to your scripts,
+            the methods availble, a description of LFOs and how to use them, and
+            a detailed map of the state object.
+          </p>
+        </div>
+      </li>
+      <li>
+        <a class="uk-accordion-title">Available Variables:</a>
+        <div class="uk-accordion-content">
+          <ul class="uk-list methods">
+            <li>
+              <label>state</label>
+              <p>
+                An object representing the current state of the system (more on
+                the state's structure
+                <a href="#state-structure">below</a>)
+              </p>
+            </li>
+            <li>
+              <label>effect_x</label>
+              <p>The current value (0 to 1) of the X slider</p>
+            </li>
+            <li>
+              <label>effect_y</label>
+              <p>The current value (0 to 1) of the Y slider</p>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <a class="uk-accordion-title">Methods:</a>
+        <div class="uk-accordion-content">
+          <ul class="uk-list methods" uk-accordion="multiple: true">
+            <li>
+              <label class="uk-accordion-title">lfo(min, max, interval)</label>
+              <div class="uk-accordion-content">
+                <p>
+                  Creates and returns an LFO (low frequency ossilator) object
+                  for transitioning properies over time (more
+                  <a href="lfos">Below</a>)
+                </p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {float} 'min' 
@@ -71,10 +71,10 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       // creates an LFO that transitions from 0 to 
                       // 1 using a sine function over 5 seconds
@@ -86,18 +86,18 @@
                       setVideoOpacity([0, 1], opacity);
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title"
-								>setVideoOpacity(videos, opacity)</label
-							>
-							<div class="uk-accordion-content">
-								<p>Sets the opacity for one or more videos</p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title"
+                >setVideoOpacity(videos, opacity)</label
+              >
+              <div class="uk-accordion-content">
+                <p>Sets the opacity for one or more videos</p>
 
-								<div class="example">
-									<pre>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {number|array} 'videos' 
@@ -107,10 +107,10 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       // locks all videos opacities to the 
                       // first videos 
@@ -122,15 +122,15 @@
                       setVideoOpacity([1, 2, 3, 4, 5], opacity);
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">getVideoOpacity(video)</label>
-							<div class="uk-accordion-content">
-								<p>Get's a video's current opacity</p>
-								<div class="example">
-									<pre>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">getVideoOpacity(video)</label>
+              <div class="uk-accordion-content">
+                <p>Get's a video's current opacity</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {number} 'video' 
@@ -141,10 +141,10 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       // mirror the first's video's opacity onto 
                       // the second video's
@@ -156,18 +156,18 @@
                       setVideoOpacity(1, 1 - opacity);
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title"
-								>setShapeOpacity(shapes, videos, opacity)</label
-							>
-							<div class="uk-accordion-content">
-								<p>Sets the opacity for one or more shapes</p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title"
+                >setShapeOpacity(shapes, videos, opacity)</label
+              >
+              <div class="uk-accordion-content">
+                <p>Sets the opacity for one or more shapes</p>
 
-								<div class="example">
-									<pre>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {number|array} 'shapes' 
@@ -179,10 +179,10 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       // fades in one shape at a time 
 
@@ -210,15 +210,15 @@
                       setShapeOpacity(shapeIndex, opacity);
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">getShapeOpacity(shape)</label>
-							<div class="uk-accordion-content">
-								<p>Get's a shape's current opacity</p>
-								<div>
-									<pre>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">getShapeOpacity(shape)</label>
+              <div class="uk-accordion-content">
+                <p>Get's a shape's current opacity</p>
+                <div>
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {number} 'shape' 
@@ -229,10 +229,10 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       // Make every shape relative to the first
 
@@ -258,19 +258,19 @@
                       }
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
+                </div>
+              </div>
+            </li>
 
-						<li>
-							<label class="uk-accordion-title">getEffectById(id)</label>
-							<div class="uk-accordion-content">
-								<p>
-									Get's an effect by it's human reabable id and returns an array
-									of the slot indexes where it's assigned
-								</p>
-								<div>
-									<pre>
+            <li>
+              <label class="uk-accordion-title">getEffectById(id)</label>
+              <div class="uk-accordion-content">
+                <p>
+                  Get's an effect by it's human reabable id and returns an array
+                  of the slot indexes where it's assigned
+                </p>
+                <div>
+                  <pre>
                     <code class="language-js">
                       /*
                       @param {enum} 'id' 
@@ -290,181 +290,213 @@
                       */
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
-	                  <code class="language-js">
-	                    // Continually move the 'shift' effect
-	                    // for the first video
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      // Continually move the 'shift' effect
+                      // for the first video
 
-	                    // Get effects indexes
-	                    let shift = getEffectById('shift');
+                      // Get effects indexes
+                      let shift = getEffectById('shift');
 
-	                    // if there are no shifts assigned, return
-	                    if (shift.length === 0){
-	                      return;
-	                    }
+                      // if there are no shifts assigned, return
+                      if (shift.length === 0){
+                        return;
+                      }
 
-	                    // Create a timer for x and y
-	                    let xShift = lfo(0, 1, 1 - effect_x * 2).saw();
-	                    let yShift = lfo(0, 1, 1 - effect_y * 2).saw();
+                      // Create a timer for x and y
+                      let xShift = lfo(0, 1, 1 - effect_x * 2).saw();
+                      let yShift = lfo(0, 1, 1 - effect_y * 2).saw();
 
-	                    // special case. If effect_x or
-	                    // effect_y are zero, just set
-	                    // the shift to whatever it is
-	                    // by default
-	                    let current = getEffectValues(shift[0], 0)
-	                    if (effect_x === 0) {
-	                      xShift = current[0];
-	                    }
+                      // special case. If effect_x or
+                      // effect_y are zero, just set
+                      // the shift to whatever it is
+                      // by default
+                      let current = getEffectValues(shift[0], 0)
+                      if (effect_x === 0) {
+                        xShift = current[0];
+                      }
 
-	                    if (effect_y === 0) {
-	                      yShift = current[1];
-	                    }
+                      if (effect_y === 0) {
+                        yShift = current[1];
+                      }
 
-	                    // Set the effect values for the
-	                    // first video
-	                    setEffectValues(shift, 0, xShift, yShift);
-	                  </code>
-	                </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">
-								setEffectValues(effects, videos, x, y)
-							</label>
-							<div class="uk-accordion-content">
-								<p></p>
+                      // Set the effect values for the
+                      // first video
+                      setEffectValues(shift, 0, xShift, yShift);
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">
+                setEffectValues(effects, videos, x, y)
+              </label>
+              <div class="uk-accordion-content">
+                <p>
+                  Sets the x and y values for one or more effect values for one
+                  or more videos. Setting a value to null will leave it at
+                  whatever the slider's value is
+                </p>
 
-								<div class="example">
-									<pre>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {number|array} 'effects' 
+                       - the index of the effects
+                      @param {number|array} 'videos'
+                       - the index of the videos
+                      @param {float} 'x'
+                       - the x (0-1) value
+                      @param {float} 'y'
+                       - the y (0-1) value
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      // Sets the zoom, and effect x prism
+                      // effect values to the opacity value
+
+                      // Loop over all the videos
+                      for (let i=0; i<6; i++) {
+                        // Get the video opacity
+                        let opacity = getVideoOpacity(i);
+
+                        // Get the zoom and prism indexes
+                        let zoom = getEffectById("zoom");
+                        let prism = getEffectById("prism");
+                        
+                        // Set the zoom effect (x and y)
+                        setEffectValues(zoom, i, opacity, opacity);
+
+                        // Set the prism x value. Using null
+                        // for y value will just default it to
+                        // the slider's value
+                        setEffectValues(prism, i, opacity/2, null);
+                      }
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">
+                getEffectValues(effect, video)
+              </label>
+              <div class="uk-accordion-content">
+                <p></p>
+
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">
-								getEffectValues(effect, video)
-							</label>
-							<div class="uk-accordion-content">
-								<p></p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">
+                setInputPoints(shapes, fn)
+              </label>
+              <div class="uk-accordion-content">
+                <p></p>
 
-								<div class="example">
-									<pre>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">
-								setInputPoints(shapes, fn)
-							</label>
-							<div class="uk-accordion-content">
-								<p></p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">
+                setOutputPoints(shapes, fn)
+              </label>
+              <div class="uk-accordion-content">
+                <p></p>
 
-								<div class="example">
-									<pre>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
                     <code class="language-js">
                       
                     </code>
                   </pre>
-								</div>
-							</div>
-						</li>
-						<li>
-							<label class="uk-accordion-title">
-								setOutputPoints(shapes, fn)
-							</label>
-							<div class="uk-accordion-content">
-								<p></p>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
 
-								<div class="example">
-									<pre>
-                    <code class="language-js">
-                      
-                    </code>
-                  </pre>
-								</div>
-								<p>Example:</p>
-								<div class="example">
-									<pre>
-                    <code class="language-js">
-                      
-                    </code>
-                  </pre>
-								</div>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</li>
+      <li id="lfos">
+        <a class="uk-accordion-title">LFOs:</a>
+        <div class="uk-accordion-content">
+          <p>
+            LFO (Low Frequency Ossilators) are a way of transitioning properties
+            over time. For instance, smoothly fading a video in and out using a
+            sine function, or creating a rapid on/off strobe using a square
+            function.
+          </p>
 
-			<li id="lfos">
-				<a class="uk-accordion-title">LFOs:</a>
-				<div class="uk-accordion-content">
-					<p>
-						LFO (Low Frequency Ossilators) are a way of transitioning properties
-						over time. For instance, smoothly fading a video in and out using a
-						sine function, or creating a rapid on/off strobe using a square
-						function.
-					</p>
+          <p>Under Construction</p>
+        </div>
+      </li>
 
-					<p>Under Construction</p>
-				</div>
-			</li>
+      <li id="state-structure">
+        <a class="uk-accordion-title">State Object:</a>
+        <div class="uk-accordion-content">
+          <p>Below is the structure of the state object</p>
 
-			<li id="state-structure">
-				<a class="uk-accordion-title">State Object:</a>
-				<div class="uk-accordion-content">
-					<p>Below is the structure of the state object</p>
-
-					<p>Under Construction</p>
-				</div>
-			</li>
-		</ul>
-	</div>
+          <p>Under Construction</p>
+        </div>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
-	class ApiDocs extends Component {
-		static get observedProperties() {
-			return [];
-		}
+  class ApiDocs extends Component {
+    static get observedProperties() {
+      return [];
+    }
 
-		constructor() {
-			super();
-		}
-	}
+    constructor() {
+      super();
+    }
+  }
 </script>
