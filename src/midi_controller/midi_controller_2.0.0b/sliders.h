@@ -94,7 +94,7 @@ void sliderHandler(int idx) {
         digitalWrite(sliderPins[idx][2], HIGH);  
       }
     
-      if (velocity == sliderValues[idx]) {
+      if (abs(velocity - sliderValues[idx]) <= 1) {
         sliderStates[idx] = 0;
         sliderActive[idx] = 0;
 
