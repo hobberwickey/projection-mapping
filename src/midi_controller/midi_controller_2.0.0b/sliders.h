@@ -30,8 +30,13 @@ int sliderInputNotes[2] = {
   42, 43
 };
 
-int sliderMin = 0;
-int sliderMax = 1024;
+int sliderMin[2] = {
+  0, 0
+};
+
+int sliderMax[2] = {
+  1024, 1024
+};
 
 unsigned long sliderTimer;
 
@@ -69,7 +74,7 @@ unsigned long sliderTimer;
 
 void sliderHandler(int idx) {
   int sensorValue = analogRead(sliderPins[idx][0]);
-  int velocity = constrain(map(sensorValue, sliderMin, sliderMax, 0, 127), 0, 127);
+  int velocity = constrain(map(sensorValue, sliderMin[idx], sliderMax[idx], 0, 127), 0, 127);
 
   if (sliderStates[idx] == 0) {
     if (abs(velocity - sliderValues[idx]) > 1) {
@@ -182,7 +187,7 @@ void calibrateSliders() {
 
       int sensorValue = analogRead(sliderPins[i][0]);
       // sliderMax = 0;
-      sliderMax = min(sliderMax, sensorValue);
+      sliderMax[i] = min(sliderMax[i], sensorValue);
     }
   } else {
     for (int i=0; i<2; i++) {
@@ -191,7 +196,7 @@ void calibrateSliders() {
 
       int sensorValue = analogRead(sliderPins[i][0]);
       // sliderMin = 1024;
-      sliderMin = max(sliderMin, sensorValue);
+      sliderMin[i] = max(sliderMin[i], sensorValue);
     }
   }
 }
@@ -200,10 +205,10 @@ void resetSliders() {
   for (int i=0; i<2; i++) {
     digitalWrite(sliderPins[i][1], LOW);
     digitalWrite(sliderPins[i][2], LOW); 
+    
+    sliderMin[i] = sliderMin[i] - 10;
+    sliderMax[i] = sliderMax[i] + 10;
   }
-
-  sliderMin = sliderMin - 5;
-  sliderMax = sliderMax + 5;
 }
 
 // 1 - VCC
