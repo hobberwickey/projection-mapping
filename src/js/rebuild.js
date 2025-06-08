@@ -28,11 +28,11 @@ const defaultQuad = [
 
 class App extends Context {
   constructor(config) {
-    try {
-      JSON.parse(localStorage.getItem("scripts")) || [];
-    } catch (e) {
-      console.log("Error parsing scripts");
-    }
+    // try {
+    //   JSON.parse(localStorage.getItem("scripts")) || [];
+    // } catch (e) {
+    //   console.log("Error parsing scripts");
+    // }
     super({
       effects: Effects,
       scripts: JSON.parse(localStorage.getItem("scripts")) || [],
@@ -575,18 +575,6 @@ class App extends Context {
     script.label = label;
     script.code = code;
 
-    // this.state.scripts
-    //   .reduce((a, c, i) => {
-    //     if (c !== null) {
-    //       return a.concat(c.id === id ? i : []);
-    //     } else {
-    //       return a;
-    //     }
-    //   }, [])
-    //   .map((idx) => {
-    //     this.state.script[idx] = script;
-    //   });
-
     this.scripts = [...this.scripts];
     localStorage.setItem("scripts", JSON.stringify(this.scripts));
 
@@ -598,6 +586,84 @@ class App extends Context {
     );
 
     this.saveState();
+  }
+
+  removeScript(id) {
+    for (var i = 0; i < this.state.scripts.length; i++) {
+      if (this.state.scripts[i] === id) {
+        this.setScript(i, null);
+      }
+    }
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "remove_script",
+        script_id: id,
+      }),
+    );
+
+    this.scripts = this.scripts.filter((s) => s.id !== id);
+    localStorage.setItem("scripts", JSON.stringify(this.scripts));
+  }
+
+  downloadScripts() {
+    let { scripts } = this;
+
+    scripts.map((s) => {
+      if (!s.id) {
+        s.id = this.gen_id();
+      }
+    });
+
+    let dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(scripts, null, 2));
+
+    let a = document.createElement("a");
+    a.setAttribute("href", dataStr);
+    a.setAttribute("class", "hidden");
+    a.setAttribute("download", "sensory_control_scripts.json");
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  uploadScripts(e) {
+    let { scripts } = this;
+
+    if (e.target.files.length > 0) {
+      let file = e.target.files[0];
+      let reader = new FileReader();
+      let self = this;
+
+      reader.onload = function () {
+        let loaded = JSON.parse(reader.result);
+
+        (loaded || []).map((script) => {
+          let existingIdx = scripts.findIndex((p) => p.id === script.id);
+
+          if (existingIdx === -1) {
+            scripts.push(script);
+
+            self.screen.postMessage(
+              JSON.stringify({
+                action: "update_script",
+                script_id: script.id,
+              }),
+            );
+          } else {
+            // TODO: Implement
+            console.log("Script already exists, confirm overwrite");
+          }
+        });
+
+        localStorage.setItem("scripts", JSON.stringify(scripts));
+        self.scripts = [...scripts];
+      };
+
+      reader.readAsText(file);
+    }
   }
 
   addShape(type) {

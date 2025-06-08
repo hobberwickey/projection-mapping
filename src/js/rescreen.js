@@ -676,8 +676,6 @@ class Output {
     let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
     let script = scripts.find((s) => s.id === scriptId);
 
-    console.log(scriptId, scripts);
-
     this.scripts[scriptId] = new Function(
       "state",
       "effect_x",
@@ -685,6 +683,10 @@ class Output {
       "previous_value",
       ScriptTemplate(script.code),
     );
+  }
+
+  removeScript(scriptId) {
+    delete this.scripts[scriptId];
   }
 }
 
@@ -835,9 +837,13 @@ class App {
             this.output.setScript.call(this.output, scriptIdx, scriptId);
             this.setState(state);
           } else if (data.action === "update_script") {
-            let { script_id, state } = data;
+            let { script_id } = data;
 
             this.output.updateScript.call(this.output, script_id);
+          } else if (data.action === "remove_script") {
+            let { script_id } = data;
+
+            this.output.removeScript.call(this.output, script_id);
           }
         } else {
           let { loadVideo } = this.output;

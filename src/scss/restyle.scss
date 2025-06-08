@@ -1,5 +1,6 @@
 @use "components/sc-header.scss";
 @use "components/script-editor.scss";
+@use "components/object-lists.scss";
 
 :root {
   --btn-color: #212c5b;
@@ -247,7 +248,7 @@ nav {
         box-sizing: border-box;
         margin-bottom: 0;
         transition: opacity 200ms ease;
-        z-index: 1;
+        z-index: 2;
         opacity: 0;
         pointer-events: none;
 
@@ -585,6 +586,8 @@ video-slot {
     width: 100%;
     aspect-ratio: 2/1;
     background-color: black;
+    position: relative;
+    z-index: auto;
   }
 
   input[type="range"]::before {

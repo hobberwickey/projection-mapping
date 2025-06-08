@@ -69,7 +69,12 @@
                         <label class="btn" for="upload-projects">
                           Upload Projects
                         </label>
-                        <input type="file" id="upload-projects" />
+                        <input
+                          type="file"
+                          id="upload-projects"
+                          accept=".json"
+                          @change="upload($event)"
+                        />
                       </div>
                     </div>
                   </li>
@@ -146,6 +151,11 @@
 
     download() {
       this.storage.downloadProjects();
+    }
+
+    upload(e) {
+      console.log(e);
+      this.storage.uploadProjects(e);
     }
 
     updateName(e) {

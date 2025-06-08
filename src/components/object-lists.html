@@ -69,6 +69,23 @@
 				</li>
 			</template>
 		</ul>
+
+		<div id="script-controls">
+			<a
+				href="javascript:void(0)"
+				id="download-scripts"
+				class="btn"
+				@click="download()"
+			>
+				Download Scripts
+			</a>
+			<div class="upload-scripts">
+				<div class="upload-wrapper">
+					<label class="btn" for="upload-scripts"> Upload Scripts </label>
+					<input type="file" id="upload-scripts" @change="upload($event)" />
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -124,10 +141,16 @@
 			this.app.addScript();
 		}
 
-		updateScript(idx, script) {
-			
+		download() {
+			this.app.downloadScripts();
 		}
 
-		removeScript(idx) {}
+		upload(e) {
+			this.app.uploadScripts(e);
+		}
+
+		removeScript(script) {
+			this.app.removeScript(script.id);
+		}
 	}
 </script>

@@ -3,6 +3,7 @@ export class Storage extends Context {
     super({
       saved: false,
       projects: JSON.parse(localStorage.getItem("projects")) || [],
+      scripts: JSON.parse(localStorage.getItem("scripts")) || [],
     });
 
     this.app = app;
@@ -33,8 +34,6 @@ export class Storage extends Context {
   }
 
   load(project) {
-    console.log(project);
-
     let { app } = this;
     let { id, name, state } = project;
 
@@ -112,12 +111,61 @@ export class Storage extends Context {
         });
 
         localStorage.setItem("projects", JSON.stringify(projects));
+        self.projects = [...projects];
       };
 
       reader.readAsText(file);
     }
+  }
 
-    this.projects = [...projects];
+  downloadScripts() {
+    let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
+    scripts.map((script) => {
+      if (!script.id) {
+        script.id = (Math.random() * 1000000) | 0;
+      }
+    });
+    let dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(scripts, null, 2));
+
+    let a = document.createElement("a");
+    a.setAttribute("href", dataStr);
+    a.setAttribute("class", "hidden");
+    a.setAttribute("download", "sensory_control_scripts.json");
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  uploadScripts() {
+    let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
+
+    if (e.target.files.length > 0) {
+      let file = e.target.files[0];
+      let reader = new FileReader();
+      let self = this;
+
+      reader.onload = function () {
+        let loaded = JSON.parse(reader.result);
+
+        (loaded || []).map((script) => {
+          let existingIdx = scripts.findIndex((s) => s.id === script.id);
+
+          if (existingIdx === -1) {
+            scripts.push(script);
+          } else {
+            // TODO: Implement
+            console.log("Project already exists, confirm overwrite");
+          }
+        });
+
+        localStorage.setItem("scripts", JSON.stringify(scripts));
+      };
+
+      reader.readAsText(file);
+    }
   }
 
   saveState() {
