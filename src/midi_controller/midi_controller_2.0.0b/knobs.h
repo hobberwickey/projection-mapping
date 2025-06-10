@@ -11,12 +11,6 @@ int knobNotes[6] = {
   10, 11, 12, 13, 14, 15
 };
 
-void knobInit() {
-  for (int i=0; i<6; i++) {
-    pinMode(knobPins[i], INPUT);
-  }
-}
-
 void knobHandler(int idx) {
   int sensorValue = analogRead(knobPins[idx]);
 
@@ -29,4 +23,15 @@ void knobHandler(int idx) {
     // MidiUSB.flush();
     knobValues[idx] = velocity;
   }
+
+  timer.in(1, knobHandler, idx);
+}
+
+void knobInit() {
+  for (int i=0; i<6; i++) {
+    pinMode(knobPins[i], INPUT);
+    timer.in(1, knobHandler, i);
+  }
+
+  
 }

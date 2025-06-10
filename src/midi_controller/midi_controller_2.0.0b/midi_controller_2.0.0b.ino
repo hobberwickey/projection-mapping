@@ -1,5 +1,8 @@
 #include <MIDIUSB.h>
 
+#include <arduino-timer.h>
+auto timer = timer_create_default();
+
 #include "midi-out.h"
 #include "leds.h"
 #include "knobs.h"
@@ -40,14 +43,6 @@
 
 int calibrated = 0;
 
-void setup() {
-  motorizedSliderInit();
-  ledsInit();
-  buttonInit();
-  knobInit();
-  rotaryInit();
-}
-
 int handleMidiIn(int header, int note, int velocity) {
   for (int i=0; i<2; i++) {
     if (note == sliderInputNotes[i]) {
@@ -85,44 +80,8 @@ int handleMidiIn(int header, int note, int velocity) {
   // }
 }
 
-
-
-void loop() {
-  if (calibrated == 0) {
-    calibrateLEDS();
-    calibrateSliders();
-
-    if (millis() > 5000) {
-      calibrated = 1;
-      resetLEDS();
-      resetSliders();
-
-      delay(1);
-      return;
-    }
-
-    delay(1);
-    return;
-  }
-
+void getMidiIn() {
   midiEventPacket_t rx;
-
-  for (int i=0; i<2; i++) {
-    sliderHandler(i);
-  }
-
-  for (int i=0; i<6; i++) {
-    knobHandler(i);
-  }
-
-  for (int i=0; i<6; i++) {
-    buttonHandler(i);
-  }
-
-  for (int i=0; i<2; i++) {
-    rotaryHandler(i);
-  }
-
   int shouldSetLEDS = 0;
   do {
     rx = MidiUSB.read();
@@ -135,6 +94,72 @@ void loop() {
     setLEDS();
   }
 
-  MidiUSB.flush();
-  delay(1);
+  timer.in(1, getMidiIn);
+}
+
+void setup() {
+  motorizedSliderInit();
+  ledsInit();
+  buttonInit();
+  knobInit();
+  rotaryInit();
+
+  timer.in(1, getMidiIn);
+
+  calibrateLEDS();
+  calibrateSliders();
+  
+  timer.in(5000, resetLEDS);
+}
+
+void loop() {
+  // if (calibrated == 0) {
+  //   calibrateLEDS();
+  //   calibrateSliders();
+
+  //   if (millis() > 5000) {
+  //     calibrated = 1;
+  //     resetLEDS();
+  //     resetSliders();
+
+  //     delay(1);
+  //     return;
+  //   }
+
+  //   delay(1);
+  //   return;
+  // }
+
+  // for (int i=0; i<2; i++) {
+  //   sliderHandler(i);
+  // }
+
+  // for (int i=0; i<6; i++) {
+  //   knobHandler(i);
+  // }
+
+  // for (int i=0; i<6; i++) {
+  //   buttonHandler(i);
+  // }
+
+  // for (int i=0; i<2; i++) {
+  //   rotaryHandler(i);
+  // }
+
+  // midiEventPacket_t rx;
+  // int shouldSetLEDS = 0;
+  // do {
+  //   rx = MidiUSB.read();
+  //   if (rx.header != 0) {
+  //     shouldSetLEDS = max(handleMidiIn(rx.byte1, rx.byte2, rx.byte3), shouldSetLEDS);
+  //   }
+  // } while (rx.header != 0);
+
+  // if (shouldSetLEDS == 1) {
+  //   setLEDS();
+  // }
+
+  // MidiUSB.flush();
+  // delay(1);
+  timer.tick();
 }

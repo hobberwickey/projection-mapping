@@ -72,45 +72,49 @@ unsigned long sliderTimer;
 //   MidiUSB.sendMIDI(event);
 // }
 
-void sliderHandler(int idx) {
-  int sensorValue = analogRead(sliderPins[idx][0]);
-  int velocity = constrain(map(sensorValue, sliderMin[idx], sliderMax[idx], 0, 127), 0, 127);
+void sliderHandler() {
+  for (int idx = 0; idx < 2; idx++) {
+    int sensorValue = analogRead(sliderPins[idx][0]);
+    int velocity = constrain(map(sensorValue, sliderMin[idx], sliderMax[idx], 0, 127), 0, 127);
 
-  if (sliderStates[idx] == 0) {
-    if (abs(velocity - sliderValues[idx]) > 1) {
-      controlChange(0, sliderNotes[idx], velocity);
-      sliderValues[idx] = velocity;
-    }
-  } else {
-    if (sliderActive[idx] == 1) {
-      digitalWrite(sliderPins[idx][1], LOW);
-      digitalWrite(sliderPins[idx][2], LOW);
-      sliderActive[idx] = 0;
-    } else {
-      sliderActive[idx] = 1;
-      
-      if (velocity < sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], HIGH);
-        digitalWrite(sliderPins[idx][2], LOW);
-      }
-
-      if (velocity > sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], LOW);
-        digitalWrite(sliderPins[idx][2], HIGH);  
-      }
-    
-      if (abs(velocity - sliderValues[idx]) <= 1) {
-        sliderStates[idx] = 0;
-        sliderActive[idx] = 0;
-
-        digitalWrite(sliderPins[idx][1], LOW);
-        digitalWrite(sliderPins[idx][2], LOW);
-        sliderValues[idx] = velocity;
-
+    if (sliderStates[idx] == 0) {
+      if (abs(velocity - sliderValues[idx]) > 1) {
         controlChange(0, sliderNotes[idx], velocity);
+        sliderValues[idx] = velocity;
+      }
+    } else {
+      if (sliderActive[idx] == 1) {
+        digitalWrite(sliderPins[idx][1], LOW);
+        digitalWrite(sliderPins[idx][2], LOW);
+        sliderActive[idx] = 0;
+      } else {
+        sliderActive[idx] = 1;
+        
+        if (velocity < sliderValues[idx]) {
+          digitalWrite(sliderPins[idx][1], HIGH);
+          digitalWrite(sliderPins[idx][2], LOW);
+        }
+
+        if (velocity > sliderValues[idx]) {
+          digitalWrite(sliderPins[idx][1], LOW);
+          digitalWrite(sliderPins[idx][2], HIGH);  
+        }
+      
+        if (abs(velocity - sliderValues[idx]) <= 1) {
+          sliderStates[idx] = 0;
+          sliderActive[idx] = 0;
+
+          digitalWrite(sliderPins[idx][1], LOW);
+          digitalWrite(sliderPins[idx][2], LOW);
+          sliderValues[idx] = velocity;
+
+          controlChange(0, sliderNotes[idx], velocity);
+        }
       }
     }
   }
+
+  timer.in(1, sliderHandler);
 }
 
 // void _sliderHandler(int idx) {
@@ -179,6 +183,18 @@ void motorizedSliderInit() {
   }
 }
 
+void resetSliders() {
+  for (int i=0; i<2; i++) {
+    digitalWrite(sliderPins[i][1], LOW);
+    digitalWrite(sliderPins[i][2], LOW); 
+    
+    sliderMin[i] = sliderMin[i] - 10;
+    sliderMax[i] = sliderMax[i] + 10;
+
+    timer.in(1, sliderHandler);
+  }
+}
+
 void calibrateSliders() {
   if (millis() < 2500) {
     for (int i=0; i<2; i++) {
@@ -199,15 +215,13 @@ void calibrateSliders() {
       sliderMin[i] = max(sliderMin[i], sensorValue);
     }
   }
-}
 
-void resetSliders() {
-  for (int i=0; i<2; i++) {
-    digitalWrite(sliderPins[i][1], LOW);
-    digitalWrite(sliderPins[i][2], LOW); 
-    
-    sliderMin[i] = sliderMin[i] - 10;
-    sliderMax[i] = sliderMax[i] + 10;
+  if (millis() < 5000) {
+    timer.in(1, calibrateSliders);
+  } 
+  
+  if (millis() >= 5000) {
+    resetSliders();
   }
 }
 
