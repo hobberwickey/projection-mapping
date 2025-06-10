@@ -65,6 +65,18 @@ export class Sliders extends Context {
 			}
 		}
 
+		if (state.selected.script !== null) {
+			let values = state.values.scripts[state.selected.script];
+
+			for (let i = 0; i < 2; i++) {
+				let slider1 = sliders[i][0];
+				output.push([144, slider1, (values[0] * 127) | 0]);
+
+				let slider2 = sliders[i][1];
+				output.push([144, slider2, (values[1] * 127) | 0]);
+			}
+		}
+
 		if (this.output_paused === null) {
 			for (let i = 0; i < output.length; i++) {
 				this.output.send(output[i]);

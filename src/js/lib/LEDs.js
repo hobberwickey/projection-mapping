@@ -45,7 +45,17 @@ export class LEDs extends Context {
 
 		if (state.selected.effect !== null) {
 			let values = state.values.effects[state.selected.video ?? 0];
+			for (var i = 0; i < values.length; i++) {
+				let led1 = leds.values[i * 2];
+				output.push([144, led1, (values[i][0] * 127) | 0]);
 
+				let led2 = leds.values[i * 2 + 1];
+				output.push([144, led2, (values[i][1] * 127) | 0]);
+			}
+		}
+
+		if (state.selected.script !== null) {
+			let values = state.values.scripts;
 			for (var i = 0; i < values.length; i++) {
 				let led1 = leds.values[i * 2];
 				output.push([144, led1, (values[i][0] * 127) | 0]);
