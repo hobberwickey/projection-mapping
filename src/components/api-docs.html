@@ -90,6 +90,54 @@
               </div>
             </li>
             <li>
+              <label class="uk-accordion-title">getSelectedVideo()</label>
+              <div class="uk-accordion-content">
+                <p>Returns the currently selected video</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @returns {number} 
+                       - The index of the selected video
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      // Stub
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+            <li>
+              <label class="uk-accordion-title">getSelectedEffect()</label>
+              <div class="uk-accordion-content">
+                <p>Returns the currently selected effect</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @returns {number} 
+                       - The index of the selected effect
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      // Stub
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+            <li>
               <label class="uk-accordion-title"
                 >setVideoOpacity(videos, opacity)</label
               >
@@ -392,12 +440,20 @@
                 getEffectValues(effect, video)
               </label>
               <div class="uk-accordion-content">
-                <p></p>
+                <p>Gets the current values (x,y) for an effect/video</p>
 
                 <div class="example">
                   <pre>
                     <code class="language-js">
+                      /*
+                      @param {number} 'effect' 
+                       - the index of the an effect
+                      @param {number} 'video'
+                       - the index of a video
                       
+                      @returns {array[float]} 
+                       - and array of the effect's current [x, y] values
+                      */
                     </code>
                   </pre>
                 </div>
@@ -416,12 +472,20 @@
                 setInputPoints(shapes, fn)
               </label>
               <div class="uk-accordion-content">
-                <p></p>
+                <p>
+                  A function to loop through in a clockwise manner the input
+                  points of the shapes in order to manipulate them
+                </p>
 
                 <div class="example">
                   <pre>
                     <code class="language-js">
-                      
+                      /*
+                      @param {integer|array} 'shapes' 
+                       - the indexes of the shapes you want to manipulate
+                      @param {function} 'video'
+                       - a function that will be passed an array of vertices
+                      */
                     </code>
                   </pre>
                 </div>
@@ -429,6 +493,12 @@
                 <div class="example">
                   <pre>
                     <code class="language-js">
+                      // A function that rotates the first shape's 
+                      // input points around it's center
+                      
+                      let xRot = lfo(0, 1, effect_x * 10).sin();
+                      let yRot = lfo(0, 1, effect_y * 10).cos();
+
                       
                     </code>
                   </pre>
@@ -440,12 +510,20 @@
                 setOutputPoints(shapes, fn)
               </label>
               <div class="uk-accordion-content">
-                <p></p>
+                <p>
+                  A function to loop through in a clockwise manner the output
+                  points of the shapes in order to manipulate them
+                </p>
 
                 <div class="example">
                   <pre>
                     <code class="language-js">
-                      
+                      /*
+                      @param {integer|array} 'shapes' 
+                       - the indexes of the shapes you want to manipulate
+                      @param {function} 'video'
+                       - a function that will be passed an array of vertices
+                      */
                     </code>
                   </pre>
                 </div>
@@ -453,7 +531,78 @@
                 <div class="example">
                   <pre>
                     <code class="language-js">
-                      
+                      // A function that rotates the first shape's 
+                      // output points around it's center
+
+                      // function to get the approximate center 
+                      // of a shape, by averaging it's points
+                      let getCenter = function(idx) {
+                        let shape = state.shapes[idx];
+                        let xSum = 0;
+                        let xLen = 0;
+
+                        let ySum = 0;
+                        let yLen = 0; 
+                        for (let i=0; i&lt;shape.tris.length; i++) {
+                          let tri = shape.tris[i];
+
+                          for (let j=0; j&lt;tri.output.length; j++) {
+                            xSum += tri.output[j][0];
+                            ySum += tri.output[j][1];
+
+                            xLen++;
+                            yLen++;
+                          }
+                        }
+                            
+                        let avgX = xSum / xLen;
+                        let avgY = ySum / yLen;
+
+                        return [avgX, avgY]
+                      } 
+
+                      // Get a saw lfo
+                      let rotator = lfo(0, 1, effect_x * 10).saw();
+                      // Get the rotation in radians                
+                      let rotation =  rotator * (Math.PI * 2);
+                      // Get the center point
+                      let center = getCenter(0);
+
+                      // Set up the function to rotate the
+                      // shape's points. The function passed
+                      // into setOutputPoints will be passed
+                      // all the vertices in the shape
+                      setOutputPoints(0, function(idx, points) {
+                        // Some math, getting the sin/cos of
+                        // the angle of rotation
+                        let c = Math.cos(rotation);
+                        let s = Math.sin(rotation);
+                        
+                        // Get the original point. Note that
+                        // for quads some vertices will have
+                        // more than one point since a quad is 
+                        // made up of two triangles, but here
+                        // we only need the first, since they'll
+                        // both be the same
+                        let oX = points[0][0];
+                        let oY = points[0][1];
+                        
+                        // Just separating out the center array
+                        let cX = center[0];
+                        let cY = center[1];
+                        
+                        // Math to get the new X/Y coordinates
+                        let x = (c * (oX - cX)) + (s * (oY - cY)) + cX;
+                        let y = (c * (oY - cY)) - (s * (oX - cX)) + cY;
+                        
+                        // Loop through all the points in this 
+                        // vertex and set them to the rotated 
+                        // coordinates
+                        for (var i=0; i&lt;points.length; i++) {
+                          points[i][0] = x;
+                          points[i][1] = y;
+                        } 
+                      });
                     </code>
                   </pre>
                 </div>

@@ -109,8 +109,19 @@ export const ScriptTemplate = function (script) {
 		}
 
 		const getEffectValues = function(effect, video) {
-			console.log("Effect", effect, "Video", video)
 			return state.values.effects[video][effect];
+		}
+
+		const getSelectedVideo = function() {
+			return state.selected.video;
+		}
+
+		const getSelectedEffect = function() {
+			return state.selected.effect;
+		}
+
+		const getSelectedScript = function() {
+			return state.selected.script;
 		}
 
 		const setInputPoints = function(shapes, fn) {
@@ -119,7 +130,11 @@ export const ScriptTemplate = function (script) {
 			}
 
 			for (let i=0; i<shapes.length; i++) {
-				let shape = state.shapes[i];
+				let shape = state.shapes[shapes[i]];
+
+				if (!shape) {
+					continue;
+				}
 
 				if (shape.type === "triangle") {
 					fn(0, [shape.tris[0].input[0]])
@@ -140,7 +155,11 @@ export const ScriptTemplate = function (script) {
 			}
 
 			for (let i=0; i<shapes.length; i++) {
-				let shape = state.shapes[i];
+				let shape = state.shapes[shapes[i]];
+
+				if (!shape) {
+					continue;
+				}
 
 				if (shape.type === "triangle") {
 					fn(0, [shape.tris[0].output[0]])
