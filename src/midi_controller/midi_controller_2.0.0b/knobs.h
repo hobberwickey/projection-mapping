@@ -3,8 +3,22 @@
 int knobPins[6] = {
   A2, A3, A4, A5, A6, A7,
 };
+
+int knobCounter[6] = {
+  0, 0, 0, 0, 0, 0
+};
+
 int knobValues[6] = {
   0, 0, 0, 0, 0, 0
+};
+
+int knobAverages[6][10] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 
 int knobNotes[6] = {
@@ -14,9 +28,21 @@ int knobNotes[6] = {
 void knobHandler(int idx) {
   int sensorValue = analogRead(knobPins[idx]);
 
-  int min = 0;
-  int max = 1023;
-  int velocity = map(sensorValue, min, max, 0, 127);
+  knobAverages[idx][knobCounter[idx]] = sensorValue;
+  int avgSensor = 0;
+  for (int cntr=0; cntr<10; cntr++) {
+    avgSensor += knobAverages[idx][cntr];
+  }
+  avgSensor = floor(avgSensor / 10);
+
+  knobCounter[idx] += 1;
+  if (knobCounter[idx] >= 10) {
+    knobCounter[idx] = 0;
+  }
+
+  int min = 10;
+  int max = 1014;
+  int velocity = floor(constrain(map(avgSensor, min, max, 0, 127), 0, 127));
 
   if (abs(knobValues[idx] - velocity) > 5) {
     controlChange(0, knobNotes[idx], velocity);

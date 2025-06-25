@@ -38,6 +38,15 @@ int sliderMax[2] = {
   1024, 1024
 };
 
+int sliderCounter[2] = {
+  0, 0
+};
+
+int sliderAverages[2][10] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
 unsigned long sliderTimer;
 
 // void setup() {
@@ -75,7 +84,20 @@ unsigned long sliderTimer;
 void sliderHandler() {
   for (int idx = 0; idx < 2; idx++) {
     int sensorValue = analogRead(sliderPins[idx][0]);
-    int velocity = constrain(map(sensorValue, sliderMin[idx], sliderMax[idx], 0, 127), 0, 127);
+    
+    sliderAverages[idx][sliderCounter[idx]] = sensorValue;
+    int avgSensor = 0;
+    for (int cntr=0; cntr<10; cntr++) {
+      avgSensor += sliderAverages[idx][cntr];
+    }
+    avgSensor = floor(avgSensor / 10);
+    
+    sliderCounter[idx] += 1;
+    if (sliderCounter[idx] >= 10) {
+      sliderCounter[idx] = 0;
+    }
+
+    int velocity = constrain(map(avgSensor, sliderMin[idx], sliderMax[idx], 0, 127), 0, 127);
 
     if (sliderStates[idx] == 0) {
       if (abs(velocity - sliderValues[idx]) > 1) {
