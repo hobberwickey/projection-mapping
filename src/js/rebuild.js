@@ -28,11 +28,6 @@ const defaultQuad = [
 
 class App extends Context {
   constructor(config) {
-    // try {
-    //   JSON.parse(localStorage.getItem("scripts")) || [];
-    // } catch (e) {
-    //   console.log("Error parsing scripts");
-    // }
     super({
       effects: Effects,
       scripts: JSON.parse(localStorage.getItem("scripts")) || [],
@@ -41,23 +36,16 @@ class App extends Context {
       name: "My Project",
     });
 
-    // this.context = context;
     this.config = config;
     this.state = this.defaultState();
 
-    // this.effects = Effects;
-    // this.scripts = [];
+    this.flags = {
+      lock_selected_video: false,
+    };
 
     this.id = this.gen_id();
     this.name = "My Project";
     this.screen = null;
-
-    // this.selectedVideos = [0];
-    // this.selectedGroup = 0;
-    // this.selectedEffect = 0;
-
-    // this.selectedShape = null;
-    // this.selectedVertex = null;
 
     this.midiAccess = null;
     this.midiInput = null;
@@ -65,8 +53,9 @@ class App extends Context {
 
     this.leds = null;
     this.sliders = null;
+    this.midiWorker = null;
+
     this.setupMidi();
-    // this.setValues();
 
     this.launch();
   }
@@ -200,19 +189,12 @@ class App extends Context {
         console.log(entry[1]);
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
-
-          /*
-          ///////////// TODOS ///////////////
-          - Set pause on updating values/midi while switching through effects/scripts
-          - Set midi flag for when sliders are moving, and don't update values while they are
-          ///////////////////////////////////
-          */
-
+          console.log(this.midiInput);
           entry[1].onmidimessage = (e) => {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            // console.log(note, velocity);
+            console.log(note, velocity);
 
             let { midi } = this.config;
 
@@ -291,161 +273,6 @@ class App extends Context {
         }
       }
 
-      //   if (entry[1].name === "Arduino Micro") {
-      //     console.log("MIDI DEVICE FOUND");
-
-      //     this.midiInput = entry[1];
-
-      //     entry[1].onmidimessage = (e) => {
-      //       let note = e.data[1];
-      //       let velocity = e.data[2];
-
-      //       console.log(note, velocity);
-
-      //       return;
-
-      //       let { shapes, groups, videos } = this.state;
-      //       let { selectedVideos, selectedGroup, selectedEffect } = this;
-
-      //       let group = groups[selectedGroup];
-      //       let ids =
-      //         selectedGroup === 0 ? shapes.map((_, idx) => idx) : group.shapes;
-
-      //       if (buttons.hasOwnProperty(note)) {
-      //         let idx = buttons[note];
-
-      //         let inputs = document.querySelectorAll("#videos .video");
-      //         let input = inputs[idx].querySelector("input[type='radio']");
-
-      //         input.checked = true;
-      //         input.dispatchEvent(new Event("change", { bubbles: true }));
-      //       } else if (knobs.hasOwnProperty(note)) {
-      //         if (note === 43) {
-      //           if (velocity === 0) {
-      //             // this.selectedEffect = Math.max(0, selectedEffect - 1);
-      //             if (selectedEffect === 0) {
-      //               this.selectedEffect = 5;
-      //             } else {
-      //               this.selectedEffect -= 1;
-      //             }
-      //           } else {
-      //             // this.selectedEffect = Math.min(5, selectedEffect + 1);
-      //             if (selectedEffect === 5) {
-      //               this.selectedEffect = 0;
-      //             } else {
-      //               this.selectedEffect += 1;
-      //             }
-      //           }
-
-      //           let prevEffect = document.querySelector(".select.selected");
-      //           if (!!prevEffect) {
-      //             prevEffect.classList.remove("selected");
-      //           }
-
-      //           let currentEffect = document
-      //             .querySelectorAll(".select")
-      //             [this.selectedEffect].classList.add("selected");
-      //         } else if (note === 44) {
-      //           if (velocity === 0) {
-      //             this.selectedGroup = Math.max(0, selectedGroup - 1);
-      //             // if (selectedGroup === 0) {
-      //             //   this.selectedGroup = 5;
-      //             // } else {
-      //             //   this.selectedGroup -= 1;
-      //             // }
-      //           } else {
-      //             this.selectedGroup = Math.min(5, selectedGroup + 1);
-      //             // if (selectedGroup === 5) {
-      //             //   this.selectedGroup = 0;
-      //             // } else {
-      //             //   this.selectedGroup += 1;
-      //             // }
-      //           }
-
-      //           let prevGroup = document.querySelector(".group .selected");
-      //           if (!!prevGroup) {
-      //             prevGroup.classList.remove("selected");
-      //           }
-
-      //           let currentGroup = document
-      //             .querySelectorAll(".group .group-btn")
-      //             [this.selectedGroup].classList.add("selected");
-      //         }
-
-      //         this.screen.postMessage(
-      //           JSON.stringify({
-      //             action: "update_state",
-      //             state: this.state,
-      //           }),
-      //         );
-
-      //         this.saveState();
-      //         this.setLEDS();
-      //       } else if (sliders.input.hasOwnProperty(note)) {
-      //         let idx = sliders.input[note];
-      //         let inputs = document.querySelectorAll(
-      //           ".inputs input[type='range']",
-      //         );
-
-      //         console.log("velocity", note, velocity);
-      //         let value = velocity / 127;
-      //         if (idx === 0) {
-      //           for (var i = 0; i < selectedVideos.length; i++) {
-      //             let videoIdx = selectedVideos[i];
-      //             let opacity = group.opacity[videoIdx];
-      //             let diff = value - opacity;
-
-      //             for (var j = 0; j < ids.length; j++) {
-      //               let shape = shapes[ids[j]];
-      //               let oldValue = shape.opacity[videoIdx];
-      //               let shapeDiff = +value - oldValue;
-      //               let newValue = oldValue + diff + (shapeDiff - diff) * 0.25;
-
-      //               shape.opacity[videoIdx] = newValue;
-      //             }
-
-      //             group.opacity[videoIdx] = opacity + diff;
-
-      //             let input = inputs[idx];
-      //             input.value = value;
-      //           }
-
-      //           this.setLEDS();
-      //         } else {
-      //           let diff = 0;
-      //           for (var i = 0; i < selectedVideos.length; i++) {
-      //             let video = videos[selectedVideos[i]];
-      //             let effectIdx = idx === 1 ? 0 : 1;
-      //             let oldValue = video.values[selectedEffect][effectIdx];
-      //             if (i === 0) {
-      //               diff = +value - oldValue;
-      //             }
-
-      //             let newValue = Math.min(Math.max(oldValue + diff, 0), 1);
-      //             video.values[selectedEffect][effectIdx] = newValue;
-
-      //             let input = inputs[idx];
-      //             input.value = value;
-      //           }
-      //         }
-
-      //         this.screen.postMessage(
-      //           JSON.stringify({
-      //             action: "update_state",
-      //             state: this.state,
-      //           }),
-      //         );
-
-      //         this.saveState();
-
-      //         // let input = inputs[idx];
-      //         // input.value = velocity / 127;
-      //         // input.dispatchEvent(new Event("input", { bubbles: true }));
-      //       }
-      //     };
-      //   }
-      // }
-
       this.leds = new LEDs(
         this.state,
         this.config,
@@ -459,6 +286,19 @@ class App extends Context {
         this.midiOutput,
         this.midiInput,
       );
+
+      // this.midiWorker = new Worker(new URL("./midi.js", import.meta.url));
+      // this.midiWorker.onmessage = (e) => {
+      //   console.log(e.data);
+      // };
+      // this.midiWorker.postMessage({
+      //   action: "config",
+      //   message: {
+      //     configuration: this.config,
+      //     input: this.midiInput,
+      //     output: this.midiOutput,
+      //   },
+      // });
     };
     const onMIDIFailure = (msg) => {
       console.error(`Failed to get MIDI access - ${msg}`);
@@ -489,7 +329,7 @@ class App extends Context {
           // TODO get selected shape and call el.controller.setSelected
         }
       } catch (err) {
-        console.log(err);
+        // console.log(err);
       }
     });
   }
@@ -788,13 +628,16 @@ class App extends Context {
 
     videos[idx].opacity = opacity + diff;
 
-    // if (!!this.midiOutput) {
-    //   this.midiOutput.send([
-    //     144,
-    //     notes[0],
-    //     (group.opacity[videoIdx] * 127) | 0,
-    //   ]);
-    // }
+    if (!this.flags.lock_selected_video) {
+      this.state.selected.video = idx;
+    }
+
+    clearTimeout(this.flags.lock_selected_video);
+    this.flags.lock_selected_video = setTimeout(() => {
+      this.flags.lock_selected_video = clearTimeout(
+        this.flags.lock_selected_video,
+      );
+    }, 300);
 
     this.screen.postMessage(
       JSON.stringify({
