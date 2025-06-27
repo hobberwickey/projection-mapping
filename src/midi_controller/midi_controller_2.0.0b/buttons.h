@@ -1,5 +1,4 @@
 #include <MIDIUSB.h>
-#include <arduino-timer.h>
 
 int buttonPins[6] = {
   2, 3, 4, 5, 6, 7
@@ -27,12 +26,12 @@ void buttonHandler(int idx) {
     // MidiUSB.flush();
   }
 
-  timer.in(1, buttonHandler, idx);
+  timer.in(1000, buttonHandler, idx);
 }
 
 void buttonInit() {
   for (int i=0; i<6; i++) {
     pinMode(buttonPins[i], INPUT_PULLUP);
-    timer.in(1, buttonHandler, i);
+    timer.in(1000, buttonHandler, i);
   }
 }

@@ -22,8 +22,6 @@ const unsigned char ttable[8][4] = {
     {R_START,    R_START,     R_START,     R_START}                 // ILLEGAL
 };
     
-unsigned long rotaryTimer;
-
 int rotaryPins[2][2] = {
   {38, 39},
   {40, 41},

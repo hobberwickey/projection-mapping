@@ -1,7 +1,7 @@
 #include <MIDIUSB.h>
 
 #include <arduino-timer.h>
-auto timer = timer_create_default();
+Timer<20, micros> timer;
 
 #include "midi-out.h"
 #include "leds.h"
@@ -94,7 +94,7 @@ void getMidiIn() {
     setLEDS();
   }
 
-  timer.in(1, getMidiIn);
+  timer.in(1000, getMidiIn);
 }
 
 void setup() {
@@ -104,12 +104,12 @@ void setup() {
   knobInit();
   rotaryInit();
 
-  timer.in(1, getMidiIn);
+  timer.in(1000, getMidiIn);
 
   calibrateLEDS();
   calibrateSliders();
   
-  timer.in(5000, resetLEDS);
+  timer.in(5000000, resetLEDS);
 }
 
 void loop() {
