@@ -139,36 +139,42 @@
             <video-slot
               :idx="0"
               :app="app"
+              :opacity="getOpacity(0)"
               :class='selectedVideo === 0 ? "selected" : ""'
               @click="selectItem('video', 0)"
             ></video-slot>
             <video-slot
               :idx="1"
               :app="app"
+              :opacity="getOpacity(1)"
               :class='selectedVideo === 1 ? "selected" : ""'
               @click="selectItem('video', 1)"
             ></video-slot>
             <video-slot
               :idx="2"
               :app="app"
+              :opacity="getOpacity(2)"
               :class='selectedVideo === 2 ? "selected" : ""'
               @click="selectItem('video', 2)"
             ></video-slot>
             <video-slot
               :idx="3"
               :app="app"
+              :opacity="getOpacity(3)"
               :class='selectedVideo === 3 ? "selected" : ""'
               @click="selectItem('video', 3)"
             ></video-slot>
             <video-slot
               :idx="4"
               :app="app"
+              :opacity="getOpacity(4)"
               :class='selectedVideo === 4 ? "selected" : ""'
               @click="selectItem('video', 4)"
             ></video-slot>
             <video-slot
               :idx="5"
               :app="app"
+              :opacity="getOpacity(5)"
               :class='selectedVideo === 5 ? "selected" : ""'
               @click="selectItem('video', 5)"
             ></video-slot>
@@ -253,8 +259,6 @@
       this.app.setEffect(idx, effect);
     }
 
-    renameVideo(idx, value) {}
-
     updateScript(idx, script_id) {
       this.app.setScript(idx, script_id);
     }
@@ -263,6 +267,8 @@
       this.app.updateValue(idx, e.target.value);
     }
 
-    setLEDs(state) {}
+    getOpacity(idx) {
+      return (this.state?.videos || [])[idx]?.opacity || 0;
+    }
   }
 </script>

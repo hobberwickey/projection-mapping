@@ -37,7 +37,10 @@
 		</div>
 		<div class="right">
 			<div>
-				<vertical-range :update="updateOpacity"></vertical-range>
+				<vertical-range
+					:update="updateOpacity"
+					:value="opacity"
+				></vertical-range>
 			</div>
 		</div>
 	</div>
@@ -52,7 +55,7 @@
 		}
 
 		static get observedProperties() {
-			return ["idx", "app", "video"];
+			return ["idx", "app", "video", "opacity"];
 		}
 
 		onChange(e) {
