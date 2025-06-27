@@ -185,7 +185,7 @@ script-editor {
   pre {
     position: relative;
     display: block;
-    pointer-events: none;
+    // pointer-events: none;
     width: 100%;
     margin: 0px;
     font-size: inherit;
@@ -202,6 +202,21 @@ script-editor {
 
   code {
     padding: 10px;
-    height: auto;
+    outline: none;
+    min-height: 100%;
+  }
+
+  code#visualizer {
+    pointer-events: none;
+  }
+
+  code#editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    color: transparent;
+    text-shadow: none;
+    caret-color: black;
   }
 }
