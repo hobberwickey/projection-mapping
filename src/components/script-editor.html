@@ -16,15 +16,25 @@
             {{(error || '').toString()}}
           </div>
           <div class="code-box">
-            <textarea
+            <!--  <textarea
               placeholder="Write your script here"
               @keydown="onKeyDown($event)"
               @input="onCode($event)"
               @scroll="onScroll($event)"
             >
 {{code}}</textarea
-            >
-            <pre><code class="language-js"></code></pre>
+            > -->
+            <pre>
+              <code id='visualizer' class="language-js"></code>
+              <code 
+                id='editor'
+                contenteditable="true"
+                tabindex="1" 
+                @keydown="onKeyDown($event)"
+                @input="onCode($event)"
+                @scroll="onScroll($event)"
+              ></code>
+            </pre>
           </div>
         </div>
       </div>
@@ -49,6 +59,11 @@
 
     connected() {
       this.dirty = false;
+      this.selectionStart = 0;
+
+      this.visualizer = this.querySelector("#visualizer");
+      this.editor = this.querySelector("#editor");
+
       this.listen("app", (app) => {
         this.scripts = [...app.scripts];
 
@@ -57,10 +72,9 @@
         });
       });
 
-      this.querySelector(".code-box code").innerHTML = this.escapeHTML(
-        this.code,
-      );
-      Prism.highlightElement(this.querySelector(".code-box code"));
+      this.visualizer.innerHTML = this.escapeHTML(this.code);
+      this.editor.innerHTML = this.escapeHTML(this.code);
+      Prism.highlightElement(this.visualizer);
 
       this.querySelectorAll(".sidebar code").forEach((c) => {
         Prism.highlightElement(c);
@@ -80,24 +94,40 @@
 
     onKeyDown(evt) {
       let el = evt.target;
-      let code = el.value;
+      let code = el.innerText;
 
-      if (evt.key == "Tab") {
+      let sel = document.getSelection();
+      if (sel.rangeCount > 0) {
+        let range = document.getSelection().getRangeAt(0);
+        let preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(el);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+
+        let startPos = preCaretRange.toString().length;
+        let selectionSize = range.startOffset - range.endOffset;
+
+        this.selectionStart = startPos;
+      }
+
+      if (evt.key === "Tab") {
         evt.preventDefault();
-
-        let before_tab = code.slice(0, el.selectionStart); // text before tab
-        let after_tab = code.slice(el.selectionEnd, el.value.length); // text after tab
-        let cursor_pos = el.selectionStart + 2;
+        let before_tab = code.slice(0, this.selectionStart);
+        let after_tab = code.slice(this.selectionStart, code.length);
+        let cursor_pos = this.selectionStart + 2;
         let tabbedCode = before_tab + "  " + after_tab;
+        this.visualizer.innerHTML = this.escapeHTML(tabbedCode);
+        this.editor.innerHTML = this.escapeHTML(tabbedCode);
 
-        this.querySelector(".code-box code").innerHTML =
-          this.escapeHTML(tabbedCode);
-        Prism.highlightElement(this.querySelector(".code-box code"));
-
+        Prism.highlightElement(this.visualizer);
         this.code = tabbedCode;
 
-        el.selectionStart = cursor_pos;
-        el.selectionEnd = cursor_pos;
+        let selectedText = document.getSelection();
+        let selectedRange = document.createRange();
+        selectedRange.setStart(evt.target.childNodes[0], cursor_pos);
+        selectedRange.collapse(true);
+        selectedText.removeAllRanges();
+        selectedText.addRange(selectedRange);
+        evt.target.focus();
 
         this.dirty = true;
       }
@@ -106,13 +136,26 @@
     onCode(evt) {
       this.error = null;
 
-      this.querySelector(".code-box code").innerHTML = this.escapeHTML(
-        evt.target.value,
-      );
-      Prism.highlightElement(this.querySelector(".code-box code"));
+      let code = evt.target.innerText;
+      let inputSize = code.length - this.code.length;
 
-      this.code = evt.target.value;
+      this.visualizer.innerHTML = this.escapeHTML(code);
+      this.editor.innerHTML = this.escapeHTML(code);
+
+      Prism.highlightElement(this.visualizer);
+      this.code = code;
       this.dirty = true;
+
+      let selectedText = document.getSelection();
+      let selectedRange = document.createRange();
+      selectedRange.setStart(
+        evt.target.childNodes[0],
+        this.selectionStart + inputSize,
+      );
+      selectedRange.collapse(true);
+      selectedText.removeAllRanges();
+      selectedText.addRange(selectedRange);
+      evt.target.focus();
     }
 
     onScroll(evt) {
@@ -132,7 +175,8 @@
     }
 
     onCancel() {
-      this.parentNode.removeChild(this);
+      document.body.removeChild(document.querySelector("script-editor"));
+      // this.parentNode.removeChild(this);
     }
   }
 </script>
