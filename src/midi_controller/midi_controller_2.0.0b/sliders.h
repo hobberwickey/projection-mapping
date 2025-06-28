@@ -1,11 +1,5 @@
 #include <MIDIUSB.h>
 
-
-// #include <FastLED.h>
-// #define NUM_LEDS 120
-// #define DATA_PIN A11
-// CRGB leds[NUM_LEDS];
-
 int sliderPins[2][3] = {
   {A0,11,12},
   {A1,9,10}
@@ -47,38 +41,6 @@ int sliderAverages[2][10] = {
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-// void setup() {
-//   for (int i=0; i<1; i++) {
-//     pinMode(sliderPins[i][0], INPUT);
-//     pinMode(sliderPins[i][1], OUTPUT);
-//     pinMode(sliderPins[i][2], OUTPUT);
-//   }
-// }
-
-// void handleMidiIn(int header, int note, int velocity) {
-//   for (int i=0; i<1; i++) {
-//     if (note == sliderInputNotes[i]) {
-//       sliderValues[i] = velocity;
-//       sliderStates[i] = 1;
-//     }
-//   }
-// }
-
-// void noteOn(byte channel, byte pitch, byte velocity) {
-//   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
-//   MidiUSB.sendMIDI(noteOn);
-// }
-
-// void noteOff(byte channel, byte pitch, byte velocity) {
-//   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
-//   MidiUSB.sendMIDI(noteOff);
-// }
-
-// void controlChange(byte channel, byte control, byte value) {
-//   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
-//   MidiUSB.sendMIDI(event);
-// }
-
 void sliderHandler(int idx) {
   
   int sensorValue = analogRead(sliderPins[idx][0]);
@@ -111,7 +73,6 @@ void sliderHandler(int idx) {
     if (sliderActive[idx] == 1) {
       digitalWrite(sliderPins[idx][1], LOW);
       digitalWrite(sliderPins[idx][2], LOW);
-      
     } else {
       if (velocity < sliderValues[idx]) {
         digitalWrite(sliderPins[idx][1], HIGH);
@@ -140,92 +101,35 @@ void sliderHandler(int idx) {
   int diff = abs(velocity - sliderValues[idx]);
   
   if (sliderActive[idx] == 0) {
-    timing = 950; // constrain(map(diff, 0, 127, 925, 1500), 925, 1500);
+    timing = constrain(map(diff, 0, 127, 930, 1200), 930, 1200);
 
-    if (diff > 10) {
-      timing = 970;
-    }
+    // if (diff > 10) {
+    //   timing = 970;
+    // }
 
-    if (diff > 40) {
-      timing = 1000;
-    }
+    // if (diff > 40) {
+    //   timing = 1000;
+    // }
 
-    if (diff > 60) {
-      timing = 1500;
-    }
+    // if (diff > 60) {
+    //   timing = 1500;
+    // }
   } else {
-    timing = 800;
+    timing = constrain(map(diff, 0, 127, 700, 1200), 700, 1200);
+    // timing = 800;
 
-    if (diff > 10) {
-      timing = 750;
-    }
+    // if (diff > 10) {
+    //   timing = 750;
+    // }
 
-    if (diff > 40) {
-      timing = 700;
-    }
+    // if (diff > 40) {
+    //   timing = 700;
+    // }
   } 
 
   timer.in(timing, sliderHandler, idx);
   sliderActive[idx] = sliderActive[idx] == 0 ? 1 : 0;
 }
-
-// void _sliderHandler(int idx) {
-//   // return;
-  
-//   int sensorValue = analogRead(sliderPins[idx][0]);
-  
-//   int max = 15;
-//   int min = 989;
-//   int velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
-
-//   if (sliderStates[idx] == 0) {
-//     if (abs(velocity - sliderValues[idx]) > 1) {
-//       controlChange(0, sliderNotes[idx], velocity);
-//       MidiUSB.flush();
-
-//       sliderValues[idx] = velocity;
-//     }
-//   } else {
-//     while (velocity < sliderValues[idx]) {
-//       digitalWrite(sliderPins[idx][1], LOW);
-//       digitalWrite(sliderPins[idx][2], LOW);
-//       delayMicroseconds(1000);
-      
-//       sensorValue = analogRead(sliderPins[idx][0]);
-//       velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
-
-//       if (velocity < sliderValues[idx]) {
-//         digitalWrite(sliderPins[idx][1], HIGH);
-//         digitalWrite(sliderPins[idx][2], LOW);
-//         delayMicroseconds(1000);
-//       }
-//     }
-
-//     while (velocity > sliderValues[idx]) {
-//       digitalWrite(sliderPins[idx][1], LOW);
-//       digitalWrite(sliderPins[idx][2], LOW);
-//       delayMicroseconds(1000);
-
-//       sensorValue = analogRead(sliderPins[idx][0]);
-//       velocity = constrain(map(sensorValue, min, max, 0, 127), 0, 127);
-
-//       if (velocity > sliderValues[idx]) {
-//         digitalWrite(sliderPins[idx][1], LOW);
-//         digitalWrite(sliderPins[idx][2], HIGH);  
-//         delayMicroseconds(1000);
-//       }
-//     }
-
-//     sliderStates[idx] = 0;
-//     digitalWrite(sliderPins[idx][1], LOW);
-//     digitalWrite(sliderPins[idx][2], LOW);
-//     sliderValues[idx] = velocity;
-
-//     controlChange(0, sliderNotes[idx], velocity);
-//     MidiUSB.flush();
-//     // }
-//   }
-// }
 
 void motorizedSliderInit() {
   for (int i=0; i<2; i++) {
