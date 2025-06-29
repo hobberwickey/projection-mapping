@@ -1,18 +1,14 @@
 #include <MIDIUSB.h>
 
-int sliderPins[2][3] = {
-  {A0,11,12},
-  {A1,9,10}
+int sliderPins[2][4] = {
+  {A0,11,12,29},
+  {A1,9,10,28}
 };
 int sliderValues[2] = {
   0, 0
 };
 // 0 = idle, 1=moving
 int sliderStates[2] = {
-  0, 0
-};
-
-int sliderActive[2] = {
   0, 0
 };
 
@@ -70,65 +66,37 @@ void sliderHandler(int idx) {
       sliderValues[idx] = velocity;
     }
   } else {
-    if (sliderActive[idx] == 1) {
+    if (velocity < sliderValues[idx]) {
+      digitalWrite(sliderPins[idx][1], HIGH);
+      digitalWrite(sliderPins[idx][2], LOW);
+    }
+
+    if (velocity > sliderValues[idx]) {
+      digitalWrite(sliderPins[idx][1], LOW);
+      digitalWrite(sliderPins[idx][2], HIGH);  
+    }
+  
+    if (abs(velocity - sliderValues[idx]) <= 1) {
+      sliderStates[idx] = 0;
+
       digitalWrite(sliderPins[idx][1], LOW);
       digitalWrite(sliderPins[idx][2], LOW);
-    } else {
-      if (velocity < sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], HIGH);
-        digitalWrite(sliderPins[idx][2], LOW);
-      }
+      sliderValues[idx] = velocity;
 
-      if (velocity > sliderValues[idx]) {
-        digitalWrite(sliderPins[idx][1], LOW);
-        digitalWrite(sliderPins[idx][2], HIGH);  
-      }
-    
-      if (abs(velocity - sliderValues[idx]) <= 1) {
-        sliderStates[idx] = 0;
-        
-
-        digitalWrite(sliderPins[idx][1], LOW);
-        digitalWrite(sliderPins[idx][2], LOW);
-        sliderValues[idx] = velocity;
-
-        controlChange(0, sliderNotes[idx], velocity);
-      }
+      controlChange(0, sliderNotes[idx], velocity);
     }
   }
   
   int timing = 1000;
+  if (sliderStates[idx] == 1) {
+    timing = 100; // Read much faster when the sliders are moving
+  }
+
   int diff = abs(velocity - sliderValues[idx]);
-  
-  if (sliderActive[idx] == 0) {
-    timing = constrain(map(diff, 0, 127, 930, 1200), 930, 1200);
+  int pmw = constrain(map(diff, 0, 127, 190, 255), 190, 255);
 
-    // if (diff > 10) {
-    //   timing = 970;
-    // }
-
-    // if (diff > 40) {
-    //   timing = 1000;
-    // }
-
-    // if (diff > 60) {
-    //   timing = 1500;
-    // }
-  } else {
-    timing = constrain(map(diff, 0, 127, 700, 1200), 700, 1200);
-    // timing = 800;
-
-    // if (diff > 10) {
-    //   timing = 750;
-    // }
-
-    // if (diff > 40) {
-    //   timing = 700;
-    // }
-  } 
-
+  analogWrite(sliderPins[idx][3], pmw);
   timer.in(timing, sliderHandler, idx);
-  sliderActive[idx] = sliderActive[idx] == 0 ? 1 : 0;
 }
 
 void motorizedSliderInit() {
@@ -136,7 +104,12 @@ void motorizedSliderInit() {
     pinMode(sliderPins[i][0], INPUT);
     pinMode(sliderPins[i][1], OUTPUT);
     pinMode(sliderPins[i][2], OUTPUT);
+
+    pinMode(sliderPins[i][3], OUTPUT);
   }
+
+  analogWrite(sliderPins[0][3], 255);
+  analogWrite(sliderPins[1][3], 255);
 }
 
 void resetSliders() {
