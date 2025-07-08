@@ -42,10 +42,10 @@ export const Effects = [
 	      vec3 hsv = rgb2hsv(vec3(color[0], color[1], color[2]));
 
 	      float hue_target = u_effect[0];
-	      float hue_dist = 1.0 - (min(abs(hsv[0] - hue_target), 1.0 - abs(hsv[0] - hue_target)) / 0.5);
-	      float hue_opacity =  sin(pow(hue_dist, 2.0) * (PI / 2.0));
+	      float hue_dist = min(abs(hsv[0]-hue_target), 1.0 - abs(hsv[0]-hue_target));
+				float hue_opacity = min(cos(hue_dist - PI) * 300.0 + 300.0, 1.0) + (1.0 - u_effect[1]);
 
-	      gl_FragColor = vec4(color[0], color[1], color[2], 1.0 - hue_opacity * (u_effect[1]));
+	      gl_FragColor = vec4(color[0], color[1], color[2], hue_opacity);
 	    }
 	  `,
 	},
@@ -104,11 +104,12 @@ export const Effects = [
 	      vec4 color = texture2D(u_texture, v_texcoord);
 	      vec3 hsl = rgb2hsl(vec3(color[0], color[1], color[2]));
 
-	      float brightness_target = u_effect[0];
-	      float brightness_dist = 1.0 - (min(abs(hsl[2] - brightness_target), 1.0 - abs(hsl[2] - brightness_target)) / 0.5);
-	      float brightness_opacity =  sin(pow(brightness_dist, 2.0) * (PI / 2.0));
+	      
+				float brightness_target = u_effect[0];
+	      float brightness_dist = abs(hsl[2]-brightness_target);
+				float brightness_opacity = min(cos(brightness_dist - PI) * 300.0 + 300.0, 1.0) + (1.0 - u_effect[1]);
 
-	      gl_FragColor = vec4(color[0], color[1], color[2], 1.0 - brightness_opacity * (u_effect[1]));
+	      gl_FragColor = vec4(color[0], color[1], color[2], brightness_opacity);
 	    }
 	  `,
 	},

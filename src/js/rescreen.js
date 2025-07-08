@@ -226,6 +226,7 @@ class Output {
       }
     }
 
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     for (let i = len; i >= 0; i--) {
       if (this.videos[i] !== null) {
         this.drawFrame(i, state);
@@ -260,26 +261,31 @@ class Output {
       return;
     }
 
+    // Clear the frame buffers
+    for (let i = 0; i < 2; i++) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
+      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
     // Draw the video frame for a frame buffer
     this.updateTexture(gl, texture, videoEl);
-    // Loop through the effects and draw each to a framebuffer
-    let activeBuffer = 0;
+
+    let activeBuffer = 1;
     for (let i = 0; i < effects.length; i++) {
       if (!effects[i]) {
         continue;
       }
+      activeBuffer = (activeBuffer + 1) % 2;
 
-      gl.bindFramebuffer(
-        gl.FRAMEBUFFER,
-        texture.attrs.buffers[activeBuffer % 2],
-      );
+      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
-      // gl.clear(gl.DEPTH_BUFFER_BIT);
 
       this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
 
-      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer % 2]);
-      activeBuffer++;
+      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
     }
 
     // Draw to the screen
@@ -480,7 +486,7 @@ class Output {
     });
 
     if (this.attrs.main !== null) {
-      this.gl.clearColor(0, 0, 0, 1);
+      this.gl.clearColor(0, 0, 0, 0);
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
       this.gl.disable(this.gl.DEPTH_TEST);
