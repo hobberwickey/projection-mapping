@@ -1,6 +1,8 @@
-import { Effects } from "./lib/Effects";
-import { UI } from "./lib/ScreenUI";
-import { ScriptTemplate } from "./lib/ScriptTemplate";
+import { Effects } from "../js/lib/Effects.js";
+import { UI } from "../js/lib/ScreenUI.js";
+import { ScriptTemplate } from "../js/lib/ScriptTemplate.js";
+
+import { Player } from "./player.js";
 
 const shaderMethods = {
   pal: `
@@ -25,6 +27,10 @@ const shaderMethods = {
 };
 
 const vertexShaderSrc = `
+  #ifdef GL_ES
+    precision mediump float;
+  #endif
+  
   attribute vec2 a_position;
   attribute vec2 a_texcoord;
 
@@ -39,12 +45,16 @@ const vertexShaderSrc = `
 `;
 
 const fragmentShader = `
-  precision mediump float;
+  #ifdef GL_ES
+    precision mediump float;
+  #endif
+  
+  // precision mediump float;
   varying vec2 v_texcoord;
   uniform sampler2D u_texture;
 
   uniform vec2 u_dimensions;
-  uniform mediump float u_opacity;
+  uniform float u_opacity;
   uniform vec2 u_effect;
 
   // For quads
@@ -94,7 +104,7 @@ const fragmentShader = `
     }
     
     return res;
-}
+  }
 
   void main() {
     vec2 coords;
@@ -115,8 +125,8 @@ const fragmentShader = `
   }
 `;
 
-class Output {
-  constructor(state) {
+export class Output {
+  constructor(gl, state) {
     this.pending_state = state;
     this.state = state;
     this.epoch = Date.now();
@@ -124,24 +134,26 @@ class Output {
     this.videos = new Array(6).fill(null);
     this.contexts = new Array(6).fill(null);
     this.textures = [];
+    this.frames = new Array(6).fill(null);
     this.glAttrs = new Array(6).fill(null);
-    // this.matrices = [];
 
-    this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
-      (a, c) => {
-        a[c.id] = new Function(
-          "state",
-          "effect_x",
-          "effect_y",
-          ScriptTemplate(c.code),
-        );
+    this.scripts = {};
+    // TODO: read from drive
+    // this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
+    //   (a, c) => {
+    //     a[c.id] = new Function(
+    //       "state",
+    //       "effect_x",
+    //       "effect_y",
+    //       ScriptTemplate(c.code),
+    //     );
 
-        return a;
-      },
-      {},
-    );
+    //     return a;
+    //   },
+    //   {},
+    // );
 
-    this.gl = null;
+    this.gl = gl;
     this.attrs = {
       main: null,
 
@@ -151,14 +163,14 @@ class Output {
     this.isPlaying = false;
     this.reset_video = null;
 
-    document.querySelectorAll(".videos video").forEach((vid) => {
-      vid.addEventListener("loadedmetadata", (e) => {
-        setTimeout(() => {
-          this.updateContext(e.target);
-          vid.play();
-        }, 100);
-      });
-    });
+    // document.querySelectorAll(".videos video").forEach((vid) => {
+    //   vid.addEventListener("loadedmetadata", (e) => {
+    //     setTimeout(() => {
+    //       this.updateContext(e.target);
+    //       vid.play();
+    //     }, 100);
+    //   });
+    // });
 
     this.createContext();
   }
@@ -216,15 +228,15 @@ class Output {
     let len = this.videos.length - 1;
     let state = JSON.parse(JSON.stringify(this.state));
 
-    state.elapsed = Date.now() - this.epoch;
-    for (let i = 0; i < 6; i++) {
-      let script_id = state.scripts[i];
-      if (script_id !== null) {
-        let script = this.scripts[script_id];
-        let values = state.values.scripts[i];
-        script(state, values[0], values[1]);
-      }
-    }
+    // state.elapsed = Date.now() - this.epoch;
+    // for (let i = 0; i < 6; i++) {
+    //   let script_id = state.scripts[i];
+    //   if (script_id !== null) {
+    //     let script = this.scripts[script_id];
+    //     let values = state.values.scripts[i];
+    //     script(state, values[0], values[1]);
+    //   }
+    // }
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     for (let i = len; i >= 0; i--) {
@@ -233,11 +245,11 @@ class Output {
       }
     }
 
-    window.requestAnimationFrame(this.step.bind(this));
+    // window.requestAnimationFrame(this.step.bind(this));
   }
 
   drawFrame(idx, state) {
-    let { videos, shapes, values } = state;
+    let { shapes, values } = state;
 
     // Get the context
     let gl = this.gl;
@@ -251,27 +263,26 @@ class Output {
     }
 
     // Get the video and it's HTML element
-    let video = videos[idx];
+    let video = this.videos[idx];
     let vals = values.effects[idx];
-    let videoEl = this.videos[idx];
     let texture = this.textures[idx];
 
     // Skip if video isn't playing
-    if (videoEl.currentTime === 0) {
+    if (!video.width) {
       return;
     }
 
     // Clear the frame buffers
     for (let i = 0; i < 2; i++) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
-      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      gl.viewport(0, 0, video.width, video.height);
 
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
     // Draw the video frame for a frame buffer
-    this.updateTexture(gl, texture, videoEl);
+    this.updateTexture(gl, texture, idx);
 
     let activeBuffer = 1;
     for (let i = 0; i < effects.length; i++) {
@@ -282,18 +293,18 @@ class Output {
       activeBuffer = (activeBuffer + 1) % 2;
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
-      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      gl.viewport(0, 0, video.width, video.height);
 
-      this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
+      this.drawShapes(gl, video, idx, effects[i], shapes, vals[i], -1);
 
       gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
     }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, 1280, 720);
+    gl.viewport(0, 0, video.width * 2, video.height * 2);
     // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
-    this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
+    this.drawShapes(gl, video, idx, attrs.main, shapes, [0, 0], 1);
   }
 
   drawShapes(gl, video, idx, attrs, shapes, values, flip) {
@@ -301,8 +312,8 @@ class Output {
     gl.uniform2fv(attrs.uniforms.effect, values);
     gl.uniform1f(attrs.uniforms.flip, flip);
     gl.uniform2fv(attrs.uniforms.dimensions, [
-      1 / video.videoWidth,
-      1 / video.videoHeight,
+      1 / video.width,
+      1 / video.height,
     ]);
 
     for (var i = 0; i < shapes.length; i++) {
@@ -393,6 +404,7 @@ class Output {
           0,
           0,
         );
+
         gl.uniform1f(attrs.uniforms.opacity, opacity);
         gl.uniform1i(attrs.uniforms.sampler, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -409,6 +421,8 @@ class Output {
     let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (success) {
       return shader;
+    } else {
+      console.warn(`Failed to build shaders`, success, source);
     }
 
     gl.deleteShader(shader);
@@ -467,15 +481,13 @@ class Output {
 
       return attrs;
     } else {
+      console.log("Error creating program");
       gl.deleteProgram(program);
       return null;
     }
   }
 
-  createContext(idx) {
-    let canvas = document.querySelector(".context canvas");
-    this.gl = canvas.getContext("webgl");
-
+  createContext() {
     this.attrs.main = this.createProgram(
       this.gl,
       vertexShaderSrc,
@@ -509,7 +521,7 @@ class Output {
   }
 
   updateContext(video) {
-    this.gl.viewport(0, 0, 1280, 720);
+    this.gl.viewport(0, 0, 1280 * 2, 720 * 2);
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
@@ -554,10 +566,16 @@ class Output {
     };
   }
 
-  updateTexture(gl, texture, video) {
-    if (video.currentTime === 0) {
+  updateFrame(idx, frame) {
+    this.frames[idx] = frame;
+  }
+
+  updateTexture(gl, texture, idx) {
+    if (!this.frames[idx]) {
       return;
     }
+
+    const frame = this.frames[idx];
 
     const level = 0;
     const internalFormat = gl.RGBA;
@@ -575,7 +593,7 @@ class Output {
           internalFormat,
           srcFormat,
           srcType,
-          video,
+          frame,
         );
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -589,6 +607,8 @@ class Output {
       }
     }
 
+    // console.log(video.data);
+
     gl.bindTexture(gl.TEXTURE_2D, texture.src);
     gl.texImage2D(
       gl.TEXTURE_2D,
@@ -596,7 +616,7 @@ class Output {
       internalFormat,
       srcFormat,
       srcType,
-      video,
+      frame,
     );
 
     // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -620,37 +640,47 @@ class Output {
   }
 
   resetVideo(idx) {
-    this.removeVideo(idx);
-    this.reset_video = idx;
+    // this.removeVideo(idx);
+    // this.reset_video = idx;
+    this.videos[idx].stop();
   }
 
-  loadVideo(file) {
-    if (this.reset_video === null) {
-      return;
-    }
+  loadVideo(path, idx) {
+    // if (this.reset_video === null) {
+    //   return;
+    // }
 
-    let idx = this.reset_video;
-    let videos = document.querySelectorAll(".videos video");
-    let vid = videos[idx];
+    // let idx = this.reset_video;
+    // let videos = document.querySelectorAll(".videos video");
+    // let vid = videos[idx];
 
-    vid.src = URL.createObjectURL(file);
+    // vid.src = URL.createObjectURL(file);
 
-    this.videos[idx] = vid;
-    this.reset_video = null;
+    // this.videos[idx] = vid;
+    // this.reset_video = null;
+
+    this.videos[idx] = new Player(path, (frame) => {
+      this.updateFrame(idx, {
+        width: this.videos[idx].width,
+        height: this.videos[idx].height,
+        data: frame,
+      });
+    });
+
+    this.videos[idx].start();
+
+    // this.reset_video = null;
   }
 
   removeVideo(idx) {
-    let video = this.videos[idx];
+    // let video = this.videos[idx];
     // let gl = this.contexts[idx];
 
     this.textures[idx] = null;
     this.textures[idx] = this.initTexture(this.gl);
 
-    if (!!video) {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-
+    if (!!this.videos[idx]) {
+      this.videos[idx].stop();
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
       this.videos[idx] = null;
     }
@@ -680,193 +710,18 @@ class Output {
   }
 
   updateScript(scriptId) {
-    let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
-    let script = scripts.find((s) => s.id === scriptId);
-
-    this.scripts[scriptId] = new Function(
-      "state",
-      "effect_x",
-      "effect_y",
-      "previous_value",
-      ScriptTemplate(script.code),
-    );
+    // let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
+    // let script = scripts.find((s) => s.id === scriptId);
+    // this.scripts[scriptId] = new Function(
+    //   "state",
+    //   "effect_x",
+    //   "effect_y",
+    //   "previous_value",
+    //   ScriptTemplate(script.code),
+    // );
   }
 
   removeScript(scriptId) {
-    delete this.scripts[scriptId];
+    // delete this.scripts[scriptId];
   }
 }
-
-class App {
-  constructor() {
-    this.ui = null;
-    this.output = null;
-    this.state = null;
-
-    this.setupListeners();
-  }
-
-  setup() {
-    this.output.play();
-  }
-
-  setState(state) {
-    let oldState = this.state;
-
-    this.state = state;
-    if (oldState === null) {
-      this.output = new Output(this.state);
-      this.ui = new UI(this.state);
-      this.setup();
-    } else {
-      this.output.updateState.call(this.output, this.state);
-      this.ui.updateState.call(this.ui, this.state);
-    }
-  }
-
-  setupListeners() {
-    window.addEventListener("mousedown", (e) => {
-      if (!this.ui) {
-        return;
-      }
-
-      let { videos, pause } = this.output;
-
-      videos.map((video) => {
-        if (video !== null) {
-          video.pause();
-        }
-      });
-
-      this.ui.select(e);
-      this.ui.startMove();
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (!this.ui) {
-        return;
-      }
-
-      let { videos, play } = this.output;
-
-      videos.map((video, idx) => {
-        if (video !== null) {
-          video.play();
-        }
-      });
-
-      this.ui.stopMove();
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      if (!this.ui) {
-        return;
-      }
-
-      this.ui.movePoint(e);
-    });
-
-    // window.addEventListener("click", (e) => {
-    //   if (!this.ui) {
-    //     return;
-    //   }
-
-    //   this.ui.select(e);
-    // });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.keyCode === 16) {
-        this.ui.shiftDown();
-      }
-
-      if (e.keyCode === 39) {
-        this.ui.handleRight();
-      }
-
-      if (e.keyCode === 37) {
-        this.ui.handleLeft();
-      }
-
-      if (e.keyCode === 38) {
-        this.ui.handleUp();
-      }
-
-      if (e.keyCode === 40) {
-        this.ui.handleDown();
-      }
-    });
-
-    window.addEventListener("keyup", (e) => {
-      if (e.keyCode === 16) {
-        this.ui.shiftUp();
-      }
-    });
-
-    window.addEventListener("keypress", (e) => {
-      if (!this.ui) {
-        return;
-      }
-
-      let { layer, setLayer, drawUI } = this.ui;
-
-      if (e.keyCode === 32) {
-        setLayer.call(this.ui, layer === "input" ? "output" : "input");
-        drawUI.call(this.ui);
-      }
-    });
-
-    window.addEventListener("message", (event) => {
-      try {
-        if (typeof event.data !== "object") {
-          let data = JSON.parse(event.data);
-
-          if (data.action === "update_state") {
-            this.setState(data.state);
-          } else if (data.action === "reset_video") {
-            let { videoIdx } = data;
-            let { resetVideo } = this.output;
-
-            resetVideo.call(this.output, videoIdx);
-          } else if (data.action === "remove_video") {
-            let { videoIdx, state } = data;
-            let { removeVideo } = this.output;
-
-            removeVideo.call(this.output, videoIdx);
-            this.setState(state);
-          } else if (data.action === "set_effect") {
-            let { effectIdx, effect, state } = data;
-
-            this.output.setEffect.call(this.output, effectIdx, effect);
-            this.setState(state);
-          } else if (data.action === "set_script") {
-            let { scriptIdx, scriptId, state } = data;
-
-            this.output.setScript.call(this.output, scriptIdx, scriptId);
-            this.setState(state);
-          } else if (data.action === "update_script") {
-            let { script_id } = data;
-
-            this.output.updateScript.call(this.output, script_id);
-          } else if (data.action === "remove_script") {
-            let { script_id } = data;
-
-            this.output.removeScript.call(this.output, script_id);
-          }
-        } else {
-          let { loadVideo } = this.output;
-
-          loadVideo.call(this.output, event.data);
-        }
-      } catch (err) {
-        console.log(err);
-      }
-
-      // localStorage.setItem("zones", JSON.stringify(this.zones));
-    });
-  }
-}
-
-window.app = null;
-window.addEventListener("load", () => {
-  window.app = new App();
-});

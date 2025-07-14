@@ -121,12 +121,15 @@ export const Effects = [
 		effect_b: "Shift",
 		defaults: [0, 0],
 		shader: `
-	    precision mediump float;
+	    #ifdef GL_ES
+    		precision mediump float;
+  		#endif
+	    
 	    varying vec2 v_texcoord;
 	    uniform sampler2D u_texture;
 
 	    uniform vec2 u_dimensions; 
-	    uniform mediump float u_opacity;
+	    uniform float u_opacity;
 	    uniform vec2 u_effect;
 
 	    vec3 pal( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) 
@@ -167,12 +170,15 @@ export const Effects = [
 		effect_b: "Pallete Depth",
 		defaults: [0, 0],
 		shader: `
-		  precision mediump float;
+			#ifdef GL_ES
+    		precision mediump float;
+  		#endif
+
 		  varying vec2 v_texcoord;
 		  uniform sampler2D u_texture;
 
 		  uniform vec2 u_dimensions; 
-		  uniform mediump float u_opacity;
+		  uniform float u_opacity;
 		  uniform vec2 u_effect;
 
 		  void main() {
