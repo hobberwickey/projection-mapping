@@ -22,7 +22,7 @@ const loop = () => {
 
 	setTimeout(() => {
 		doc.requestAnimationFrame(loop);
-	}, 30);
+	}, 41);
 };
 
 loop();
@@ -31,7 +31,7 @@ loop();
 // 	// output.step();
 // });
 
-output.loadVideo("/Users/Joel/Downloads/broken.mp4", 0);
+output.loadVideo("/Users/Joel/Downloads/slugs.mp4", 0);
 // output.loadVideo("/Users/Joel/Downloads/slugs.mp4", 1);
 // output.loadVideo("/Users/Joel/Downloads/slugs.mp4", 2);
 // output.loadVideo("/Users/Joel/Downloads/slugs.mp4", 3);
@@ -45,5 +45,5 @@ output.loadVideo("./public/videos/pines.mp4", 3);
 output.loadVideo("./public/videos/trippy.mp4", 4);
 output.loadVideo("./public/videos/lines.mp4", 5);
 
-output.setEffect(0, "pixelate");
-output.setEffect(1, "cosine_palette");
+// output.setEffect(0, "pixelate");
+// output.setEffect(1, "cosine_palette");
