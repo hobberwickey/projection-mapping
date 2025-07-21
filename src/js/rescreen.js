@@ -262,13 +262,13 @@ class Output {
     }
 
     // Clear the frame buffers
-    for (let i = 0; i < 2; i++) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
-      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+    // for (let i = 0; i < 2; i++) {
+    //   gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
+    //   gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
 
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    }
+    //   gl.clearColor(0, 0, 0, 0);
+    //   gl.clear(gl.COLOR_BUFFER_BIT);
+    // }
 
     // Draw the video frame for a frame buffer
     this.updateTexture(gl, texture, videoEl);
@@ -283,6 +283,9 @@ class Output {
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
 
       this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
 
