@@ -34,6 +34,7 @@ class App extends Context {
       state: null,
       id: null,
       midiAccess: null,
+      media: [],
       name: "My Project",
     });
 
@@ -52,11 +53,16 @@ class App extends Context {
     this.midiInput = null;
     this.midiOutput = null;
 
+    this.selectedMedia = null;
+    this.stream = null;
+    this.media = [];
+
     this.leds = null;
     this.sliders = null;
     this.midiWorker = null;
 
     this.setupMidi();
+    this.setupMedia();
 
     this.launch();
   }
@@ -304,6 +310,7 @@ class App extends Context {
       //   },
       // });
     };
+
     const onMIDIFailure = (msg) => {
       console.error(`Failed to get MIDI access - ${msg}`);
     };
@@ -313,23 +320,28 @@ class App extends Context {
     } else {
       console.log("No Midi Access");
     }
+  }
 
-    // const onWebcamSuccess = (obj) => {
+  async toggleMedia(device) {
+    try {
+      this.selectedMedia = device;
+      // this.stream = await navigator.mediaDevices.getUserMedia({
+      //   audio: false,
+      //   video: { deviceId: device.deviceId },
+      // });
 
-    // }
+      // console.log(this.stream);
+    } catch (err) {
+      console.log("Failed to load webcam:", err);
+    }
+  }
 
-    // async function getMedia() {
-    //   let stream = null;
-
-    //   try {
-    //     stream = await navigator.mediaDevices.getUserMedia({
-    //       audio: false,
-    //       video: true
-    //     });
-    //   } catch (err) {
-    //     /* handle the error */
-    //   }
-    // }
+  async setupMedia() {
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
+      this.media = [...devices].filter((d) => {
+        return d.kind === "videoinput";
+      });
+    });
   }
 
   launch() {
@@ -626,6 +638,21 @@ class App extends Context {
     );
 
     this.screen.postMessage(file);
+  }
+
+  updateVideoMedia(idx, source) {
+    if (!this.screen) {
+      return;
+    }
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "set_media",
+        deviceId: source.deviceId,
+        deviceName: source.label,
+        videoIdx: idx,
+      }),
+    );
   }
 
   updateOpacity(idx, value) {

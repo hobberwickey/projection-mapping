@@ -8,6 +8,7 @@
 
   --text-color: #fff;
   --fg-color: hsl(180deg 20.54% 90.41%);
+  --hover-color: #d8f5ff;
 
   --fx-clr-0: hsl(204, 70%, 41%);
   --fx-clr-1: hsl(116, 56%, 40%);
@@ -451,6 +452,7 @@ video-slot {
   color: black;
   box-shadow: none;
   padding: 10px 40px 10px 10px;
+  position: relative;
 
   & > div {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
@@ -536,6 +538,29 @@ video-slot {
     }
   }
 
+  .media-list {
+    position: absolute;
+    top: 55px;
+    left: 167px;
+    margin-top: 0;
+    list-style-type: none;
+    background-color: #ffffff;
+    z-index: 10;
+    padding: 0px;
+    white-space: nowrap;
+    border-radius: 4px;
+    box-shadow: 2px 4px 11px 0 #fff;
+    border: solid 1px;
+
+    li {
+      padding: 10px;
+
+      &:hover {
+        background-color: var(--hover-color);
+      }
+    }
+  }
+
   .video-header {
     border-bottom: none;
     padding: 13px 50px 13px 20px;
@@ -572,9 +597,15 @@ video-slot {
     a {
       display: inline-block;
       vertical-align: middle;
-      width: 30px;
+      width: 20px;
       text-align: right;
-      margin-right: -30px;
+      margin-right: -20px;
+      cursor: pointer;
+
+      &:last-child {
+        position: relative;
+        left: 20px;
+      }
     }
   }
 

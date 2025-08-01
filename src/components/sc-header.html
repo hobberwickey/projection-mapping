@@ -96,7 +96,26 @@
                       </template>
                     </ul>
                   </li>
-                  <li>
+
+                  <!-- <li id="media_devices">
+                    <label
+                      ><span>Media Input</span
+                      ><span
+                        uk-icon="icon: refresh"
+                        @click="refreshMedia()"
+                      ></span
+                    ></label>
+                    <ul>
+                      <template :for="media">
+                        <li @click="toggleMedia($value)">
+                          <template :if="isMediaSelected($value)">
+                            <span uk-icon="icon: check"></span></template
+                          ><span>{{$value.label}}</span>
+                        </li>
+                      </template>
+                    </ul>
+                  </li> -->
+                  <!-- <li>
                     <label>About</label>
                     <ul class="uk-list">
                       <li>Overview</li>
@@ -104,7 +123,7 @@
                       <li>Effects</li>
                       <li>Groups</li>
                     </ul>
-                  </li>
+                  </li> -->
                 </ul>
               </div>
             </li>
@@ -126,7 +145,15 @@
     }
 
     static get observedProperties() {
-      return ["app", "storage", "projects", "saved", "name", "devices"];
+      return [
+        "app",
+        "storage",
+        "projects",
+        "saved",
+        "name",
+        "devices",
+        "media",
+      ];
     }
 
     connected() {
@@ -149,6 +176,10 @@
 
         app.listen("midiAccess", (access) => {
           this.devices = [...access?.inputs] || [];
+        });
+
+        app.listen("media", (media) => {
+          this.media = media;
         });
 
         this.name = app.name;
@@ -191,5 +222,18 @@
     isSelected(input) {
       return this.app.midiInput?.name === input?.name;
     }
+
+    // toggleMedia(device) {
+    //   this.app.toggleMedia(device);
+    //   this.media = [...this.media];
+    // }
+
+    // refreshMedia() {
+    //   this.app.setupMedia();
+    // }
+
+    // isMediaSelected(stream) {
+    //   return this.app.selectedMedia?.deviceId === stream?.deviceId;
+    // }
   }
 </script>

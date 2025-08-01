@@ -23,7 +23,8 @@ sc-header {
 		}
 	}
 
-	#midi_devices {
+	#midi_devices,
+	#media_devices {
 		label {
 			.uk-icon {
 				color: var(--btn-color);
@@ -44,6 +45,10 @@ sc-header {
 
 				span:last-child {
 					margin-left: 5px;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					max-width: 100%;
 				}
 			}
 		}

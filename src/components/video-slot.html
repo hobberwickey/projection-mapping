@@ -19,6 +19,12 @@
 					class="remove-video"
 					href="javascript:void(0)"
 					uk-icon="icon: trash"
+				></a
+				><a
+					@click="showMedia()"
+					class="remove-video"
+					href="javascript:void(0)"
+					uk-icon="icon: video-camera"
 				></a>
 			</div>
 			<div class="video-body">
@@ -81,6 +87,61 @@
 			this.querySelector(".preview").classList.add("no-video");
 
 			this.app.removeVideo(this.idx);
+		}
+
+		async showMedia() {
+			let media = [];
+			try {
+
+				media = await navigator.mediaDevices.enumerateDevices().then((devices) => {
+		      return [...devices].filter((d) => {
+		        return d.kind === "videoinput";
+		      });
+		    });
+			} catch(e) {
+				console.log("Couldn't access media devices")
+			}
+
+			let container = document.createElement("ul");
+					container.className = 'media-list';
+					container.addEventListener("click", (e) => {
+						e.preventDefault();
+						e.stopPropagation();	
+					});
+
+			[...media].map((source) => {
+				let item = document.createElement("li");
+						item.innerHTML = source.label;
+						item.addEventListener("click", () => {
+							console.log(source);
+
+							container.parentNode.removeChild(container);
+							this.app.updateVideoMedia(this.idx, source);
+						})
+
+				container.appendChild(item);
+			})
+
+			this.appendChild(container);
+
+			let remove = () => {
+				if (!!container.parentNode) {
+					container.parentNode.removeChild(container);
+				}
+
+				window.removeEventListener("click", remove);
+			}
+			window.addEventListener("click", remove);
+
+			// if (!!this.app.stream) {
+			// 	this.querySelector("video").src = this.app.stream;
+
+			// 	// this.querySelector("video").currentTime = 0;
+			// 	this.querySelector(".preview").classList.remove("no-video");
+			// 	this.querySelector("input[type='file']").disabled = true;
+			// }
+
+			// this.app.updateVideoMedia(this.idx);
 		}
 
 		updateOpacity(e) {

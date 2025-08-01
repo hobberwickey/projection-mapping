@@ -642,6 +642,41 @@ class Output {
     this.reset_video = null;
   }
 
+  async setMedia(videoIdx, deviceId) {
+    let videos = document.querySelectorAll(".videos video");
+    let vid = videos[videoIdx];
+
+    let media = await navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        return [...devices].filter((d) => {
+          return d.kind === "videoinput";
+        });
+      });
+
+    let device = [...media].find((m) => {
+      return m.deviceId === deviceId;
+    });
+
+    try {
+      let stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          deviceId: {
+            exact: device.deviceId,
+          },
+        },
+      });
+
+      console.log(deviceId);
+
+      vid.srcObject = stream;
+      this.videos[videoIdx] = vid;
+    } catch (err) {
+      console.log("Failed to load webcam:", err);
+    }
+  }
+
   removeVideo(idx) {
     let video = this.videos[idx];
     // let gl = this.contexts[idx];
@@ -652,6 +687,7 @@ class Output {
     if (!!video) {
       video.pause();
       video.removeAttribute("src");
+      video.removeAttribute("srcObject");
       video.load();
 
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -836,6 +872,12 @@ class App {
 
             removeVideo.call(this.output, videoIdx);
             this.setState(state);
+          } else if (data.action === "set_media") {
+            let { videoIdx, deviceId, deviceName } = data;
+            let { removeVideo, setMedia } = this.output;
+
+            removeVideo.call(this.output, videoIdx);
+            setMedia.call(this.output, videoIdx, deviceId, deviceName);
           } else if (data.action === "set_effect") {
             let { effectIdx, effect, state } = data;
 
