@@ -33,6 +33,7 @@ class App extends Context {
       scripts: JSON.parse(localStorage.getItem("scripts")) || [],
       state: null,
       id: null,
+      midiAccess: null,
       name: "My Project",
     });
 
@@ -184,6 +185,7 @@ class App extends Context {
     let { buttons, sliders, knobs } = this.state.notes;
 
     const onMIDISuccess = (midiAccess) => {
+      console.log("Midi Success");
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
       for (const entry of this.midiAccess.inputs) {
         console.log(entry[1]);
@@ -309,6 +311,23 @@ class App extends Context {
     } else {
       console.log("No Midi Access");
     }
+
+    // const onWebcamSuccess = (obj) => {
+
+    // }
+
+    // async function getMedia() {
+    //   let stream = null;
+
+    //   try {
+    //     stream = await navigator.mediaDevices.getUserMedia({
+    //       audio: false,
+    //       video: true
+    //     });
+    //   } catch (err) {
+    //     /* handle the error */
+    //   }
+    // }
   }
 
   launch() {

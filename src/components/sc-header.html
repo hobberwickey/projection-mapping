@@ -79,6 +79,25 @@
                     </div>
                   </li>
                   <li>
+                    <label
+                      >Midi Devices
+                      <span
+                        uk-icon="icon: refresh"
+                        @click="refreshMidi()"
+                      ></span
+                    ></label>
+                    <ul id="midi_devices">
+                      <template :for="devices">
+                        <li>
+                          <template :if="isSelected($value)">
+                            <span uk-icon="icon: check"></span>
+                          </template>
+                          <span>{{$value[1].name}}</span>
+                        </li>
+                      </template>
+                    </ul>
+                  </li>
+                  <li>
                     <label>About</label>
                     <ul class="uk-list">
                       <li>Overview</li>
@@ -108,7 +127,7 @@
     }
 
     static get observedProperties() {
-      return ["app", "storage", "projects", "saved", "name"];
+      return ["app", "storage", "projects", "saved", "name", "devices"];
     }
 
     connected() {
@@ -127,6 +146,12 @@
       this.listen("app", (app) => {
         app.listen("name", (name) => {
           this.name = name;
+        });
+
+        console.log("Listing to midi access");
+        app.listen("midiAccess", (access) => {
+          console.log("ACCESS:", access);
+          this.devices = [...access?.inputs] || [];
         });
 
         this.name = app.name;
@@ -160,6 +185,14 @@
 
     updateName(e) {
       this.app.name = (e.target.value || "").trim();
+    }
+
+    refreshMidi() {
+      this.app.setupMidi();
+    }
+
+    isSelected(input) {
+      return this.app.midiInput?.name === input?.name;
     }
   }
 </script>
