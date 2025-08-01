@@ -22,4 +22,39 @@ sc-header {
 			}
 		}
 	}
+
+	#midi_devices {
+		label {
+			.uk-icon {
+				color: var(--btn-color);
+				cursor: pointer;
+				margin-left: 5px;
+			}
+		}
+
+		ul {
+			list-style-type: none;
+			padding-left: 20px;
+
+			li {
+				.uk-icon {
+					margin-left: -20px;
+					color: green;
+				}
+
+				span:last-child {
+					margin-left: 5px;
+				}
+			}
+		}
+
+		span {
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		.uk-icon {
+			width: 20px;
+		}
+	}
 }

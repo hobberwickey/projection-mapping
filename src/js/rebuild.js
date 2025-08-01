@@ -186,8 +186,8 @@ class App extends Context {
 
     const onMIDISuccess = (midiAccess) => {
       console.log("Midi Success");
-      this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
-      for (const entry of this.midiAccess.inputs) {
+
+      for (const entry of midiAccess.inputs) {
         console.log(entry[1]);
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
@@ -265,7 +265,7 @@ class App extends Context {
         }
       }
 
-      for (const entry of this.midiAccess.outputs) {
+      for (const entry of midiAccess.outputs) {
         if (entry[1].name === "Arduino Micro") {
           this.midiOutput = entry[1];
         }
@@ -288,6 +288,8 @@ class App extends Context {
         this.midiOutput,
         this.midiInput,
       );
+
+      this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
 
       // this.midiWorker = new Worker(new URL("./midi.js", import.meta.url));
       // this.midiWorker.onmessage = (e) => {

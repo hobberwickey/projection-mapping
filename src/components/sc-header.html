@@ -78,21 +78,20 @@
                       </div>
                     </div>
                   </li>
-                  <li>
+                  <li id="midi_devices">
                     <label
-                      >Midi Devices
-                      <span
+                      ><span>Midi Devices</span
+                      ><span
                         uk-icon="icon: refresh"
                         @click="refreshMidi()"
                       ></span
                     ></label>
-                    <ul id="midi_devices">
+                    <ul>
                       <template :for="devices">
                         <li>
-                          <template :if="isSelected($value)">
-                            <span uk-icon="icon: check"></span>
-                          </template>
-                          <span>{{$value[1].name}}</span>
+                          <template :if="isSelected($value[1])">
+                            <span uk-icon="icon: check"></span></template
+                          ><span>{{$value[1].name}}</span>
                         </li>
                       </template>
                     </ul>
@@ -148,9 +147,7 @@
           this.name = name;
         });
 
-        console.log("Listing to midi access");
         app.listen("midiAccess", (access) => {
-          console.log("ACCESS:", access);
           this.devices = [...access?.inputs] || [];
         });
 
