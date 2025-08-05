@@ -31,11 +31,11 @@ const loop = () => {
 loop();
 
 output.loadVideo("./public/videos/ink.mp4", 0);
-output.loadVideo("./public/videos/ink.mp4", 1);
-output.loadVideo("./public/videos/ink.mp4", 2);
-output.loadVideo("./public/videos/ink.mp4", 3);
-output.loadVideo("./public/videos/ink.mp4", 4);
-output.loadVideo("./public/videos/ink.mp4", 5);
+// output.loadVideo("./public/videos/ink.mp4", 1);
+// output.loadVideo("./public/videos/ink.mp4", 2);
+// output.loadVideo("./public/videos/ink.mp4", 3);
+// output.loadVideo("./public/videos/ink.mp4", 4);
+// output.loadVideo("./public/videos/ink.mp4", 5);
 
-output.setEffect(0, "pixelate");
-output.setEffect(1, "cosine_palette");
+// output.setEffect(0, "pixelate");
+// output.setEffect(1, "cosine_palette");

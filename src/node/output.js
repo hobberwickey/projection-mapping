@@ -386,32 +386,27 @@ export class Output {
     this.updateTexture(gl, texture, idx);
 
     // Convert the YUV frame to an RGBA frame
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[0]);
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[0]);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, video.width * 2, video.height * 2);
     this.drawYUVShapes(gl, video, idx, attrs.yuv, shapes, [0, 0], 1, texture);
-    gl.bindTexture(gl.TEXTURE_2D, texture.attrs.buffers[0]);
-
-    // return;
-
     gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[0]);
 
-    let activeBuffer = 1;
-    for (let i = 0; i < effects.length; i++) {
-      if (!effects[i]) {
-        continue;
-      }
+    // let activeBuffer = 1;
+    // for (let i = 0; i < effects.length; i++) {
+    //   if (!effects[i]) {
+    //     continue;
+    //   }
 
-      activeBuffer = (activeBuffer + 1) % 2;
+    //   activeBuffer = (activeBuffer + 1) % 2;
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
-      gl.viewport(0, 0, video.width, video.height);
+    //   gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
+    //   gl.viewport(0, 0, video.width, video.height);
 
-      this.drawShapes(gl, video, idx, effects[i], shapes, vals[i], -1);
+    //   this.drawShapes(gl, video, idx, effects[i], shapes, vals[i], -1);
 
-      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
-    }
+    //   gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+    // }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
