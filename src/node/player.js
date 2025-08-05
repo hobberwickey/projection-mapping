@@ -13,7 +13,7 @@ export class Player {
 		this.byte_count = 0;
 		this.frame = 0;
 		this.ffmpeg = null;
-		this.identity = new Uint8Array(this.width * this.height).fill(0);
+		this.identity = new Uint8Array(this.width * this.height * 4).fill(0);
 
 		console.log("FRAME SIZE:", this.frame_size);
 	}

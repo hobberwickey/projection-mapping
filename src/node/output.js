@@ -387,35 +387,52 @@ export class Output {
 
     // Convert the YUV frame to an RGBA frame
     gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[0]);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, video.width * 2, video.height * 2);
-    this.drawYUVShapes(gl, video, idx, attrs.yuv, shapes, [0, 0], 1, texture);
+    gl.viewport(0, 0, video.width, video.height);
+    this.drawYUVShapes(gl, video, idx, attrs.yuv, shapes, [0, 0], -1, texture);
     gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[0]);
 
-    // let activeBuffer = 1;
-    // for (let i = 0; i < effects.length; i++) {
-    //   if (!effects[i]) {
-    //     continue;
-    //   }
+    let activeBuffer = 1;
+    for (let i = 0; i < effects.length; i++) {
+      if (!effects[i]) {
+        continue;
+      }
 
-    //   activeBuffer = (activeBuffer + 1) % 2;
+      activeBuffer = (activeBuffer + 1) % 2;
 
-    //   gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
-    //   gl.viewport(0, 0, video.width, video.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
+      gl.viewport(0, 0, video.width, video.height);
 
-    //   this.drawShapes(gl, video, idx, effects[i], shapes, vals[i], -1);
+      this.drawShapes(
+        gl,
+        video,
+        idx,
+        effects[i],
+        shapes,
+        vals[i],
+        -1,
+        activeBuffer,
+      );
 
-    //   gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
-    // }
+      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+    }
 
     // Draw to the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, video.width * 2, video.height * 2);
     // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
-    this.drawShapes(gl, video, idx, attrs.main, shapes, [0, 0], 1);
+    this.drawShapes(
+      gl,
+      video,
+      idx,
+      attrs.main,
+      shapes,
+      [0, 0],
+      1,
+      (activeBuffer + 1) % 2,
+    );
   }
 
-  drawShapes(gl, video, idx, attrs, shapes, values, flip) {
+  drawShapes(gl, video, idx, attrs, shapes, values, flip, bufferIdx) {
     gl.useProgram(attrs.program);
     gl.uniform2fv(attrs.uniforms.effect, values);
     gl.uniform1f(attrs.uniforms.flip, flip);
@@ -514,7 +531,7 @@ export class Output {
         );
 
         gl.uniform1f(attrs.uniforms.opacity, opacity);
-        gl.uniform1i(attrs.uniforms.sampler, 0);
+        gl.uniform1i(attrs.uniforms.sampler, 2 + bufferIdx);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       }
     }
@@ -764,24 +781,6 @@ export class Output {
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
     const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
-    // gl.texImage2D(
-    //   gl.TEXTURE_2D,
-    //   level,
-    //   internalFormat,
-    //   width,
-    //   height,
-    //   border,
-    //   srcFormat,
-    //   srcType,
-    //   pixel,
-    // );
-
-    // // Turn off mips and set wrapping to clamp to edge so it
-    // // will work regardless of the dimensions of the video.
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    // // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
     let createYUVTexure = () => {
       const tex = gl.createTexture();
@@ -807,7 +806,6 @@ export class Output {
     };
 
     return {
-      // src: texture,
       yuv: {
         y: createYUVTexure(),
         u: createYUVTexure(),
@@ -841,19 +839,47 @@ export class Output {
     const srcFormat = gl.LUMINANCE;
     const srcType = gl.UNSIGNED_BYTE;
 
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.y);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      gl.RGBA,
+      gl.LUMINANCE,
+      srcType,
+      frame.y,
+    );
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.u);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      gl.RGBA,
+      gl.LUMINANCE,
+      srcType,
+      frame.u,
+    );
+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.v);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      gl.RGBA,
+      gl.LUMINANCE,
+      srcType,
+      frame.v,
+    );
+
     const { attrs } = texture;
     if (attrs.textures.length < 2 && attrs.buffers.length < 2) {
       for (let i = 0; i < 2; i++) {
         const bufferTexture = gl.createTexture();
+
+        gl.activeTexture(gl.TEXTURE0 + i + 3);
         gl.bindTexture(gl.TEXTURE_2D, bufferTexture);
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          level,
-          internalFormat,
-          srcFormat,
-          srcType,
-          frame.i,
-        );
+        gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.RGBA, srcType, frame.i);
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -865,53 +891,6 @@ export class Output {
         attrs.buffers.push(frameBuffer);
       }
     }
-
-    // console.log(video.data);
-
-    // gl.bindTexture(gl.TEXTURE_2D, texture.yuv.y);
-
-    // gl.activeTexture(gl.TEXTURE1);
-    // gl.bindTexture(gl.TEXTURE_2D, texture.yuv.u);
-
-    // gl.activeTexture(gl.TEXTURE2);
-    // gl.bindTexture(gl.TEXTURE_2D, texture.yuv.v);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.y);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      internalFormat,
-      gl.LUMINANCE,
-      srcType,
-      frame.y,
-    );
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.y);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      internalFormat,
-      gl.LUMINANCE,
-      srcType,
-      frame.u,
-    );
-
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, texture.yuv.v);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      internalFormat,
-      gl.LUMINANCE,
-      srcType,
-      frame.v,
-    );
-
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   }
 
   initFrameBuffer(gl, texture) {

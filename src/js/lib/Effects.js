@@ -201,12 +201,15 @@ export const Effects = [
 		effect_b: "Vertical",
 		defaults: [0, 0],
 		shader: `
-		  precision mediump float;
+		  #ifdef GL_ES
+    		precision mediump float;
+  		#endif
+
 		  varying vec2 v_texcoord;
 		  uniform sampler2D u_texture;
 
 		  uniform vec2 u_dimensions; 
-		  uniform mediump float u_opacity;
+		  uniform float u_opacity;
 		  uniform vec2 u_effect;
 
 		  void main() {
@@ -225,12 +228,15 @@ export const Effects = [
 		effect_b: "Y-Zoom",
 		defaults: [0, 0],
 		shader: `
-			precision mediump float;
+			#ifdef GL_ES
+    		precision mediump float;
+  		#endif
+
 		  varying vec2 v_texcoord;
 		  uniform sampler2D u_texture;
 
 		  uniform vec2 u_dimensions; 
-		  uniform mediump float u_opacity;
+		  uniform float u_opacity;
 		  uniform vec2 u_effect;
 
 		  void main() {
@@ -255,12 +261,15 @@ export const Effects = [
 		effect_b: "Y-Shift",
 		defaults: [0.0, 0.0],
 		shader: `
-			precision mediump float;
+			#ifdef GL_ES
+    		precision mediump float;
+  		#endif
+  		
 		  varying vec2 v_texcoord;
 		  uniform sampler2D u_texture;
 
 		  uniform vec2 u_dimensions; 
-		  uniform mediump float u_opacity;
+		  uniform float u_opacity;
 		  uniform vec2 u_effect;
 
 		  void main() {
