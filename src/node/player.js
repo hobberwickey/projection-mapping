@@ -8,11 +8,14 @@ export class Player {
 		this.width = 1280;
 		this.height = 720;
 		this.onFrame = onFrame;
-		this.buffer = new Uint8Array(1280 * 720 * 4);
-		this.frame_size = 1280 * 720 * 4;
+		this.buffer = new Uint8Array((1280 * 720 * 12) / 8);
+		this.frame_size = (1280 * 720 * 12) / 8;
 		this.byte_count = 0;
 		this.frame = 0;
 		this.ffmpeg = null;
+		this.identity = new Uint8Array(this.width * this.height).fill(0);
+
+		console.log("FRAME SIZE:", this.frame_size);
 	}
 
 	start() {
@@ -24,12 +27,12 @@ export class Player {
 			this.path,
 			"-f",
 			"rawvideo",
-			"-pix_fmt",
-			"rgba",
+			//"-pix_fmt",
+			//"rgba",
 			"-vf",
 			"scale=1280:720",
-			"-loglevel",
-			"quiet",
+			// "-loglevel",
+			// "quiet",
 			"pipe:1",
 		]);
 
@@ -42,7 +45,16 @@ export class Player {
 
 				this.buffer.set(rest, this.byte_count);
 
-				this.onFrame(new Uint8Array(this.buffer));
+				let f = this.width * this.height;
+				let q = (this.width >> 1) * (this.height >> 1);
+
+				let y = this.buffer.slice(0, f);
+				let u = this.buffer.slice(f, f + q);
+				let v = this.buffer.slice(f + q, f + q + q);
+
+				// console.log(y, u, v);
+
+				this.onFrame(y, u, v, new Uint8Array(this.identity));
 
 				this.buffer.set(remainder, 0);
 				this.byte_count = remainder.length;
