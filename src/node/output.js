@@ -3,6 +3,7 @@ import { UI } from "../js/lib/ScreenUI.js";
 import { ScriptTemplate } from "../js/lib/ScriptTemplate.js";
 
 import { Player } from "./player.js";
+import { MultiPlayer } from "./multi-player.js";
 
 const shaderMethods = {
   pal: `
@@ -841,36 +842,27 @@ export class Output {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture.yuv.y);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      gl.RGBA,
-      gl.LUMINANCE,
-      srcType,
-      frame.y,
-    );
+    gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.LUMINANCE, srcType, {
+      width: 1280,
+      height: 720,
+      data: frame.y,
+    });
 
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, texture.yuv.u);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      gl.RGBA,
-      gl.LUMINANCE,
-      srcType,
-      frame.u,
-    );
+    gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.LUMINANCE, srcType, {
+      width: 1280 >> 1,
+      height: 720 >> 1,
+      data: frame.u,
+    });
 
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, texture.yuv.v);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      level,
-      gl.RGBA,
-      gl.LUMINANCE,
-      srcType,
-      frame.v,
-    );
+    gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.LUMINANCE, srcType, {
+      width: 1280 >> 1,
+      height: 720 >> 1,
+      data: frame.v,
+    });
 
     const { attrs } = texture;
     if (attrs.textures.length < 2 && attrs.buffers.length < 2) {
@@ -879,7 +871,11 @@ export class Output {
 
         gl.activeTexture(gl.TEXTURE0 + i + 3);
         gl.bindTexture(gl.TEXTURE_2D, bufferTexture);
-        gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.RGBA, srcType, frame.i);
+        gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, gl.RGBA, srcType, {
+          width: 1280,
+          height: 720,
+          data: new Uint8Array(1280 * 720 * 4).fill(0),
+        });
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -961,6 +957,52 @@ export class Output {
     this.videos[idx].start();
 
     // this.reset_video = null;
+  }
+
+  loadVideos(videos) {
+    this.player = new MultiPlayer(videos, (frames) => {
+      this.frames = frames;
+      // this.step();
+    });
+
+    for (var i = 0; i < 6; i++) {
+      this.videos[i] = {
+        width: 1280,
+        height: 720,
+      };
+    }
+
+    this.player.start();
+
+    // this.videos[idx] = new Player(path, (y, u, v, i) => {
+    //   this.updateFrame(
+    //     idx,
+    //     {
+    //       width: this.videos[idx].width,
+    //       height: this.videos[idx].height,
+    //       data: y,
+    //     },
+    //     {
+    //       width: this.videos[idx].width / 2,
+    //       height: this.videos[idx].height / 2,
+    //       data: u,
+    //     },
+    //     {
+    //       width: this.videos[idx].width / 2,
+    //       height: this.videos[idx].height / 2,
+    //       data: v,
+    //     },
+    //     {
+    //       width: this.videos[idx].width,
+    //       height: this.videos[idx].height,
+    //       data: i,
+    //     },
+    //   );
+    // });
+
+    // for (var i = 0; i < 6; i++) {
+    //   this.videos[i].start();
+    // }
   }
 
   removeVideo(idx) {

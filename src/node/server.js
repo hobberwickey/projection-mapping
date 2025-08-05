@@ -17,20 +17,31 @@ const gl = canvas.getContext("webgl");
 
 const output = new Output(gl, state);
 
+let start = Date.now();
 const loop = () => {
 	try {
 		output.step();
 	} catch (e) {
 		console.log(e);
 	}
+
+	let diff = new Date() - start;
 	setTimeout(() => {
+		start = Date.now();
 		doc.requestAnimationFrame(loop);
-	}, 41);
+	}, 41 - diff);
 };
 
 loop();
 
-output.loadVideo("./public/videos/pika.mp4", 0);
+output.loadVideos([
+	"./public/videos/pika.mp4",
+	"./public/videos/pika.mp4",
+	"./public/videos/pika.mp4",
+	"./public/videos/pika.mp4",
+	"./public/videos/pika.mp4",
+	"./public/videos/pika.mp4",
+]);
 // output.loadVideo("./public/videos/ink.mp4", 1);
 // output.loadVideo("./public/videos/ink.mp4", 2);
 // output.loadVideo("./public/videos/ink.mp4", 3);
