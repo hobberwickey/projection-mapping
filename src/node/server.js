@@ -20,7 +20,7 @@ const output = new Output(gl, state);
 let start = Date.now();
 const loop = () => {
 	try {
-		output.step();
+		// output.step();
 	} catch (e) {
 		console.log(e);
 	}

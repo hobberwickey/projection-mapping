@@ -35,6 +35,8 @@ export class MultiPlayer {
 			"rawvideo",
 			"-filter_complex",
 			"vstack=inputs=6",
+			"-preset",
+			"ultrafast",
 			"pipe:1",
 		];
 
