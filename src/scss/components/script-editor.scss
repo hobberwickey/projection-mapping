@@ -35,6 +35,12 @@ script-editor {
           padding-right: 30px;
           box-sizing: border-box;
 
+          .api-docs {
+            h2 {
+              margin-bottom: 31px;
+            }
+          }
+
           pre,
           code {
             white-space: pre-wrap;
@@ -137,6 +143,21 @@ script-editor {
             textarea {
               height: 100%;
               width: 100%;
+            }
+          }
+
+          .editor-header {
+            form {
+              display: flex;
+
+              & > div {
+                flex: 1;
+                padding: 0px 10px;
+
+                label {
+                  padding-bottom: 10px;
+                }
+              }
             }
           }
         }

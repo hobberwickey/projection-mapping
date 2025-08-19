@@ -119,6 +119,8 @@ class Output {
   constructor(state) {
     this.pending_state = state;
     this.state = state;
+    this.registry = { elapsed: 1 };
+
     this.epoch = Date.now();
 
     this.videos = new Array(6).fill(null);
@@ -127,19 +129,24 @@ class Output {
     this.glAttrs = new Array(6).fill(null);
     // this.matrices = [];
 
-    this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
-      (a, c) => {
-        a[c.id] = new Function(
-          "state",
-          "effect_x",
-          "effect_y",
-          ScriptTemplate(c.code),
-        );
+    // this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
+    //   (a, c) => {
+    //     a[c.id] = new Function(
+    //       "state",
+    //       "effect_x",
+    //       "effect_y",
+    //       c.id,
+    //       this.registry,
+    //       ScriptTemplate(c.code),
+    //     );
 
-        return a;
-      },
-      {},
-    );
+    //     return a;
+    //   },
+    //   {},
+    // );
+    this.scripts = new Array(6).fill(null).map(() => {
+      return () => {};
+    });
 
     this.gl = null;
     this.attrs = {
@@ -213,18 +220,29 @@ class Output {
   }
 
   step() {
+    let start = Date.now();
     let len = this.videos.length - 1;
     let state = JSON.parse(JSON.stringify(this.state));
-
     state.elapsed = Date.now() - this.epoch;
+
     for (let i = 0; i < 6; i++) {
       let script_id = state.scripts[i];
       if (script_id !== null) {
         let script = this.scripts[script_id];
         let values = state.values.scripts[i];
-        script(state, values[0], values[1]);
+
+        this.registry[script_id] = script(
+          state,
+          values[0],
+          values[1],
+          script_id,
+          this.registry,
+        );
       }
     }
+    this.registry.elapsed = state.elapsed;
+
+    // console.log(this.registry);
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     for (let i = len; i >= 0; i--) {
@@ -726,7 +744,8 @@ class Output {
       "state",
       "effect_x",
       "effect_y",
-      "previous_value",
+      "script_id",
+      "registry",
       ScriptTemplate(script.code),
     );
   }

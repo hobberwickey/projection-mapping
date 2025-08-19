@@ -9,21 +9,27 @@
         </div>
 
         <div class="editor">
-          <div class="label">
-            <input type="text" :value="label || ''" @input="onLabel($event)" />
-          </div>
-          <div :class='!!error ? "error " : "error hidden"'>
-            {{(error || '').toString()}}
+          <div class='editor-header'>
+            <form>
+              <div class="input-wrapper">
+                <label>Script Name</label>
+                <input type='text' class='label' :value="label" @input="onLabel($event)" />
+              </div>
+              <div class='input-wrapper'>
+                <label>Template</label>
+                <select @input="onTemplate($event)">
+                  <option value="">No Template</option>
+                  <template :for="scripts">
+                    <option :value="$value.id">{{$value.label}}</option>
+                  </template>
+                </select>
+              </div>
+            </form>
+            <div :class='!!error ? "error " : "error hidden"'>
+              {{(error || '').toString()}}
+            </div>
           </div>
           <div class="code-box">
-            <!--  <textarea
-              placeholder="Write your script here"
-              @keydown="onKeyDown($event)"
-              @input="onCode($event)"
-              @scroll="onScroll($event)"
-            >
-{{code}}</textarea
-            > -->
             <pre>
               <code id='visualizer' class="language-js"></code>
               <code 
@@ -54,7 +60,15 @@
     }
 
     static get observedProperties() {
-      return ["app", "idx", "label", "code", "scripts", "error", "dirty"];
+      return [
+        "app", 
+        "idx", 
+        "label", 
+        "code", 
+        "scripts", 
+        "error", 
+        "dirty"
+      ];
     }
 
     connected() {
@@ -64,13 +78,19 @@
       this.visualizer = this.querySelector("#visualizer");
       this.editor = this.querySelector("#editor");
 
-      this.listen("app", (app) => {
-        this.scripts = [...app.scripts];
+      // this.listen("app", (app) => {
+      //   console.log("App:", app)
+      //   this.scripts = [...app.scripts];
 
-        app.listen("scripts", (scripts) => {
-          this.scripts = [...scripts];
-        });
-      });
+      //   app.listen("scripts", (scripts) => {
+      //     this.scripts = [...scripts];
+      //   });
+      // });
+      
+      this.scripts = this.app.scripts.filter((s) => !s.hidden);
+      this.app.listen("scripts", (scripts) => {
+        this.scripts = scripts.filter((s) => !s.hidden)
+      })
 
       this.visualizer.innerHTML = this.escapeHTML(this.code);
       this.editor.innerHTML = this.escapeHTML(this.code);
@@ -86,6 +106,19 @@
 
       this.label = evt.target.value;
       this.app.updateScript(script.id, this.label, this.code);
+    }
+
+    onTemplate(evt) {
+      let script = this.app.scripts.find((s) => +s.id === +evt.target.value);
+
+      this.label = script.label + " Copy";
+      this.code = script.code;
+
+      this.visualizer.innerHTML = this.escapeHTML(this.code);
+      this.editor.innerHTML = this.escapeHTML(this.code);
+      Prism.highlightElement(this.visualizer);
+
+      this.dirty = true;
     }
 
     escapeHTML(text) {

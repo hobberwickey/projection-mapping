@@ -1,0 +1,57 @@
+<template>
+  <div class="select">
+    <div class="select-display">{{script?.label || ""}}</div>
+    
+    <div class="select-list">
+
+    </div>
+    <div class="select-handle" @click="edit()">
+      <span uk-icon="icon: file-edit"></span>
+    </div>
+  </div>
+</template>
+
+<script>
+  class SlotList extends Component {
+    constructor() {
+      super();
+    }
+
+    static get observedProperties() {
+      return ["app", "idx", "script"];
+    }
+
+    connected() {
+      
+    }
+
+    edit(e) {
+      let editor = document.createElement("script-editor");
+      editor.idx = this.idx;
+      editor.app = this.app;
+      editor.code = this.script.code;
+      editor.label = this.script.label;
+
+      document.body.appendChild(editor);
+    }
+
+    getLabel(id) {
+      if (!id) {
+        return "Empty";
+      }
+
+      let item = this.options.find((o) => o.id === id);
+      return item?.label || "Empty";
+    }
+
+    setSelected(idx) {
+      this.select(idx);
+    }
+
+    updateSelection(id) {
+      console.log(id);
+
+      this.update(this.idx, id || null);
+    }
+  }
+</script>

@@ -107,10 +107,10 @@
 			});
 
 			this.listen("app", (app) => {
-				this.scripts = [...app.scripts];
+				this.scripts = [...app.scripts].filter((s) => !s.hidden);
 
 				app.listen("scripts", (scripts) => {
-					this.scripts = [...scripts];
+					this.scripts = [...scripts].filter((s) => !s.hidden);
 				});
 			});
 		}

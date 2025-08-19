@@ -78,13 +78,30 @@ a:hover {
   color: var(--btn-color) !important;
 }
 
+form {
+  .input-wrapper {
+    label {
+      display: block;
+      font-size: 12px;
+    }
+
+    input, select {
+      display: block;
+      width: 100%;
+
+      border: none;
+      border-bottom: solid 1px;
+    }
+  }
+}
+
 input[type="text"] {
   max-width: 100%;
   max-height: 100%;
-  border: none;
   outline: none;
   background-color: transparent;
   text-align: left;
+  border: none;
   border-bottom: solid 1px;
 }
 
@@ -179,7 +196,7 @@ nav {
   position: relative;
   font-size: 0;
 
-  slot-item {
+  slot-item, script-slot {
     display: inline-block;
     width: 33.3%;
     margin-top: 10px !important;
@@ -295,6 +312,15 @@ nav {
 
     &.selected {
       box-shadow: 0px 1px 14px 6px hsl(184.14deg 100% 51.57%) !important;
+    }
+  }
+
+  script-slot {
+    .select-handle {
+      .uk-icon {
+        width: 20px;
+        height: 20px;
+      }
     }
   }
 }

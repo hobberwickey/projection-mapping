@@ -1,8 +1,49 @@
 export const ScriptTemplate = function (script) {
 	return `
+		// Keep track of the percs for each lfo initiated
+		let lfos = registry[script_id] || [];
+		let lfos_count = 0;
+
 		const lfo = function(min, max, interval) {
 			let ms = interval * 1000;
 			let perc = (state.elapsed % ms) / ms;
+
+			return {
+				sin: function() {
+					return (
+			      min +
+			      (1 + Math.sin((perc * 360 * Math.PI) / 180)) * ((max - min) / 2)
+			    );
+				},
+				cos: function() {
+					return (
+			      min +
+			      (1 + Math.cos((perc * 360 * Math.PI) / 180)) * ((max - min) / 2)
+			    );
+				},
+				tri: function() {
+					return Math.abs(perc - 0.5) * (max - min) * 2 + min;
+				},
+				saw: function() {
+					return perc * (max - min) + min;
+				},
+				square: function() {
+					return Math.round(perc) * (max - min) + min;
+				},
+				noise: function() {
+					return Math.floor(Math.random() * (max - min + 1)) + min;
+				}
+			}
+		}
+
+		const smooth_lfo = function(min, max, interval) {
+			let ms = interval * 1000;
+			let previous = lfos[lfos_count] || 1;
+			let delta = Math.abs(((state.elapsed % ms) / ms) - ((registry.elapsed % ms) / ms));
+			let perc = (previous + delta) % 1;
+
+			lfos[lfos_count] = perc || 0;
+			lfos_count++;
 
 			return {
 				sin: function() {
@@ -175,5 +216,7 @@ export const ScriptTemplate = function (script) {
 		}
 
 		${script}
+
+		return lfos;
 	`;
 };

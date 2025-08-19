@@ -30,7 +30,55 @@ class App extends Context {
   constructor(config) {
     super({
       effects: Effects,
-      scripts: JSON.parse(localStorage.getItem("scripts")) || [],
+      scripts: [
+        ...[
+          {
+            id: 0,
+            hidden: true,
+            active: false,
+            label: `Script 1`,
+            code: "",
+          },
+          {
+            id: 1,
+            hidden: true,
+            active: false,
+            label: `Script 2`,
+            code: "",
+          },
+          {
+            id: 2,
+            hidden: true,
+            active: false,
+            label: `Script 3`,
+            code: "",
+          },
+          {
+            id: 3,
+            hidden: true,
+            active: false,
+            label: `Script 4`,
+            code: "",
+          },
+          {
+            id: 4,
+            hidden: true,
+            active: false,
+            label: `Script 5`,
+            code: "",
+          },
+          {
+            id: 5,
+            hidden: true,
+            active: false,
+            label: `Script 6`,
+            code: "",
+          },
+        ],
+        ...(JSON.parse(localStorage.getItem("scripts")) || []).filter((s) => {
+          return s.id > 5;
+        }),
+      ],
       state: null,
       id: null,
       midiAccess: null,
@@ -40,7 +88,6 @@ class App extends Context {
 
     this.config = config;
     this.state = this.defaultState();
-
     this.flags = {
       lock_selected_video: false,
     };
@@ -109,13 +156,13 @@ class App extends Context {
             return new Array(config.effect_parameter_count).fill(0);
           });
         }),
-        scripts: new Array(config.effect_count).fill().map(() => {
+        scripts: new Array(config.effect_count).fill().map((_, idx) => {
           return new Array(config.effect_parameter_count).fill(0);
         }),
       },
 
       scripts: new Array(config.script_count).fill().map((_, idx) => {
-        return null;
+        return [0, 1, 5, 2, 4, 3][idx];
       }),
 
       effects: new Array(config.effect_count).fill().map((_, idx) => {
@@ -371,6 +418,7 @@ class App extends Context {
     this.screen = window.open("./rescreen.html");
     // document.querySelector(".launch-overlay").style.display = "none";
 
+    localStorage.setItem("scripts", JSON.stringify(this.scripts));
     this.screen.addEventListener("load", () => {
       this.screen.postMessage(
         JSON.stringify({
@@ -378,6 +426,15 @@ class App extends Context {
           state: this.state,
         }),
       );
+
+      for (var i = 0; i < 6; i++) {
+        this.screen.postMessage(
+          JSON.stringify({
+            action: "update_script",
+            script_id: i,
+          }),
+        );
+      }
     });
   }
 
@@ -441,9 +498,10 @@ class App extends Context {
       "state",
       "effect_x",
       "effect_y",
-      "previous_value",
+      "script_id",
+      "registry",
       ScriptTemplate(code),
-    )(stateClone, 0, 0, undefined);
+    )(stateClone, 0, 0, id, { elapsed: 1 });
 
     script.label = label;
     script.code = code;
