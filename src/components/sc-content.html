@@ -16,36 +16,42 @@
               :idx="0"
               :script="(scripts || [])[0]"
               :app="app"
+              :class="selectedScript === 0 ? 'selected': ''"
               @click="selectItem('script', 0)"
             ></script-slot>
             <script-slot
               :idx="1"
               :script="(scripts || [])[1]"
               :app="app"
+              :class="selectedScript === 1 ? 'selected': ''"
               @click="selectItem('script', 1)"
             ></script-slot>
             <script-slot
               :idx="5"
               :script="(scripts || [])[5]"
               :app="app"
+              :class="selectedScript === 5 ? 'selected': ''"
               @click="selectItem('script', 5)"
             ></script-slot>
             <script-slot
               :idx="2"
               :script="(scripts || [])[2]"
               :app="app"
+              :class="selectedScript === 2 ? 'selected': ''"
               @click="selectItem('script', 2)"
             ></script-slot>
             <script-slot
               :idx="4"
               :script="(scripts || [])[4]"
               :app="app"
+              :class="selectedScript === 4 ? 'selected': ''"
               @click="selectItem('script', 4)"
             ></script-slot>
             <script-slot
               :idx="3"
               :script="(scripts || [])[3]"
               :app="app"
+              :class="selectedScript === 3 ? 'selected': ''"
               @click="selectItem('script', 3)"
             ></script-slot>
             <!-- <template :for="state?.scripts || []">
