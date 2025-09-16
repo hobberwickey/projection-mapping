@@ -1,6 +1,7 @@
 import { Effects } from "./lib/Effects";
 import { UI } from "./lib/ScreenUI";
 import { ScriptTemplate } from "./lib/ScriptTemplate";
+import { Config } from "./lib/Config";
 
 const shaderMethods = {
   pal: `
@@ -230,14 +231,17 @@ class Output {
       if (script_id !== null) {
         let script = this.scripts[script_id];
         let values = state.values.scripts[i];
+        let active = values[2];
 
-        this.registry[script_id] = script(
-          state,
-          values[0],
-          values[1],
-          script_id,
-          this.registry,
-        );
+        if (active === 0) {
+          this.registry[script_id] = script(
+            state,
+            values[0],
+            values[1],
+            script_id,
+            this.registry,
+          );
+        }
       }
     }
     this.registry.elapsed = state.elapsed;
@@ -294,6 +298,10 @@ class Output {
     let activeBuffer = 1;
     for (let i = 0; i < effects.length; i++) {
       if (!effects[i]) {
+        continue;
+      }
+
+      if (vals[i][2] === 1) {
         continue;
       }
 

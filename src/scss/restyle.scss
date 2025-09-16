@@ -310,9 +310,19 @@ nav {
       }
     }
 
+    &.disabled {
+      box-shadow: 0px 1px 14px 6px hsl(0deg 100% 51.57%) !important;
+    }
+
     &.selected {
       box-shadow: 0px 1px 14px 6px hsl(184.14deg 100% 51.57%) !important;
+    
+      &.disabled {
+        box-shadow: 0px 1px 14px 6px hsl(277.14deg 100% 51.57%) !important;
+      }
     }
+
+
   }
 
   script-slot {

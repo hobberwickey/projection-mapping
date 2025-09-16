@@ -16,42 +16,42 @@
               :idx="0"
               :script="(scripts || [])[0]"
               :app="app"
-              :class="selectedScript === 0 ? 'selected': ''"
+              :class="classes('script', 0)"
               @click="selectItem('script', 0)"
             ></script-slot>
             <script-slot
               :idx="1"
               :script="(scripts || [])[1]"
               :app="app"
-              :class="selectedScript === 1 ? 'selected': ''"
+              :class="classes('script', 1)"
               @click="selectItem('script', 1)"
             ></script-slot>
             <script-slot
               :idx="5"
               :script="(scripts || [])[5]"
               :app="app"
-              :class="selectedScript === 5 ? 'selected': ''"
+              :class="classes('script', 5)"
               @click="selectItem('script', 5)"
             ></script-slot>
             <script-slot
               :idx="2"
               :script="(scripts || [])[2]"
               :app="app"
-              :class="selectedScript === 2 ? 'selected': ''"
+              :class="classes('script', 2)"
               @click="selectItem('script', 2)"
             ></script-slot>
             <script-slot
               :idx="4"
               :script="(scripts || [])[4]"
               :app="app"
-              :class="selectedScript === 4 ? 'selected': ''"
+              :class="classes('script', 4)"
               @click="selectItem('script', 4)"
             ></script-slot>
             <script-slot
               :idx="3"
               :script="(scripts || [])[3]"
               :app="app"
-              :class="selectedScript === 3 ? 'selected': ''"
+              :class="classes('script', 5)"
               @click="selectItem('script', 3)"
             ></script-slot>
             <!-- <template :for="state?.scripts || []">
@@ -125,7 +125,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[0]"
               :options="effects || []"
-              :class="selectedEffect === 0 ? 'selected': ''"
+              :class="classes('effect', 0)"
               @click="selectItem('effect', 0)"
             ></slot-item>
             <slot-item
@@ -133,7 +133,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[1]"
               :options="effects || []"
-              :class="selectedEffect === 1 ? 'selected': ''"
+              :class="classes('effect', 1)"
               @click="selectItem('effect', 1)"
             ></slot-item>
             <slot-item
@@ -141,7 +141,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[5]"
               :options="effects || []"
-              :class="selectedEffect === 5 ? 'selected': ''"
+              :class="classes('effect', 5)"
               @click="selectItem('effect', 5)"
             ></slot-item>
             <slot-item
@@ -149,7 +149,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[2]"
               :options="effects || []"
-              :class="selectedEffect === 2 ? 'selected': ''"
+              :class="classes('effect', 2)"
               @click="selectItem('effect', 2)"
             ></slot-item>
             <slot-item
@@ -157,7 +157,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[4]"
               :options="effects || []"
-              :class="selectedEffect === 4 ? 'selected': ''"
+              :class="classes('effect', 4)"
               @click="selectItem('effect', 4)"
             ></slot-item>
             <slot-item
@@ -165,7 +165,7 @@
               :update="updateEffect"
               :selected="(state?.effects || [])[3]"
               :options="effects || []"
-              :class="selectedEffect === 3 ? 'selected': ''"
+              :class="classes('effect', 3)"
               @click="selectItem('effect', 3)"
             ></slot-item>
             <!-- </template> -->
@@ -295,9 +295,43 @@
       });
     }
 
+    classes(type, idx) {
+      let classList = []
+      
+      if (this.isSelected(type, idx)) {
+        classList.push("selected");
+      }
+
+      if (!!this.state?.values) {
+        let values = null;
+        if (type === "script") {
+          values = this.state.values.scripts[idx];
+        } else {
+          values = this.state.values.effects[this.selectedVideo || 0][idx];
+        }
+
+        if (values[2] === 1) {
+          classList.push("disabled");
+        }
+      }
+
+      return classList.join(" ");
+    }
+
+    isSelected(type, idx) {
+      if (type === "script") {
+        return this.selectedScript === idx;
+      } else {
+        return this.selectedEffect === idx;
+      }
+    }
+
     selectItem(type, idx) {
-      console.log(idx, this.order[idx]);
-      this.app.updateSelected(type, idx);
+      if (this.isSelected(type, idx)) {
+        this.app.toggleDisabled(type, idx);
+      } else {
+        this.app.updateSelected(type, idx);
+      }
     }
 
     updateEffect(idx, effect) {

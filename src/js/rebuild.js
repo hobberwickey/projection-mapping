@@ -138,7 +138,7 @@ class App extends Context {
 
     return {
       selected: {
-        video: null,
+        video: 0,
         effect: null,
         script: null,
       },
@@ -149,15 +149,15 @@ class App extends Context {
           opacity: 0,
         };
       }),
-
       values: {
+        count: config.effect_parameter_count,
         effects: new Array(config.video_count).fill().map(() => {
           return new Array(config.effect_count).fill().map(() => {
-            return new Array(config.effect_parameter_count).fill(0);
+            return new Array(config.effect_parameter_count + 1).fill(0);
           });
         }),
         scripts: new Array(config.effect_count).fill().map((_, idx) => {
-          return new Array(config.effect_parameter_count).fill(0);
+          return new Array(config.effect_parameter_count + 1).fill(0);
         }),
       },
 
@@ -452,6 +452,27 @@ class App extends Context {
     if (type === "effect") {
       this.state.selected["script"] = null;
     }
+
+    this.saveState();
+  }
+
+  toggleDisabled(type, idx) {
+    if (type === "script") {
+      this.state.values.scripts[idx][2] = +!this.state.values.scripts[idx][2];
+    }
+
+    if (type === "effect") {
+      let videoIdx = this.state.selected.video;
+      this.state.values.effects[videoIdx][idx][2] =
+        +!this.state.values.effects[videoIdx][idx][2];
+    }
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "update_state",
+        state: this.state,
+      }),
+    );
 
     this.saveState();
   }
