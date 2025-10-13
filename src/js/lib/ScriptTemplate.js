@@ -6,7 +6,12 @@ export const ScriptTemplate = function (script) {
 
 		const lfo = function(min, max, interval) {
 			let ms = interval * 1000;
-			let perc = (state.elapsed % ms) / ms;
+			let previous = lfos[lfos_count] || 1;
+			let delta = Math.abs(((state.elapsed % ms) / ms) - ((registry.elapsed % ms) / ms));
+			let perc = (previous + delta) % 1;
+
+			lfos[lfos_count] = perc || 0;
+			lfos_count++;
 
 			return {
 				sin: function() {
@@ -36,6 +41,7 @@ export const ScriptTemplate = function (script) {
 			}
 		}
 
+		// Deprecated
 		const smooth_lfo = function(min, max, interval) {
 			let ms = interval * 1000;
 			let previous = lfos[lfos_count] || 1;
@@ -116,53 +122,86 @@ export const ScriptTemplate = function (script) {
 			return state.shapes[shape].opacity[video];
 		}
 
-		const getEffectById = function(id) {
-			let effects = [];
-			for (var i=0; i<state.effects.length; i++) {
-				if (state.effects[i] === id) {
-					effects.push(i);
+		const getValues = function(identifier) {
+			if (typeof identifier === 'number') {
+				if (state.slots[identifier].effect === "__script") {
+					return [state.slots[identifier].script.values]
+				}
+
+				return [state.slots[identifier].values];
+			}
+
+			let values = [];
+			for (let i=0; i<state.scripts.length; i++) {
+				if (state.scripts[i].slot.label.toLowerCase() === identifier.toLowerCase()) {
+					values.push(state.scripts[i].slot.script.values);
 				}
 			}
 
-			return effects;
+			for (let i=0; i<state.effects.length; i++) {
+				if (state.effects[i].slot.label.toLowerCase() === identifier.toLowerCase()) {
+					values.push(state.effects[i].slot.values);
+				}
+			}	
+
+			return values;
 		}
 
-		const setEffectValues = function(effects, videos, x, y) {
+		const setValues = function(identifier, videos, values) {
+			let current = getValues(identifier);
+			let x = values[0];
+			let y = values[0];
+
 			if (!Array.isArray(videos)) {
 				videos = [videos];
 			}
 
-			if (!Array.isArray(effects)) {
-				effects = [effects];
-			}
+			for (let i=0; i<current.length; i++) {
+				let set = current[i];
 
-			for (var i=0; i<videos.length; i++) {
-				for (var j=0; j<effects.length; j++) {
+				for (let j=0; j<videos.length; j++) {
 					if (x !== null) {
-						state.values.effects[videos[i]][effects[j]][0] = x;
+						set[j][0] = x;
 					}
 
 					if (y !== null) {
-						state.values.effects[videos[i]][effects[j]][1] = y;
-					}
+						set[j][1] = y;
+					} 
 				}
 			}
 		}
 
+		// Deprecated
+		const getEffectById = function(id) {
+			return [];
+		}
+
+		// Deprecated
+		const setEffectValues = function(effects, videos, x, y) {
+			return;
+		}
+
+		// Deprecated
 		const getEffectValues = function(effect, video) {
-			return state.values.effects[video][effect];
+			return [0, 0];
 		}
 
 		const getSelectedVideo = function() {
 			return state.selected.video;
 		}
 
-		const getSelectedEffect = function() {
-			return state.selected.effect;
+		const getSelectedSlot = function() {
+			return state.selected.slot;
 		}
 
+		// Deprecated
+		const getSelectedEffect = function() {
+			return state.selected.slot;
+		}
+
+		// Deprecated
 		const getSelectedScript = function() {
-			return state.selected.script;
+			return state.selected.slot;
 		}
 
 		const setInputPoints = function(shapes, fn) {

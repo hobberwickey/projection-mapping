@@ -57,10 +57,7 @@
 							:value="$value?.label || ''"
 							@input="updateScript($value, $event)"
 						/>
-						<span
-							uk-icon="icon: file-edit"
-							@click="editScript($idx, $value)"
-						></span>
+						<span uk-icon="icon: file-edit" @click="editScript($value)"></span>
 						<span
 							uk-icon="icon: minus-circle"
 							@click="removeScript($value)"
@@ -107,10 +104,10 @@
 			});
 
 			this.listen("app", (app) => {
-				this.scripts = [...app.scripts].filter((s) => !s.hidden);
+				this.scripts = [...app.scripts];
 
 				app.listen("scripts", (scripts) => {
-					this.scripts = [...scripts].filter((s) => !s.hidden);
+					this.scripts = [...scripts];
 				});
 			});
 		}
@@ -127,14 +124,22 @@
 			this.app.removeShape(shape);
 		}
 
-		editScript(idx) {
+		editScript(script) {
 			let editor = document.createElement("script-editor");
-			editor.idx = idx;
+			editor.save = this.saveScript.bind(this, script.id);
 			editor.app = this.app;
-			editor.code = this.scripts[idx].code;
-			editor.label = this.scripts[idx].label;
+			editor.code = script.code;
+			editor.label = script.label;
 
 			document.body.appendChild(editor);
+		}
+
+		saveScript(id, label, code) {
+			try {
+				this.app.updateScript(id, label, code);
+			} catch (err) {
+				this.error = err;
+			}
 		}
 
 		addScript() {

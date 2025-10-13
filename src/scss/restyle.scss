@@ -85,7 +85,8 @@ form {
       font-size: 12px;
     }
 
-    input, select {
+    input,
+    select {
       display: block;
       width: 100%;
 
@@ -196,54 +197,44 @@ nav {
   position: relative;
   font-size: 0;
 
-  slot-item, script-slot {
+  slot-item,
+  script-slot {
     display: inline-block;
-    width: 33.3%;
+    width: 38.3%;
     margin-top: 10px !important;
     margin-bottom: 10px !important;
     font-size: var(--default-font-size);
+    position: relative;
 
     &:nth-child(1) {
-      margin-left: 15.6%;
+      margin-left: 10.6%;
       margin-right: 1%;
     }
 
     &:nth-child(2) {
-      margin-right: 15.6%;
+      margin-right: 10.6%;
       margin-left: 1%;
     }
 
     &:nth-child(3) {
-      margin-right: 8.3%;
-      margin-left: 8.3%;
+      margin-right: 3.3%;
+      margin-left: 3.3%;
     }
 
     &:nth-child(4) {
-      margin-right: 8.3%;
-      margin-left: 8.3%;
+      margin-right: 3.3%;
+      margin-left: 13.3%;
     }
 
     &:nth-child(5) {
-      margin-left: 15.6%;
+      margin-left: 10.6%;
       margin-right: 1%;
     }
 
     &:nth-child(6) {
-      margin-right: 15.6%;
+      margin-right: 10.6%;
       margin-left: 1%;
     }
-
-    // &:nth-child(n + 3):nth-child(-n + 4) {
-    //   background-color: #060;
-    // }
-
-    // &:nth-child(n + 5):nth-child(-n + 6) {
-    //   background-color: #006;
-    // }
-
-    position: relative;
-    // padding: 0px !important;
-    // margin: 0px !important;
 
     .select {
       border: solid 1px #000;
@@ -288,17 +279,29 @@ nav {
         }
       }
 
-      .select-handle {
-        width: 50px;
+      .select-actions {
+        width: 90px;
+        top: 1px;
+        right: 0px;
         position: absolute;
-        top: 2px;
-        right: 10px;
-        text-align: right;
-        cursor: pointer;
+        display: flex;
+        justify-content: flex-end;
 
-        svg {
-          width: 35px;
-          height: 35px;
+        .select-handle {
+          width: 30px;
+          text-align: right;
+          cursor: pointer;
+
+          span {
+            width: 20px;
+            height: 35px;
+            display: block;
+            margin: 0px auto;
+
+            svg {
+              height: 35px;
+            }
+          }
         }
       }
 
@@ -316,13 +319,11 @@ nav {
 
     &.selected {
       box-shadow: 0px 1px 14px 6px hsl(184.14deg 100% 51.57%) !important;
-    
+
       &.disabled {
         box-shadow: 0px 1px 14px 6px hsl(277.14deg 100% 51.57%) !important;
       }
     }
-
-
   }
 
   script-slot {

@@ -11,172 +11,98 @@
         <div class="uk-width-1-2">
           <label>Script Slots</label>
           <div class="slot-list">
-            0, 1, 5, 2, 4, 3
-            <script-slot
-              :idx="0"
-              :script="(scripts || [])[0]"
-              :app="app"
-              :class="classes('script', 0)"
-              @click="selectItem('script', 0)"
-            ></script-slot>
-            <script-slot
-              :idx="1"
-              :script="(scripts || [])[1]"
-              :app="app"
-              :class="classes('script', 1)"
-              @click="selectItem('script', 1)"
-            ></script-slot>
-            <script-slot
-              :idx="5"
-              :script="(scripts || [])[5]"
-              :app="app"
-              :class="classes('script', 5)"
-              @click="selectItem('script', 5)"
-            ></script-slot>
-            <script-slot
-              :idx="2"
-              :script="(scripts || [])[2]"
-              :app="app"
-              :class="classes('script', 2)"
-              @click="selectItem('script', 2)"
-            ></script-slot>
-            <script-slot
-              :idx="4"
-              :script="(scripts || [])[4]"
-              :app="app"
-              :class="classes('script', 4)"
-              @click="selectItem('script', 4)"
-            ></script-slot>
-            <script-slot
-              :idx="3"
-              :script="(scripts || [])[3]"
-              :app="app"
-              :class="classes('script', 5)"
-              @click="selectItem('script', 3)"
-            ></script-slot>
-            <!-- <template :for="state?.scripts || []">
-              <slot-item
-                :idx="order[$idx]"
-                :update="updateScript"
-                :selected="$value"
-                :options="scripts || []"
-                :class="selectedScript === order[$idx] ? 'selected': ''"
-                @click="selectItem('script', order[$idx])"
-              ></slot-item>
-            </template> -->
-            <!--
             <slot-item
               :idx="0"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[0]"
-              :options="scripts || []"
-              :class="selectedScript === 0 ? 'selected': ''"
-              @click="selectItem('script', 0)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(0)"
+              @click="select('slot', 0)"
             ></slot-item>
             <slot-item
               :idx="1"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[1]"
-              :options="scripts || []"
-              :class="selectedScript === 1 ? 'selected': ''"
-              @click="selectItem('script', 1)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(1)"
+              @click="select('slot', 1)"
             ></slot-item>
             <slot-item
               :idx="5"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[5]"
-              :options="scripts || []"
-              :class="selectedScript === 5 ? 'selected': ''"
-              @click="selectItem('script', 5)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(5)"
+              @click="select('slot', 5)"
             ></slot-item>
             <slot-item
               :idx="2"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[2]"
-              :options="scripts || []"
-              :class="selectedScript === 2 ? 'selected': ''"
-              @click="selectItem('script', 2)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(2)"
+              @click="select('slot', 2)"
             ></slot-item>
             <slot-item
               :idx="4"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[4]"
-              :options="scripts || []"
-              :class="selectedScript === 4 ? 'selected': ''"
-              @click="selectItem('script', 4)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(4)"
+              @click="select('slot', 4)"
             ></slot-item>
             <slot-item
               :idx="3"
-              :update="updateScript"
-              :selected="(state?.scripts || [])[3]"
-              :options="scripts || []"
-              :class="selectedScript === 3 ? 'selected': ''"
-              @click="selectItem('script', 3)"
+              :app="app"
+              :options="effects || []"
+              :class="classes(3)"
+              @click="select('slot', 3)"
             ></slot-item>
-            -->
           </div>
         </div>
         <div class="uk-width-1-2">
           <label>Effect Slots</label>
           <div class="slot-list">
-            <!-- <template :for="state?.effects || []"> -->
             <slot-item
-              :idx="0"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[0]"
+              :idx="6"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 0)"
-              @click="selectItem('effect', 0)"
+              :class="classes(6)"
+              @click="select('slot', 6)"
             ></slot-item>
             <slot-item
-              :idx="1"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[1]"
+              :idx="7"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 1)"
-              @click="selectItem('effect', 1)"
+              :class="classes(7)"
+              @click="select('slot', 7)"
             ></slot-item>
             <slot-item
-              :idx="5"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[5]"
+              :idx="11"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 5)"
-              @click="selectItem('effect', 5)"
+              :class="classes(11)"
+              @click="select('slot', 11)"
             ></slot-item>
             <slot-item
-              :idx="2"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[2]"
+              :idx="8"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 2)"
-              @click="selectItem('effect', 2)"
+              :class="classes(8)"
+              @click="select('slot', 8)"
             ></slot-item>
             <slot-item
               :idx="4"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[4]"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 4)"
-              @click="selectItem('effect', 4)"
+              :class="classes(10)"
+              @click="select('slot', 10)"
             ></slot-item>
             <slot-item
               :idx="3"
-              :update="updateEffect"
-              :selected="(state?.effects || [])[3]"
+              :app="app"
               :options="effects || []"
-              :class="classes('effect', 3)"
-              @click="selectItem('effect', 3)"
+              :class="classes(9)"
+              @click="select('slot', 9)"
             ></slot-item>
-            <!-- </template> -->
           </div>
         </div>
       </div>
-
-      <!-- <div class="bar-holder">
-        <horizontal-led-bar id="h_effect_a_lights"></horizontal-led-bar>
-        <horizontal-led-bar id="h_effect_b_lights"></horizontal-led-bar>
-      </div> -->
 
       <div class="controls uk-width-1-1 uk-flex">
         <div class="videos uk-width-6-10">
@@ -186,42 +112,42 @@
               :app="app"
               :opacity="getOpacity(0)"
               :class='selectedVideo === 0 ? "selected" : ""'
-              @click="selectItem('video', 0)"
+              @click="select('video', 0)"
             ></video-slot>
             <video-slot
               :idx="1"
               :app="app"
               :opacity="getOpacity(1)"
               :class='selectedVideo === 1 ? "selected" : ""'
-              @click="selectItem('video', 1)"
+              @click="select('video', 1)"
             ></video-slot>
             <video-slot
               :idx="2"
               :app="app"
               :opacity="getOpacity(2)"
               :class='selectedVideo === 2 ? "selected" : ""'
-              @click="selectItem('video', 2)"
+              @click="select('video', 2)"
             ></video-slot>
             <video-slot
               :idx="3"
               :app="app"
               :opacity="getOpacity(3)"
               :class='selectedVideo === 3 ? "selected" : ""'
-              @click="selectItem('video', 3)"
+              @click="select('video', 3)"
             ></video-slot>
             <video-slot
               :idx="4"
               :app="app"
               :opacity="getOpacity(4)"
               :class='selectedVideo === 4 ? "selected" : ""'
-              @click="selectItem('video', 4)"
+              @click="select('video', 4)"
             ></video-slot>
             <video-slot
               :idx="5"
               :app="app"
               :opacity="getOpacity(5)"
               :class='selectedVideo === 5 ? "selected" : ""'
-              @click="selectItem('video', 5)"
+              @click="select('video', 5)"
             ></video-slot>
           </div>
           <!-- <video-slots :app="app" :selected="selectedVideo"></video-slots> -->
@@ -289,49 +215,33 @@
           this.selectedEffect = state.selected.effect;
           this.selectedScript = state.selected.script;
           this.values = [...this.app.getSelectedValues()];
-
-          // console.log(this.values);
         });
       });
     }
 
-    classes(type, idx) {
-      let classList = []
-      
-      if (this.isSelected(type, idx)) {
+    classes(idx) {
+      let { slots, selected } = this.state || {};
+      let classList = [];
+
+      if (!slots || !selected) {
+        return "";
+      }
+
+      let slot = slots[idx];
+
+      if (selected.slot === idx) {
         classList.push("selected");
       }
 
-      if (!!this.state?.values) {
-        let values = null;
-        if (type === "script") {
-          values = this.state.values.scripts[idx];
-        } else {
-          values = this.state.values.effects[this.selectedVideo || 0][idx];
-        }
-
-        if (values[2] === 1) {
-          classList.push("disabled");
-        }
+      if (slot.disabled) {
+        classList.push("disabled");
       }
 
       return classList.join(" ");
     }
 
-    isSelected(type, idx) {
-      if (type === "script") {
-        return this.selectedScript === idx;
-      } else {
-        return this.selectedEffect === idx;
-      }
-    }
-
-    selectItem(type, idx) {
-      if (this.isSelected(type, idx)) {
-        this.app.toggleDisabled(type, idx);
-      } else {
-        this.app.updateSelected(type, idx);
-      }
+    select(type, idx) {
+      this.app.updateSelected(type, idx);
     }
 
     updateEffect(idx, effect) {

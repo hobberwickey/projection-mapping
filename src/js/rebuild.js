@@ -30,55 +30,7 @@ class App extends Context {
   constructor(config) {
     super({
       effects: Effects,
-      scripts: [
-        ...[
-          {
-            id: 0,
-            hidden: true,
-            active: false,
-            label: `Script 1`,
-            code: "",
-          },
-          {
-            id: 1,
-            hidden: true,
-            active: false,
-            label: `Script 2`,
-            code: "",
-          },
-          {
-            id: 2,
-            hidden: true,
-            active: false,
-            label: `Script 3`,
-            code: "",
-          },
-          {
-            id: 3,
-            hidden: true,
-            active: false,
-            label: `Script 4`,
-            code: "",
-          },
-          {
-            id: 4,
-            hidden: true,
-            active: false,
-            label: `Script 5`,
-            code: "",
-          },
-          {
-            id: 5,
-            hidden: true,
-            active: false,
-            label: `Script 6`,
-            code: "",
-          },
-        ],
-        ...(JSON.parse(localStorage.getItem("scripts")) || []).filter((s) => {
-          return s.id > 5;
-        }),
-      ],
+      scripts: JSON.parse(localStorage.getItem("scripts")) || [],
       state: null,
       id: null,
       midiAccess: null,
@@ -138,9 +90,8 @@ class App extends Context {
 
     return {
       selected: {
-        video: 0,
-        effect: null,
-        script: null,
+        video: null,
+        slot: null,
       },
       videos: new Array(config.video_count).fill().map((_, idx) => {
         return {
@@ -149,25 +100,24 @@ class App extends Context {
           opacity: 0,
         };
       }),
-      values: {
-        count: config.effect_parameter_count,
-        effects: new Array(config.video_count).fill().map(() => {
-          return new Array(config.effect_count).fill().map(() => {
-            return new Array(config.effect_parameter_count + 1).fill(0);
-          });
-        }),
-        scripts: new Array(config.effect_count).fill().map((_, idx) => {
-          return new Array(config.effect_parameter_count + 1).fill(0);
-        }),
-      },
-
-      scripts: new Array(config.script_count).fill().map((_, idx) => {
-        return [0, 1, 5, 2, 4, 3][idx];
+      slots: new Array(config.slot_count).fill().map((_, idx) => {
+        return {
+          label: `Empty`,
+          script: {
+            label: `Script ${idx + 1}`,
+            code: "",
+            values: [0, 0],
+          },
+          effect: null,
+          disabled: false,
+          values: new Array(6).fill().map((v) => {
+            return [0, 0];
+          }),
+        };
       }),
 
-      effects: new Array(config.effect_count).fill().map((_, idx) => {
-        return null;
-      }),
+      scripts: [],
+      effects: [],
 
       shapes: [
         {
@@ -241,22 +191,19 @@ class App extends Context {
       console.log("Midi Success");
 
       for (const entry of midiAccess.inputs) {
-        console.log(entry[1]);
         if (entry[1].name === "Sensory Controller") {
           this.midiInput = entry[1];
-          console.log(this.midiInput);
           entry[1].onmidimessage = (e) => {
             let note = e.data[1];
             let velocity = e.data[2];
 
-            console.log(note, velocity);
+            // console.log(note, velocity);
 
             let { midi } = this.config;
 
             let opacityNotes = midi.buttons.opacity;
             for (var i = 0; i < opacityNotes.length; i++) {
               if (+note === +opacityNotes[i]) {
-                // this.sliders.pauseIn();
                 this.updateOpacity(i, velocity / 127);
               }
             }
@@ -271,29 +218,33 @@ class App extends Context {
 
             let effectSelectNote = midi.selectors.select[0];
             if (+note === +effectSelectNote) {
-              let current = this.state.selected.effect ?? 0;
+              let current =
+                Math.min(Math.max(5, this.state.selected.slot ?? 6), 11) - 6;
 
               this.sliders.pauseIn();
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
-                this.updateSelected("effect", next);
+                this.updateSelected("slot", next + 6);
               } else {
                 let next = (current + 1) % 6;
-                this.updateSelected("effect", next);
+                this.updateSelected("slot", next + 6);
               }
             }
 
             let scriptSelectNote = midi.selectors.select[1];
             if (+note === +scriptSelectNote) {
-              let current = this.state.selected.script ?? 0;
+              let current = Math.max(
+                0,
+                Math.min(5, this.state.selected.slot ?? 0),
+              );
 
               this.sliders.pauseIn();
               if (velocity === 127) {
                 let next = current - 1 < 0 ? 5 : current - 1;
-                this.updateSelected("script", next);
+                this.updateSelected("slot", next);
               } else {
                 let next = (current + 1) % 6;
-                this.updateSelected("script", next);
+                this.updateSelected("slot", next);
               }
             }
 
@@ -301,16 +252,8 @@ class App extends Context {
               let sliderNotes = midi.sliders[0];
               for (var i = 0; i < sliderNotes.length; i++) {
                 if (+note === +sliderNotes[i]) {
-                  let { effect, script } = this.state.selected;
-
                   this.sliders.pauseOut();
-                  if (effect !== null) {
-                    this.updateEffectValue(i, velocity / 127);
-                  }
-
-                  if (script !== null) {
-                    this.updateScriptValue(i, velocity / 127);
-                  }
+                  this.updateValue(i, velocity / 127);
                 }
               }
             }
@@ -343,19 +286,6 @@ class App extends Context {
       );
 
       this.midiAccess = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
-
-      // this.midiWorker = new Worker(new URL("./midi.js", import.meta.url));
-      // this.midiWorker.onmessage = (e) => {
-      //   console.log(e.data);
-      // };
-      // this.midiWorker.postMessage({
-      //   action: "config",
-      //   message: {
-      //     configuration: this.config,
-      //     input: this.midiInput,
-      //     output: this.midiOutput,
-      //   },
-      // });
     };
 
     const onMIDIFailure = (msg) => {
@@ -372,12 +302,6 @@ class App extends Context {
   async toggleMedia(device) {
     try {
       this.selectedMedia = device;
-      // this.stream = await navigator.mediaDevices.getUserMedia({
-      //   audio: false,
-      //   video: { deviceId: device.deviceId },
-      // });
-
-      // console.log(this.stream);
     } catch (err) {
       console.log("Failed to load webcam:", err);
     }
@@ -427,14 +351,14 @@ class App extends Context {
         }),
       );
 
-      for (var i = 0; i < 6; i++) {
-        this.screen.postMessage(
-          JSON.stringify({
-            action: "update_script",
-            script_id: i,
-          }),
-        );
-      }
+      // for (var i = 0; i < 6; i++) {
+      //   this.screen.postMessage(
+      //     JSON.stringify({
+      //       action: "update_script",
+      //       script_id: i,
+      //     }),
+      //   );
+      // }
     });
   }
 
@@ -444,28 +368,11 @@ class App extends Context {
 
   updateSelected(type, idx) {
     this.state.selected[type] = idx;
-
-    if (type === "script") {
-      this.state.selected["effect"] = null;
-    }
-
-    if (type === "effect") {
-      this.state.selected["script"] = null;
-    }
-
     this.saveState();
   }
 
-  toggleDisabled(type, idx) {
-    if (type === "script") {
-      this.state.values.scripts[idx][2] = +!this.state.values.scripts[idx][2];
-    }
-
-    if (type === "effect") {
-      let videoIdx = this.state.selected.video;
-      this.state.values.effects[videoIdx][idx][2] =
-        +!this.state.values.effects[videoIdx][idx][2];
-    }
+  toggleDisabled(idx) {
+    this.state.slots[idx].active = !this.state.slots[idx].active;
 
     this.screen.postMessage(
       JSON.stringify({
@@ -479,25 +386,18 @@ class App extends Context {
 
   getSelectedValues() {
     let { selected } = this.state;
-    let { effect, script, video } = selected;
+    let { slot, video } = selected;
 
-    if (script === null) {
-      if (effect !== null) {
-        if (video === null) {
-          return [0, 0];
-        }
-
-        return this.state.values.effects[video][effect];
-      }
+    if (slot === null || video === null) {
+      return [0, 0];
     }
 
-    if (effect === null) {
-      if (script !== null) {
-        return this.state.values.scripts[script];
-      }
+    console.log(slot, this.state);
+    if (this.state.slots[slot].effect === "__script") {
+      return this.state.slots[slot].script.values;
     }
 
-    return [0, 0];
+    return this.state.slots[slot].values[video];
   }
 
   addScript(type) {
@@ -530,29 +430,29 @@ class App extends Context {
     this.scripts = [...this.scripts];
     localStorage.setItem("scripts", JSON.stringify(this.scripts));
 
-    this.screen.postMessage(
-      JSON.stringify({
-        action: "update_script",
-        script_id: id,
-      }),
-    );
+    // this.screen.postMessage(
+    //   JSON.stringify({
+    //     action: "update_script",
+    //     script_id: id,
+    //   }),
+    // );
 
-    this.saveState();
+    // this.saveState();
   }
 
   removeScript(id) {
-    for (var i = 0; i < this.state.scripts.length; i++) {
-      if (this.state.scripts[i] === id) {
-        this.setScript(i, null);
-      }
-    }
+    // for (var i = 0; i < this.state.scripts.length; i++) {
+    //   if (this.state.scripts[i] === id) {
+    //     this.setScript(i, null);
+    //   }
+    // }
 
-    this.screen.postMessage(
-      JSON.stringify({
-        action: "remove_script",
-        script_id: id,
-      }),
-    );
+    // this.screen.postMessage(
+    //   JSON.stringify({
+    //     action: "remove_script",
+    //     script_id: id,
+    //   }),
+    // );
 
     this.scripts = this.scripts.filter((s) => s.id !== id);
     localStorage.setItem("scripts", JSON.stringify(this.scripts));
@@ -692,14 +592,6 @@ class App extends Context {
     this.saveState();
   }
 
-  updateShape(idx, name) {
-    // Stub
-  }
-
-  selectShape(idx) {
-    // Stub
-  }
-
   updateVideo(idx, file) {
     if (!this.screen) {
       return;
@@ -778,49 +670,20 @@ class App extends Context {
 
   updateValue(idx, value) {
     let { selected } = this.state;
-    let { effect, script, video } = selected;
+    let { slot, video } = selected;
 
-    if (script === null) {
-      if (effect !== null) {
-        this.updateEffectValue(idx, value);
-      }
-    }
-
-    if (effect === null) {
-      if (script !== null) {
-        this.updateScriptValue(idx, value);
-      }
-    }
-  }
-
-  updateScriptValue(valueIdx, value) {
-    let { selected } = this.state;
-    let { effect, script, video } = selected;
-
-    this.state.values.scripts[script][valueIdx] = value;
-    this.screen.postMessage(
-      JSON.stringify({
-        action: "update_state",
-        state: this.state,
-      }),
-    );
-
-    this.saveState();
-  }
-
-  updateEffectValue(effectIdx, value) {
-    if (!this.screen) {
+    if (slot === null || video === null) {
       return;
     }
 
-    let { state } = this;
-    let { video, effect } = state.selected;
+    let effect = this.state.slots[slot].effect;
 
-    if (video === null || effect === null) {
-      return;
+    if (effect === "__script") {
+      console.log(this.state.slots[slot].script);
+      this.state.slots[slot].script.values[idx] = parseFloat(value);
+    } else {
+      this.state.slots[slot].values[video][idx] = parseFloat(value);
     }
-
-    this.state.values.effects[video][effect][effectIdx] = value;
 
     this.screen.postMessage(
       JSON.stringify({
@@ -834,7 +697,6 @@ class App extends Context {
 
   toggleVideo(idx) {
     this.selectedVideos[0] = idx;
-    this.setValues();
   }
 
   removeVideo(idx) {
@@ -851,234 +713,110 @@ class App extends Context {
     );
 
     this.saveState();
-    this.setValues();
   }
 
-  // toggleGroup(shapeIdx, groupIdx) {
-  //   let group = this.state.groups[groupIdx];
-  //   let existingIdx = group.shapes.indexOf(shapeIdx);
+  setSlot(idx, effect) {
+    let slot = this.state.slots[idx];
 
-  //   if (existingIdx === -1) {
-  //     group.shapes.push(shapeIdx);
-  //   } else {
-  //     group.shapes.splice(existingIdx, 1);
-  //   }
-  // }
-
-  // selectEffect(idx) {
-  //   this.selectedEffect = idx;
-  //   this.setValues();
-
-  //   document
-  //     .querySelector(":root")
-  //     .style.setProperty("--selected-fx-clr", `var(--fx-clr-${idx}`);
-  // }
-
-  // selectGroup(idx) {
-  //   this.selectedGroup = idx;
-  //   this.setValues();
-
-  //   document
-  //     .querySelector(":root")
-  //     .style.setProperty("--selected-grp-clr", `var(--grp-clr-${idx}`);
-  // }
-
-  // selectShape(idx) {
-  //   this.selectedShape = idx;
-  // }
-
-  setEffect(idx, effect) {
-    let { state } = this;
-
-    state.effects[idx] = effect;
-
-    let fx = this.effects.find((e) => e.id === effect);
-    if (!!fx) {
-      for (var i = 0; i < state.videos.length; i++) {
-        state.values.effects[i][idx] = [...fx.defaults];
-      }
+    slot.effect = effect;
+    if (effect === null) {
+      slot.label = "Empty";
+    } else if (effect === "__script") {
+      slot.label = slot.script.label;
     } else {
-      console.log("Unknown Effect", effect);
+      slot.label = this.effects.find((e) => e.id === effect).label;
     }
 
-    this.state = { ...state, effects: [...state.effects] };
+    slot.values = new Array(6).fill().map((v) => {
+      return [0, 0];
+    });
+
+    let used = [];
+    let unused = Effects.map((e) => e.id);
+    let effects = [];
+    let scripts = [];
+
+    for (var i = 0; i < this.state.slots.length; i++) {
+      let effect = this.state.slots[i].effect;
+
+      if (!!effect) {
+        if (effect === "__script") {
+          scripts.push({
+            slot: this.state.slots[i],
+          });
+        } else {
+          used.push({
+            id: effect,
+            slot: this.state.slots[i],
+          });
+          unused.splice(unused.indexOf(effect), 1);
+        }
+      }
+    }
+
+    unused = unused.map((id) => {
+      let e = Effects.find((fx) => fx.id === id);
+
+      return {
+        id: id,
+        slot: {
+          label: e.label,
+          values: new Array(6).fill(null).map(() => {
+            return [0, 0];
+          }),
+        },
+      };
+    });
+
+    effects = [...used, ...unused].map((effect) => {
+      return {
+        ...effect,
+        context: null,
+      };
+    });
+
+    this.state = {
+      ...this.state,
+      slots: [...this.state.slots],
+      scripts: scripts,
+      effects: effects,
+    };
 
     this.screen.postMessage(
       JSON.stringify({
-        action: "set_effect",
-        effectIdx: idx,
-        effect: effect,
-        state: state,
-      }),
-    );
-
-    this.saveState();
-    this.setValues();
-  }
-
-  setScript(idx, script_id) {
-    this.state.scripts[idx] = script_id;
-    this.state = { ...this.state, scripts: [...this.state.scripts] };
-
-    this.screen.postMessage(
-      JSON.stringify({
-        action: "update_state",
+        action: "update_slot",
+        idx: idx,
+        slot: slot,
         state: this.state,
       }),
     );
 
     this.saveState();
-    // this.setValues();
   }
 
-  setValues() {
-    // let selectedVideo = this.selectedVideos[0];
-    // let selectedGroup = this.selectedGroup;
-    // let selectedEffect = this.selectedEffect;
+  updateSlot(idx, updates) {
+    let slot = this.state.slots[idx];
 
-    // let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    // let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
-    // let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
+    for (var x in updates) {
+      slot[x] = updates[x];
+    }
 
-    // document.querySelectorAll(".inputs input")[0].value = opacity;
-    // document.querySelectorAll(".inputs input")[1].value = effect_a;
-    // document.querySelectorAll(".inputs input")[2].value = effect_b;
+    this.state = { ...this.state, slots: [...this.state.slots] };
 
-    this.setMidi();
-    this.setLEDS();
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "update_slot",
+        idx: idx,
+        slot: slot,
+        state: this.state,
+      }),
+    );
+
+    this.saveState();
   }
-
-  setEffectValues() {
-    // let effects = this.state.effects;
-    // let effectEls = document.querySelectorAll("#effects > .select");
-    // for (var i = 0; i < effects.length; i++) {
-    //   let effect = effects[i];
-    //   let el = effectEls[i];
-    //   el.controller.setSelected(effect);
-    // }
-  }
-
-  setMidi() {
-    // // stub
-    // return;
-    // let selectedVideo = this.selectedVideos[0];
-    // let selectedGroup = this.selectedGroup;
-    // let selectedEffect = this.selectedEffect;
-    // let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    // let effect_a = this.state.videos[selectedVideo].values[selectedEffect][0];
-    // let effect_b = this.state.videos[selectedVideo].values[selectedEffect][1];
-    // let { sliders } = this.state.notes;
-    // let notes = Object.keys(sliders.output);
-    // if (!!this.midiOutput) {
-    //   this.midiOutput.send([144, notes[0], (opacity * 127) | 0]);
-    //   this.midiOutput.send([144, notes[1], (effect_a * 127) | 0]);
-    //   this.midiOutput.send([144, notes[2], (effect_b * 127) | 0]);
-    // }
-  }
-
-  setLEDS() {
-    // // stub
-    // return;
-    // if (!this.midiOutput) {
-    //   return;
-    // }
-    // let selectedVideo = this.selectedVideos[0];
-    // let selectedGroup = this.selectedGroup;
-    // let selectedEffect = this.selectedEffect;
-    // let opacity = this.state.groups[selectedGroup].opacity[selectedVideo];
-    // let opacityNote = [10, 11, 12, 13, 14, 15][selectedVideo];
-    // this.midiOutput.send([144, opacityNote, (opacity * 100) | 0]);
-    // let groupNotes = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
-    // let effectNotes = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
-    // for (var i = 0; i < 6; i++) {
-    //   let note1 = groupNotes[i * 2];
-    //   let note2 = groupNotes[i * 2 + 1];
-    //   let groupOpacity = this.state.groups[i].opacity[selectedVideo];
-    //   if (selectedGroup !== i) {
-    //     this.midiOutput.send([144, note1, (groupOpacity * 10) | 0]);
-    //     this.midiOutput.send([144, note2, (groupOpacity * 10) | 0]);
-    //   } else {
-    //     this.midiOutput.send([144, note1, 127]);
-    //     this.midiOutput.send([144, note2, 127]);
-    //   }
-    // }
-    // for (var i = 0; i < 6; i++) {
-    //   let note1 = effectNotes[i * 2];
-    //   let note2 = effectNotes[i * 2 + 1];
-    //   let values = this.state.videos[selectedVideo].values[i];
-    //   if (selectedEffect !== i) {
-    //     this.midiOutput.send([144, note1, (values[0] * 10) | 0]);
-    //     this.midiOutput.send([144, note2, (values[1] * 10) | 0]);
-    //   } else {
-    //     console.log(note1, note2);
-    //     this.midiOutput.send([144, note1, 127]);
-    //     this.midiOutput.send([144, note2, 127]);
-    //   }
-    // }
-    // let effectNotes = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
-    // let groupNotes = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
-    // for (var i = 0; i < 6; i++) {
-    //   let note1 = groupNotes[i * 2];
-    //   let note2 = groupNotes[i * 2 + 1];
-    //   let groupOpacity = this.state.groups[i].opacity[selectedVideo];
-    //   if (selectedGroup !== i) {
-    //     this.midiOutput.send(144, note1, (groupOpacity * 10) | 0);
-    //     this.midiOutput.send(144, note2, (groupOpacity * 10) | 0);
-    //   } else {
-    //     this.midiOutput.send(144, note1, 0);
-    //     this.midiOutput.send(144, note2, 0);
-    //   }
-    // }
-    // console.log(selectedEffect);
-    // console.log(selectedGroup);
-    // for (var i = 0; i < 6; i++) {
-    //   let note1 = effectNotes[i * 2];
-    //   let note2 = effectNotes[i * 2 + 1];
-    //   let values = this.state.videos[selectedVideo].values[i];
-    //   if (selectedEffect !== i) {
-    //     this.midiOutput.send(144, note1, (values[0] * 10) | 0);
-    //     this.midiOutput.send(144, note2, (values[1] * 10) | 0);
-    //   } else {
-    //     this.midiOutput.send(144, note1, 255);
-    //     this.midiOutput.send(144, note2, 255);
-    //   }
-    // }
-  }
-
-  debounce(callback, wait) {
-    window.clearTimeout(this.timeoutId);
-    this.timeoutId = window.setTimeout(() => {
-      callback();
-    }, wait);
-  }
-
-  // updateValues(valueIdx, videoIdx, e) {
-  //   console.log(valueIdx, videoIdx, e.target.value);
-  //   if (!this.screen) {
-  //     return;
-  //   }
-
-  //   this.values[videoIdx][valueIdx] = e.target.value;
-
-  //   this.screen.postMessage(
-  //     JSON.stringify({
-  //       action: "update_effects",
-  //       videoIdx: videoIdx,
-  //       effect_a: this.values[videoIdx][0],
-  //       effect_b: this.values[videoIdx][1],
-  //       effect_c: this.values[videoIdx][2],
-  //     }),
-  //   );
-  // }
 }
 
 window.addEventListener("load", () => {
-  // const context = new Context({
-  //   config: { ...Config.default },
-  //   state: {},
-  //   storage: {},
-  // });
-
   const config = { ...Config.default };
 
   const app = new App(config);
@@ -1087,6 +825,5 @@ window.addEventListener("load", () => {
   const storage = new Storage(app);
 
   appEl.storage = storage;
-
   appEl.app = app;
 });

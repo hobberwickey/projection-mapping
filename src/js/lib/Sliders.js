@@ -52,9 +52,14 @@ export class Sliders extends Context {
 		let { sliders } = midi;
 
 		let output = [];
-		if (state.selected.effect !== null) {
-			let values =
-				state.values.effects[state.selected.video ?? 0][state.selected.effect];
+		if (state.selected.slot !== null) {
+			let slot = state.slots[state.selected.slot];
+			let values = [0, 0];
+			if (slot.effect === "__script") {
+				values = slot.script.values;
+			} else {
+				values = slot.values[state.selected.video ?? 0];
+			}
 
 			for (let i = 0; i < 2; i++) {
 				let slider1 = sliders[i][0];
@@ -64,18 +69,30 @@ export class Sliders extends Context {
 				output.push([144, slider2, (values[1] * 127) | 0]);
 			}
 		}
+		// if (state.selected.effect !== null) {
+		// 	let values =
+		// 		state.values.effects[state.selected.video ?? 0][state.selected.effect];
 
-		if (state.selected.script !== null) {
-			let values = state.values.scripts[state.selected.script];
+		// 	for (let i = 0; i < 2; i++) {
+		// 		let slider1 = sliders[i][0];
+		// 		output.push([144, slider1, (values[0] * 127) | 0]);
 
-			for (let i = 0; i < 2; i++) {
-				let slider1 = sliders[i][0];
-				output.push([144, slider1, (values[0] * 127) | 0]);
+		// 		let slider2 = sliders[i][1];
+		// 		output.push([144, slider2, (values[1] * 127) | 0]);
+		// 	}
+		// }
 
-				let slider2 = sliders[i][1];
-				output.push([144, slider2, (values[1] * 127) | 0]);
-			}
-		}
+		// if (state.selected.script !== null) {
+		// 	let values = state.values.scripts[state.selected.script];
+
+		// 	for (let i = 0; i < 2; i++) {
+		// 		let slider1 = sliders[i][0];
+		// 		output.push([144, slider1, (values[0] * 127) | 0]);
+
+		// 		let slider2 = sliders[i][1];
+		// 		output.push([144, slider2, (values[1] * 127) | 0]);
+		// 	}
+		// }
 
 		if (this.output_paused === null) {
 			for (let i = 0; i < output.length; i++) {

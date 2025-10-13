@@ -43,25 +43,74 @@ export class LEDs extends Context {
 			output.push([144, led, value]);
 		}
 
-		if (state.selected.effect !== null) {
-			let values = state.values.effects[state.selected.video ?? 0];
-			for (var i = 0; i < values.length; i++) {
-				let led1 = leds.values[i * 2];
-				output.push([144, led1, (values[i][0] * 127) | 0]);
+		let led = leds.selected[2];
+		let selected = state.selected.video;
+		let value = selected === null ? 127 : selected;
+		output.push([144, led, value]);
 
-				let led2 = leds.values[i * 2 + 1];
-				output.push([144, led2, (values[i][1] * 127) | 0]);
+		let slot = state.selected.slot;
+		if (slot > 5) {
+			let slotLed = leds.selected[1];
+			let slotValue = slot === null ? 127 : slot % 6;
+			output.push([144, slotLed, slotValue]);
+			output.push([144, leds.selected[0], 127]);
+		} else {
+			let slotLed = leds.selected[0];
+			let slotValue = slot === null ? 127 : slot;
+			output.push([144, slotLed, slotValue]);
+			output.push([144, leds.selected[1], 127]);
+		}
+
+		// if (state.selected.slot !== null && state.selected.slot < 6) {
+		// 	let values = state.values.effects[state.selected.video ?? 0];
+		// 	for (var i = 0; i < values.length; i++) {
+		// 		let led1 = leds.values[i * 2];
+		// 		output.push([144, led1, (values[i][0] * 127) | 0]);
+
+		// 		let led2 = leds.values[i * 2 + 1];
+		// 		output.push([144, led2, (values[i][1] * 127) | 0]);
+		// 	}
+		// }
+
+		// if (state.selected.slot !== null state.selected.slot > 5) {
+		// 	let values = state.values.scripts;
+		// 	for (var i = 0; i < values.length; i++) {
+		// 		let led1 = leds.values[i * 2];
+		// 		output.push([144, led1, (values[i][0] * 127) | 0]);
+
+		// 		let led2 = leds.values[i * 2 + 1];
+		// 		output.push([144, led2, (values[i][1] * 127) | 0]);
+		// 	}
+		// }
+
+		let videoIdx = state.selected.video ?? 0;
+		if (state.selected.slot !== null && state.selected.slot < 6) {
+			for (var i = 0; i < 6; i++) {
+				let slot = state.slots[i];
+				let values = [0, 0];
+				if (slot.effect === "__script") {
+					values = slot.script.values;
+				} else {
+					values = slot.values[videoIdx];
+				}
+
+				output.push([144, leds.values[i * 2], (values[0] * 127) | 0]);
+				output.push([144, leds.values[i * 2 + 1], (values[1] * 127) | 0]);
 			}
 		}
 
-		if (state.selected.script !== null) {
-			let values = state.values.scripts;
-			for (var i = 0; i < values.length; i++) {
-				let led1 = leds.values[i * 2];
-				output.push([144, led1, (values[i][0] * 127) | 0]);
+		if (state.selected.slot !== null && state.selected.slot > 5) {
+			for (var i = 0; i < 6; i++) {
+				let slot = state.slots[i + 6];
+				let values = [0, 0];
+				if (slot.effect === "__script") {
+					values = slot.script.values;
+				} else {
+					values = slot.values[videoIdx];
+				}
 
-				let led2 = leds.values[i * 2 + 1];
-				output.push([144, led2, (values[i][1] * 127) | 0]);
+				output.push([144, leds.values[i * 2], (values[0] * 127) | 0]);
+				output.push([144, leds.values[i * 2 + 1], (values[1] * 127) | 0]);
 			}
 		}
 

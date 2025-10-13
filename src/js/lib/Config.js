@@ -4,6 +4,7 @@ export const Config = {
 		effect_count: 6,
 		group_count: 6,
 		script_count: 6,
+		slot_count: 12,
 		effect_parameter_count: 2,
 
 		midi: {

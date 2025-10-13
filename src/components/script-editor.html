@@ -9,13 +9,18 @@
         </div>
 
         <div class="editor">
-          <div class='editor-header'>
+          <div class="editor-header">
             <form>
               <div class="input-wrapper">
                 <label>Script Name</label>
-                <input type='text' class='label' :value="label" @input="onLabel($event)" />
+                <input
+                  type="text"
+                  class="label"
+                  :value="label"
+                  @input="onLabel($event)"
+                />
               </div>
-              <div class='input-wrapper'>
+              <div class="input-wrapper">
                 <label>Template</label>
                 <select @input="onTemplate($event)">
                   <option value="">No Template</option>
@@ -60,15 +65,7 @@
     }
 
     static get observedProperties() {
-      return [
-        "app", 
-        "idx", 
-        "label", 
-        "code", 
-        "scripts", 
-        "error", 
-        "dirty"
-      ];
+      return ["app", "save", "label", "code", "scripts", "error", "dirty"];
     }
 
     connected() {
@@ -86,11 +83,11 @@
       //     this.scripts = [...scripts];
       //   });
       // });
-      
+
       this.scripts = this.app.scripts.filter((s) => !s.hidden);
       this.app.listen("scripts", (scripts) => {
-        this.scripts = scripts.filter((s) => !s.hidden)
-      })
+        this.scripts = scripts.filter((s) => !s.hidden);
+      });
 
       this.visualizer.innerHTML = this.escapeHTML(this.code);
       this.editor.innerHTML = this.escapeHTML(this.code);
@@ -102,10 +99,10 @@
     }
 
     onLabel(evt) {
-      let script = this.app.scripts[this.idx];
-
+      // let script = this.app.scripts[this.idx];
       this.label = evt.target.value;
-      this.app.updateScript(script.id, this.label, this.code);
+      this.dirty = true;
+      // this.app.updateScript(script.id, this.label, this.code);
     }
 
     onTemplate(evt) {
@@ -196,14 +193,15 @@
     }
 
     onSave() {
-      let script = this.app.scripts[this.idx];
+      // let script = this.app.scripts[this.idx];
 
-      try {
-        this.app.updateScript(script.id, this.label, this.code);
-      } catch (err) {
-        this.error = err;
-      }
+      // try {
+      //   this.app.updateScript(script.id, this.label, this.code);
+      // } catch (err) {
+      //   this.error = err;
+      // }
 
+      this.save(this.label, this.code);
       this.dirty = false;
     }
 

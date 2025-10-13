@@ -95,7 +95,7 @@ const fragmentShader = `
     }
     
     return res;
-}
+  }
 
   void main() {
     vec2 coords;
@@ -125,34 +125,15 @@ class Output {
     this.epoch = Date.now();
 
     this.videos = new Array(6).fill(null);
-    this.contexts = new Array(6).fill(null);
+    this.scripts = [];
+    this.effects = [];
+
     this.textures = [];
     this.glAttrs = new Array(6).fill(null);
-    // this.matrices = [];
-
-    // this.scripts = (JSON.parse(localStorage.getItem("scripts")) || []).reduce(
-    //   (a, c) => {
-    //     a[c.id] = new Function(
-    //       "state",
-    //       "effect_x",
-    //       "effect_y",
-    //       c.id,
-    //       this.registry,
-    //       ScriptTemplate(c.code),
-    //     );
-
-    //     return a;
-    //   },
-    //   {},
-    // );
-    this.scripts = new Array(6).fill(null).map(() => {
-      return () => {};
-    });
 
     this.gl = null;
     this.attrs = {
       main: null,
-
       effects: [],
     };
 
@@ -169,12 +150,28 @@ class Output {
     });
 
     this.createContext();
+    this.updateSlots(this.state);
   }
 
   updateState(state) {
     this.pending_state = state;
 
     this.setState();
+  }
+
+  setEffectOrder() {
+    let effects = Effects.map((e) => e.id);
+    let used = [...this.state.effects].filter((e) => !!e);
+    let unused = effects.reduce((a, c) => {
+      if (!used.includes(c)) {
+        a.push(c);
+      }
+
+      return a;
+    }, []);
+
+    console.log(effects, used, unused);
+    console.log([...used, ...unused]);
   }
 
   setState() {
@@ -186,24 +183,24 @@ class Output {
       let video = this.state.videos[i];
       let next = state;
 
-      for (var j = 0; j < state.effects.length; j++) {
-        let effect = Effects.find((e) => e.id === state.effects[j]);
-        if (!!effect && effect.id === "video_controls") {
-          let prev = state.values.effects[i][j];
-          let curr = next.values.effects[i][j];
+      // for (var j = 0; j < state.effects.length; j++) {
+      //   let effect = Effects.find((e) => e.id === state.effects[j]);
+      //   if (!!effect && effect.id === "video_controls") {
+      //     let prev = state.values.effects[i][j];
+      //     let curr = next.values.effects[i][j];
 
-          let vid = this.videos[i];
-          if (!!vid) {
-            if (prev[0] !== curr[0]) {
-              vid.playbackRate = curr[0] * 2;
-            } else if (prev[1] !== curr[1]) {
-              vid.currentTime =
-                (vid.currentTime + vid.duration * (curr[1] - prev[1])) %
-                vid.duration;
-            }
-          }
-        }
-      }
+      //     let vid = this.videos[i];
+      //     if (!!vid) {
+      //       if (prev[0] !== curr[0]) {
+      //         vid.playbackRate = curr[0] * 2;
+      //       } else if (prev[1] !== curr[1]) {
+      //         vid.currentTime =
+      //           (vid.currentTime + vid.duration * (curr[1] - prev[1])) %
+      //           vid.duration;
+      //       }
+      //     }
+      //   }
+      // }
     }
   }
 
@@ -226,22 +223,20 @@ class Output {
     let state = JSON.parse(JSON.stringify(this.state));
     state.elapsed = Date.now() - this.epoch;
 
-    for (let i = 0; i < 6; i++) {
-      let script_id = state.scripts[i];
-      if (script_id !== null) {
-        let script = this.scripts[script_id];
-        let values = state.values.scripts[i];
-        let active = values[2];
+    for (let i = 0; i < state.scripts.length; i++) {
+      let script = this.scripts[i];
+      let slot = state.scripts[i].slot;
+      let values = slot.script.values;
+      let disabled = slot.disabled;
 
-        if (active === 0) {
-          this.registry[script_id] = script(
-            state,
-            values[0],
-            values[1],
-            script_id,
-            this.registry,
-          );
-        }
+      if (!disabled) {
+        this.registry[i] = script(
+          state,
+          values[0],
+          values[1],
+          i,
+          this.registry,
+        );
       }
     }
     this.registry.elapsed = state.elapsed;
@@ -249,84 +244,89 @@ class Output {
     // console.log(this.registry);
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    for (let i = len; i >= 0; i--) {
-      if (this.videos[i] !== null) {
-        this.drawFrame(i, state);
-      }
-    }
+    this.drawFrame(state);
 
     window.requestAnimationFrame(this.step.bind(this));
   }
 
-  drawFrame(idx, state) {
-    let { videos, shapes, values } = state;
+  drawFrame(state) {
+    let effects = this.effects;
+
+    let { videos, shapes, slots } = state;
 
     // Get the context
     let gl = this.gl;
     // Get the attributes
     let attrs = this.attrs;
-
-    // Get the active effect programs
-    let effects = [];
-    for (var i = 0; i < attrs.effects.length; i++) {
-      effects.push(attrs.effects[i]);
-    }
-
-    // Get the video and it's HTML element
-    let video = videos[idx];
-    let vals = values.effects[idx];
-    let videoEl = this.videos[idx];
-    let texture = this.textures[idx];
-
-    // Skip if video isn't playing
-    if (videoEl.currentTime === 0) {
-      return;
-    }
-
-    // Clear the frame buffers
-    // for (let i = 0; i < 2; i++) {
-    //   gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
-    //   gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
-
-    //   gl.clearColor(0, 0, 0, 0);
-    //   gl.clear(gl.COLOR_BUFFER_BIT);
-    // }
-
-    // Draw the video frame for a frame buffer
-    this.updateTexture(gl, texture, videoEl);
-
+    let videosLen = this.videos.length - 1;
     let activeBuffer = 1;
-    for (let i = 0; i < effects.length; i++) {
-      if (!effects[i]) {
+
+    for (var j = videosLen; j >= 0; j--) {
+      let video = videos[j];
+      let videoEl = this.videos[j];
+      let texture = this.textures[j];
+
+      // Skip if video isn't playing
+      if (videoEl === null || videoEl.currentTime === 0) {
         continue;
       }
 
-      if (vals[i][2] === 1) {
-        continue;
-      }
+      this.updateTexture(gl, texture, videoEl);
+    }
 
+    for (var i = 0; i < effects.length; i++) {
+      gl.useProgram(effects[i].program);
       activeBuffer = (activeBuffer + 1) % 2;
+      for (var j = videosLen; j >= 0; j--) {
+        let video = videos[j];
+        let vals = [...state.effects[i].slot.values[j]];
+        let videoEl = this.videos[j];
+        let texture = this.textures[j];
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
-      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+        // Skip if video isn't playing
+        if (videoEl === null || videoEl.currentTime === 0) {
+          continue;
+        }
 
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+        if (i === 0) {
+          gl.bindTexture(gl.TEXTURE_2D, texture.src);
+        } else {
+          gl.bindTexture(
+            gl.TEXTURE_2D,
+            texture.attrs.textures[(activeBuffer + 1) % 2],
+          );
+        }
 
-      this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
+        gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.drawShapes(gl, videoEl, j, effects[i], shapes, vals, -1);
+      }
+    }
+
+    for (var j = videosLen; j >= 0; j--) {
+      let video = videos[j];
+      let vals = [0, 0];
+      let videoEl = this.videos[j];
+      let texture = this.textures[j];
+
+      // Skip if video isn't playing
+      if (videoEl === null || videoEl.currentTime === 0) {
+        continue;
+      }
 
       gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, 1280, 720);
+      // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      gl.useProgram(attrs.main.program);
+      this.drawShapes(gl, videoEl, j, attrs.main, shapes, [0, 0], 1);
     }
-
-    // Draw to the screen
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, 1280, 720);
-    // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
-    this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
   }
 
   drawShapes(gl, video, idx, attrs, shapes, values, flip) {
-    gl.useProgram(attrs.program);
+    // gl.useProgram(attrs.program);
     gl.uniform2fv(attrs.uniforms.effect, values);
     gl.uniform1f(attrs.uniforms.flip, flip);
     gl.uniform2fv(attrs.uniforms.dimensions, [
@@ -429,6 +429,177 @@ class Output {
     }
   }
 
+  // _drawFrame(idx, state) {
+  //   let { videos, shapes, values } = state;
+
+  //   // Get the context
+  //   let gl = this.gl;
+  //   // Get the attributes
+  //   let attrs = this.attrs;
+
+  //   // Get the active effect programs
+  //   let effects = [];
+  //   for (var i = 0; i < attrs.effects.length; i++) {
+  //     effects.push(attrs.effects[i]);
+  //   }
+
+  //   // Get the video and it's HTML element
+  //   let video = videos[idx];
+  //   let vals = values.effects[idx];
+  //   let videoEl = this.videos[idx];
+  //   let texture = this.textures[idx];
+
+  //   // Skip if video isn't playing
+  //   if (videoEl.currentTime === 0) {
+  //     return;
+  //   }
+
+  //   // Clear the frame buffers
+  //   // for (let i = 0; i < 2; i++) {
+  //   //   gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[i]);
+  //   //   gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+
+  //   //   gl.clearColor(0, 0, 0, 0);
+  //   //   gl.clear(gl.COLOR_BUFFER_BIT);
+  //   // }
+
+  //   // Draw the video frame for a frame buffer
+  //   this.updateTexture(gl, texture, videoEl);
+
+  //   let activeBuffer = 1;
+  //   for (let i = 0; i < effects.length; i++) {
+  //     if (!effects[i]) {
+  //       continue;
+  //     }
+
+  //     if (vals[i][2] === 1) {
+  //       continue;
+  //     }
+
+  //     activeBuffer = (activeBuffer + 1) % 2;
+
+  //     gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
+  //     gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+
+  //     gl.clearColor(0, 0, 0, 0);
+  //     gl.clear(gl.COLOR_BUFFER_BIT);
+
+  //     this.drawShapes(gl, videoEl, idx, effects[i], shapes, vals[i], -1);
+
+  //     gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+  //   }
+
+  //   // Draw to the screen
+  //   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  //   gl.viewport(0, 0, 1280, 720);
+  //   // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+  //   this.drawShapes(gl, videoEl, idx, attrs.main, shapes, [0, 0], 1);
+  // }
+
+  // _drawShapes(gl, video, idx, attrs, shapes, values, flip) {
+  //   gl.useProgram(attrs.program);
+  //   gl.uniform2fv(attrs.uniforms.effect, values);
+  //   gl.uniform1f(attrs.uniforms.flip, flip);
+  //   gl.uniform2fv(attrs.uniforms.dimensions, [
+  //     1 / video.videoWidth,
+  //     1 / video.videoHeight,
+  //   ]);
+
+  //   for (var i = 0; i < shapes.length; i++) {
+  //     let tris = shapes[i].tris;
+
+  //     if (flip === 1 && shapes[i].type === "quad") {
+  //       let vert_a = [tris[0].output[0][0], tris[0].output[0][1]];
+  //       let vert_b = [tris[0].output[1][0], tris[0].output[1][1]];
+  //       let vert_c = [tris[0].output[2][0], tris[0].output[2][1]];
+  //       let vert_d = [tris[1].output[2][0], tris[1].output[2][1]];
+
+  //       let translate = [tris[0].input[0][0], tris[0].input[0][1]];
+  //       let scale = [
+  //         tris[0].input[1][0] - tris[0].input[0][0],
+  //         tris[0].input[2][1] - tris[0].input[1][1],
+  //       ];
+
+  //       gl.uniform1f(attrs.uniforms.quad, 1);
+  //       gl.uniform2fv(attrs.uniforms.vert_a, vert_a);
+  //       gl.uniform2fv(attrs.uniforms.vert_b, vert_b);
+  //       gl.uniform2fv(attrs.uniforms.vert_c, vert_c);
+  //       gl.uniform2fv(attrs.uniforms.vert_d, vert_d);
+
+  //       gl.uniform2fv(attrs.uniforms.translate, translate);
+  //       gl.uniform2fv(attrs.uniforms.scale, scale);
+  //     } else {
+  //       gl.uniform1f(attrs.uniforms.quad, 0);
+  //     }
+
+  //     for (var j = 0; j < tris.length; j++) {
+  //       // If we're rendering an effect to a frame buffer,
+  //       // use the same points for the input and output
+  //       let pnts = tris[j].input;
+  //       let oPnts = tris[j].input;
+  //       // If we're rendering the final output use the output points
+  //       if (flip === 1) {
+  //         if (shapes[i].type === "quad") {
+  //           pnts = tris[j].output;
+  //         }
+
+  //         oPnts = tris[j].output;
+  //       }
+
+  //       let opacity = shapes[i].opacity[idx];
+
+  //       gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.position);
+  //       gl.bufferData(
+  //         gl.ARRAY_BUFFER,
+  //         new Float32Array([
+  //           oPnts[0][0] * 2 - 1,
+  //           oPnts[0][1] * -2 + 1,
+  //           oPnts[1][0] * 2 - 1,
+  //           oPnts[1][1] * -2 + 1,
+  //           oPnts[2][0] * 2 - 1,
+  //           oPnts[2][1] * -2 + 1,
+  //         ]),
+  //         gl.DYNAMIC_DRAW,
+  //       );
+
+  //       gl.vertexAttribPointer(
+  //         attrs.locations.position,
+  //         2,
+  //         gl.FLOAT,
+  //         false,
+  //         0,
+  //         0,
+  //       );
+
+  //       gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.texture);
+  //       gl.bufferData(
+  //         gl.ARRAY_BUFFER,
+  //         new Float32Array([
+  //           pnts[0][0],
+  //           pnts[0][1],
+  //           pnts[1][0],
+  //           pnts[1][1],
+  //           pnts[2][0],
+  //           pnts[2][1],
+  //         ]),
+  //         gl.DYNAMIC_DRAW,
+  //       );
+
+  //       gl.vertexAttribPointer(
+  //         attrs.locations.texture,
+  //         2,
+  //         gl.FLOAT,
+  //         false,
+  //         0,
+  //         0,
+  //       );
+  //       gl.uniform1f(attrs.uniforms.opacity, opacity);
+  //       gl.uniform1i(attrs.uniforms.sampler, 0);
+  //       gl.drawArrays(gl.TRIANGLES, 0, 3);
+  //     }
+  //   }
+  // }
+
   createShader(gl, type, source) {
     let shader = gl.createShader(type);
 
@@ -443,7 +614,7 @@ class Output {
     gl.deleteShader(shader);
   }
 
-  createProgram(gl, vShaderSrc, fShaderSrc) {
+  createProgram(id, gl, vShaderSrc, fShaderSrc) {
     let vShader = this.createShader(gl, gl.VERTEX_SHADER, vShaderSrc);
     let fShader = this.createShader(gl, gl.FRAGMENT_SHADER, fShaderSrc);
 
@@ -468,6 +639,7 @@ class Output {
       gl.vertexAttribPointer(textureLocation, 2, gl.FLOAT, false, 0, 0);
 
       let attrs = {
+        id: id,
         program: program,
         locations: {
           position: positionLocation,
@@ -506,6 +678,7 @@ class Output {
     this.gl = canvas.getContext("webgl");
 
     this.attrs.main = this.createProgram(
+      "__main__",
       this.gl,
       vertexShaderSrc,
       fragmentShader,
@@ -523,16 +696,17 @@ class Output {
       this.gl.enable(this.gl.BLEND);
       this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
-      let effects = this.state.effects;
-      for (var i = 0; i < effects.length; i++) {
-        let effect = Effects.find((e) => e.id === effects[i]);
-        if (!!effect && !!effect.shader) {
-          this.attrs.effects.push(
-            this.createProgram(this.gl, vertexShaderSrc, effect.shader),
-          );
-        } else {
-          this.attrs.effects.push(null);
-        }
+      // let effects = this.state.effects;
+      for (var i = 0; i < Effects.length; i++) {
+        let effect = Effects[i];
+        this.attrs.effects.push(
+          this.createProgram(
+            effect.id,
+            this.gl,
+            vertexShaderSrc,
+            effect.shader,
+          ),
+        );
       }
     }
   }
@@ -705,7 +879,6 @@ class Output {
 
   removeVideo(idx) {
     let video = this.videos[idx];
-    // let gl = this.contexts[idx];
 
     this.textures[idx] = null;
     this.textures[idx] = this.initTexture(this.gl);
@@ -722,44 +895,115 @@ class Output {
   }
 
   setEffect(idx, effect) {
-    let fx = Effects.find((e) => e.id === effect);
-
-    for (var i = 0; i < this.glAttrs.length; i++) {
-      if (this.attrs === null) {
-        continue;
-      }
-
-      let attrs = this.attrs;
-      let gl = this.gl;
-
-      if (!!attrs.effects[idx]) {
-        attrs.effects[idx] = null;
-      }
-
-      if (!!effect && !!fx.shader) {
-        attrs.effects[idx] = this.createProgram(gl, vertexShaderSrc, fx.shader);
-      } else {
-        attrs.effects[idx] = null;
-      }
-    }
+    // let fx = Effects.find((e) => e.id === effect);
+    // for (var i = 0; i < this.glAttrs.length; i++) {
+    //   if (this.attrs === null) {
+    //     continue;
+    //   }
+    //   let attrs = this.attrs;
+    //   let gl = this.gl;
+    //   if (!!attrs.effects[idx]) {
+    //     attrs.effects[idx] = null;
+    //   }
+    //   if (!!effect && !!fx.shader) {
+    //     attrs.effects[idx] = this.createProgram(gl, vertexShaderSrc, fx.shader);
+    //   } else {
+    //     attrs.effects[idx] = null;
+    //   }
+    // }
   }
 
   updateScript(scriptId) {
-    let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
-    let script = scripts.find((s) => s.id === scriptId);
-
-    this.scripts[scriptId] = new Function(
-      "state",
-      "effect_x",
-      "effect_y",
-      "script_id",
-      "registry",
-      ScriptTemplate(script.code),
-    );
+    // let scripts = JSON.parse(localStorage.getItem("scripts")) || [];
+    // let script = scripts.find((s) => s.id === scriptId);
+    // this.scripts[scriptId] = new Function(
+    //   "state",
+    //   "effect_x",
+    //   "effect_y",
+    //   "script_id",
+    //   "registry",
+    //   ScriptTemplate(script.code),
+    // );
   }
 
   removeScript(scriptId) {
-    delete this.scripts[scriptId];
+    // delete this.scripts[scriptId];
+  }
+
+  updateSlots(state) {
+    let { effects, scripts } = state;
+
+    this.scripts = scripts.map((script) => {
+      return new Function(
+        "state",
+        "effect_x",
+        "effect_y",
+        "script_id",
+        "registry",
+        ScriptTemplate(script.slot.script.code),
+      );
+    });
+
+    this.effects = effects.map((effect) => {
+      return this.attrs.effects.find((e) => {
+        return e.id === effect.id;
+      });
+    });
+
+    //   let { slots } = state;
+
+    //   let used = [];
+    //   let unused = Effects.map((e) => e.id);
+    //   let scripts = [];
+
+    //   for (var i = 0; i < slots.length; i++) {
+    //     let effect = slots[i].effect;
+
+    //     if (!!effect) {
+    //       if (effect === "__script") {
+    //         scripts.push({
+    //           fn: new Function(
+    //             "state",
+    //             "effect_x",
+    //             "effect_y",
+    //             "script_id",
+    //             "registry",
+    //             ScriptTemplate(slots[i].script.code),
+    //           ),
+    //           slot: i,
+    //         });
+    //       } else {
+    //         used.push({
+    //           id: effect,
+    //           slot: slots[i],
+    //         });
+    //         unused.splice(unused.indexOf(effect), 1);
+    //       }
+    //     }
+    //   }
+
+    //   unused = unused.map((e) => {
+    //     return {
+    //       id: e,
+    //       slot: {
+    //         values: new Array(6).fill(null).map(() => {
+    //           return [0, 0];
+    //         }),
+    //       },
+    //     };
+    //   });
+
+    //   this.scripts = scripts;
+    //   this.effects = [...used, ...unused].map((effect) => {
+    //     let context = this.attrs.effects.find((e) => {
+    //       return e.id === effect.id;
+    //     });
+
+    //     return {
+    //       ...effect,
+    //       context: context,
+    //     };
+    //   });
   }
 }
 
@@ -905,25 +1149,38 @@ class App {
 
             removeVideo.call(this.output, videoIdx);
             setMedia.call(this.output, videoIdx, deviceId, deviceName);
-          } else if (data.action === "set_effect") {
-            let { effectIdx, effect, state } = data;
+          } else if (data.action === "update_slot") {
+            console.log("Updating Slots");
+            let { state } = data;
+            let { updateSlots } = this.output;
 
-            this.output.setEffect.call(this.output, effectIdx, effect);
+            updateSlots.call(this.output, state);
             this.setState(state);
-          } else if (data.action === "set_script") {
-            let { scriptIdx, scriptId, state } = data;
-
-            this.output.setScript.call(this.output, scriptIdx, scriptId);
-            this.setState(state);
-          } else if (data.action === "update_script") {
-            let { script_id } = data;
-
-            this.output.updateScript.call(this.output, script_id);
-          } else if (data.action === "remove_script") {
-            let { script_id } = data;
-
-            this.output.removeScript.call(this.output, script_id);
           }
+          // } else if (data.action === "set_effect") {
+          //   console.log("Setting Effects");
+          //   let { effectIdx, effect, state } = data;
+
+          //   this.output.setEffect.call(this.output, effectIdx, effect);
+          //   this.setState(state);
+
+          //   this.output.setEffectOrder.call(this.output);
+          // } else if (data.action === "set_script") {
+          //   console.log("Setting Scripts");
+          //   let { scriptIdx, scriptId, state } = data;
+
+          //   this.output.setScript.call(this.output, scriptIdx, scriptId);
+          //   this.setState(state);
+          // } else if (data.action === "update_script") {
+          //   console.log("Updating Script");
+          //   let { script_id } = data;
+
+          //   this.output.updateScript.call(this.output, script_id);
+          // } else if (data.action === "remove_script") {
+          //   let { script_id } = data;
+
+          //   this.output.removeScript.call(this.output, script_id);
+          // }
         } else {
           let { loadVideo } = this.output;
 
