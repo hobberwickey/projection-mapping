@@ -42,6 +42,7 @@
                 contenteditable="true"
                 tabindex="1" 
                 @keydown="onKeyDown($event)"
+                @keyup="onKeyUp($event)"
                 @input="onCode($event)"
                 @scroll="onScroll($event)"
               ></code>
@@ -89,8 +90,17 @@
         this.scripts = scripts.filter((s) => !s.hidden);
       });
 
-      this.visualizer.innerHTML = this.escapeHTML(this.code);
-      this.editor.innerHTML = this.escapeHTML(this.code);
+      let nw = Prism.plugins.NormalizeWhitespace;
+      this.code =
+        nw.normalize(this.escapeHTML(this.code), {
+          "left-trim": true,
+          "right-trim": true,
+          "remove-trailing": true,
+          "remove-indent": true,
+        }) + " ";
+
+      this.visualizer.innerHTML = this.code;
+      this.editor.innerHTML = this.code;
       Prism.highlightElement(this.visualizer);
 
       this.querySelectorAll(".sidebar code").forEach((c) => {
@@ -109,7 +119,7 @@
       let script = this.app.scripts.find((s) => +s.id === +evt.target.value);
 
       this.label = script.label + " Copy";
-      this.code = script.code;
+      this.code = this.normalize(this.escapeHTML(script.code)) + " ";
 
       this.visualizer.innerHTML = this.escapeHTML(this.code);
       this.editor.innerHTML = this.escapeHTML(this.code);
@@ -122,7 +132,31 @@
       return text.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
     }
 
+    /**
+     * [normalize This is kinda dumb, but in addition to using the
+     *            prism whitespace normalizer, this function makes sure
+     *            there's a trailing whitespace character which just
+     *            basically fixes all the quirks of contentEditable]
+     * @param  {[String]} text [the string to normalize]
+     * @return {[Sype]}      [the normalized string]
+     */
+    normalize(text) {
+      text = text.slice(0, -1);
+
+      let nw = Prism.plugins.NormalizeWhitespace;
+      let normalized = nw.normalize(this.escapeHTML(text), {
+        "left-trim": false,
+        "right-trim": false,
+        "remove-trailing": false,
+        "remove-indent": false,
+      });
+
+      return normalized + " ";
+    }
+
     onKeyDown(evt) {
+      let nw = Prism.plugins.NormalizeWhitespace;
+
       let el = evt.target;
       let code = el.innerText;
 
@@ -143,8 +177,12 @@
         evt.preventDefault();
         let before_tab = code.slice(0, this.selectionStart);
         let after_tab = code.slice(this.selectionStart, code.length);
+
         let cursor_pos = this.selectionStart + 2;
-        let tabbedCode = before_tab + "  " + after_tab;
+        let tabbedCode = this.normalize(
+          this.escapeHTML(before_tab + "  " + after_tab),
+        );
+
         this.visualizer.innerHTML = this.escapeHTML(tabbedCode);
         this.editor.innerHTML = this.escapeHTML(tabbedCode);
 
@@ -163,14 +201,61 @@
       }
     }
 
+    onKeyUp(evt) {
+      let el = evt.target;
+      let code = el.innerText;
+      let sel = document.getSelection();
+      if (sel.rangeCount > 0) {
+        let range = document.getSelection().getRangeAt(0);
+        let preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(el);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        let startPos = preCaretRange.toString().length;
+        let selectionSize = range.startOffset - range.endOffset;
+
+        if (selectionSize === 0 && startPos === code.length) {
+          console.log("Uh oh");
+          let selectedText = document.getSelection();
+          let selectedRange = document.createRange();
+          selectedRange.setStart(evt.target.childNodes[0], startPos - 1);
+          selectedRange.collapse(true);
+          selectedText.removeAllRanges();
+          selectedText.addRange(selectedRange);
+          evt.target.focus();
+        } else {
+          console.log("Phew");
+        }
+      }
+      // if (evt.key === "Tab") {
+      //   evt.preventDefault();
+      //   let before_tab = code.slice(0, this.selectionStart);
+      //   let after_tab = code.slice(this.selectionStart, code.length);
+      //   let cursor_pos = this.selectionStart + 2;
+      //   let tabbedCode = this.normalize(
+      //     this.escapeHTML(before_tab + "  " + after_tab),
+      //   );
+      //   this.visualizer.innerHTML = this.escapeHTML(tabbedCode);
+      //   this.editor.innerHTML = this.escapeHTML(tabbedCode);
+      //   Prism.highlightElement(this.visualizer);
+      //   this.code = tabbedCode;
+      //   let selectedText = document.getSelection();
+      //   let selectedRange = document.createRange();
+      //   selectedRange.setStart(evt.target.childNodes[0], cursor_pos);
+      //   selectedRange.collapse(true);
+      //   selectedText.removeAllRanges();
+      //   selectedText.addRange(selectedRange);
+      //   evt.target.focus();
+      //   this.dirty = true;
+      // }
+    }
+
     onCode(evt) {
       this.error = null;
 
-      let code = evt.target.innerText;
+      let code = this.normalize(this.escapeHTML(evt.target.innerText));
       let inputSize = code.length - this.code.length;
-
-      this.visualizer.innerHTML = this.escapeHTML(code);
-      this.editor.innerHTML = this.escapeHTML(code);
+      this.visualizer.innerHTML = code;
+      this.editor.innerHTML = code;
 
       Prism.highlightElement(this.visualizer);
       this.code = code;
@@ -178,13 +263,20 @@
 
       let selectedText = document.getSelection();
       let selectedRange = document.createRange();
-      selectedRange.setStart(
-        evt.target.childNodes[0],
-        this.selectionStart + inputSize,
-      );
-      selectedRange.collapse(true);
-      selectedText.removeAllRanges();
-      selectedText.addRange(selectedRange);
+      let selectionTarget = evt.target.childNodes[0];
+
+      if (!!selectionTarget) {
+        selectedRange.setStart(
+          selectionTarget,
+          Math.min(
+            selectionTarget.length,
+            Math.max(0, this.selectionStart + inputSize),
+          ),
+        );
+        selectedRange.collapse(true);
+        selectedText.removeAllRanges();
+        selectedText.addRange(selectedRange);
+      }
       evt.target.focus();
     }
 
