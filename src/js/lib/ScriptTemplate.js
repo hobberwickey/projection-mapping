@@ -1,7 +1,14 @@
 export const ScriptTemplate = function (script) {
 	return `
 		// Keep track of the percs for each lfo initiated
-		let lfos = registry[script_id] || [];
+		if (!registry[script_id]) {
+			registry[script_id] = {};
+		}
+
+		registry[script_id].lfos = registry[script_id].lfos || [];
+		registry[script_id].beats = registry[script_id].beats || {};
+
+		let lfos = registry[script_id].lfos;
 		let lfos_count = 0;
 
 		const lfo = function(min, max, interval) {
@@ -39,6 +46,33 @@ export const ScriptTemplate = function (script) {
 					return Math.floor(Math.random() * (max - min + 1)) + min;
 				}
 			}
+		}
+
+		const onBeats = function(beats, on, off) {
+			let beat_id = ''
+			for (var i=0; i<beats.length; i++) {
+				beat_id = beat_id + beats[i][0] + "." + beats[i][1];
+			}
+			let current = registry[script_id].beats[beat_id] || null;
+			if (state.beat !== null) {
+				let match = beats.find((beat) => {
+					let match1 = beat[0] === state.beat[0] || beat[0] === "*";
+					let match2 = beat[1] === state.beat[1] || beat[1] === "*";
+					
+					return match1 && match2;
+				})
+
+				if (match) {
+		      let new_value = on(state.beat, current);
+					registry[script_id].beats[beat_id] = new_value;
+				}
+			} else {
+				if (!!off) {
+					registry[script_id].beats[beat_id] = off(state.beat, current);
+				}
+			}
+
+			return registry[script_id].beats[beat_id] || null;
 		}
 
 		// Deprecated
@@ -147,10 +181,8 @@ export const ScriptTemplate = function (script) {
 			return values;
 		}
 
-		const setValues = function(identifier, videos, values) {
+		const setValues = function(identifier, videos, x, y) {
 			let current = getValues(identifier);
-			let x = values[0];
-			let y = values[0];
 
 			if (!Array.isArray(videos)) {
 				videos = [videos];
@@ -161,11 +193,11 @@ export const ScriptTemplate = function (script) {
 
 				for (let j=0; j<videos.length; j++) {
 					if (x !== null) {
-						set[j][0] = x;
+						set[j][0] = Math.max(0, Math.min(1, x || 0));
 					}
 
 					if (y !== null) {
-						set[j][1] = y;
+						set[j][1] = Math.max(0, Math.min(1, y || 0));;
 					} 
 				}
 			}

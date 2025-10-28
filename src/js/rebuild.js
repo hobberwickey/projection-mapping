@@ -34,6 +34,8 @@ class App extends Context {
       state: null,
       id: null,
       midiAccess: null,
+      midiClock: null,
+      midiBPM: 0,
       media: [],
       name: "My Project",
     });
@@ -59,6 +61,9 @@ class App extends Context {
     this.leds = null;
     this.sliders = null;
     this.midiWorker = null;
+
+    this.clockStart = null;
+    this.clockCount = null;
 
     this.setupMidi();
     this.setupMedia();
@@ -102,6 +107,7 @@ class App extends Context {
       }),
       slots: new Array(config.slot_count).fill().map((_, idx) => {
         return {
+          id: `${idx}`,
           label: `Empty`,
           script: {
             label: `Script ${idx + 1}`,
@@ -117,7 +123,17 @@ class App extends Context {
       }),
 
       scripts: [],
-      effects: [],
+      effects: Effects.map((e) => {
+        return {
+          id: e.id,
+          slot: {
+            label: e.label,
+            values: new Array(6).fill(null).map(() => {
+              return [0, 0];
+            }),
+          },
+        };
+      }),
 
       shapes: [
         {
@@ -297,6 +313,39 @@ class App extends Context {
     } else {
       console.log("No Midi Access");
     }
+  }
+
+  syncClock(input) {
+    this.midiClock = input;
+
+    this.screen.postMessage(
+      JSON.stringify({
+        action: "set_clock",
+        name: input.name,
+        bpm: +input.bpm,
+      }),
+    );
+    // if (this.midiClock?.name !== input.name) {
+    //   this.midiClock = input;
+
+    //   input.onmidimessage = (e) => {
+    //     if (this.clockStart === null) {
+    //       this.clockStart = Date.now();
+    //     }
+
+    //     this.clockCount = (this.clockCount + 1) % 6;
+    //     if (this.clockCount === 0) {
+    //       let diff = Date.now() - this.clockStart;
+    //       let bpm = (60 / (diff / 250)) | 0;
+
+    //       if (this.midiBPM !== bpm) {
+    //         this.midiBPM = bpm;
+    //       }
+
+    //       this.clockStart = Date.now();
+    //     }
+    //   };
+    // }
   }
 
   async toggleMedia(device) {
@@ -700,9 +749,9 @@ class App extends Context {
   }
 
   removeVideo(idx) {
-    this.state.values.effects[idx] = new Array(6).fill().map((a) => {
-      return new Array(this.config.effect_parameter_count).fill(0);
-    });
+    // this.state.values.effects[idx] = new Array(6).fill().map((a) => {
+    //   return new Array(this.config.effect_parameter_count).fill(0);
+    // });
 
     this.screen.postMessage(
       JSON.stringify({

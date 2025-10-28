@@ -96,6 +96,44 @@
                       </template>
                     </ul>
                   </li>
+                  <li id="midi_devices">
+                    <label
+                      ><span>Midi Clock</span
+                      ><span
+                        uk-icon="icon: refresh"
+                        @click="refreshMidi()"
+                      ></span
+                    ></label>
+                    <ul>
+                      <template :for="devices">
+                        <li @click="syncClock($value[1])">
+                          <template :if="isClockSelected($value[1], clock)">
+                            <span uk-icon="icon: check"></span></template
+                          ><span>{{$value[1].name}}</span>
+                        </li>
+                      </template>
+                      <li @click="syncClock({name: 'default', bpm: 120})">
+                        <template
+                          :if="isClockSelected({name: 'default'}, clock)"
+                        >
+                          <span uk-icon="icon: check"></span></template
+                        ><span>Default Clock</span>
+                        <template
+                          :if="isClockSelected({name: 'default'}, clock)"
+                        >
+                          <div class="range-input">
+                            <input
+                              type="range"
+                              min="20"
+                              max="250"
+                              :value="clock.bpm ?? 120"
+                              @input="syncClock({name: 'default', bpm: $event.target.value})"
+                            /><span>{{clock.bpm}}</span>
+                          </div>
+                        </template>
+                      </li>
+                    </ul>
+                  </li>
 
                   <!-- <li id="media_devices">
                     <label
@@ -153,6 +191,7 @@
         "name",
         "devices",
         "media",
+        "clock",
       ];
     }
 
@@ -176,6 +215,10 @@
 
         app.listen("midiAccess", (access) => {
           this.devices = [...access?.inputs] || [];
+        });
+
+        app.listen("midiClock", (clock) => {
+          this.clock = clock;
         });
 
         app.listen("media", (media) => {
@@ -221,6 +264,14 @@
 
     isSelected(input) {
       return this.app.midiInput?.name === input?.name;
+    }
+
+    isClockSelected(input, clock) {
+      return !!clock?.name && clock?.name === input?.name;
+    }
+
+    syncClock(input) {
+      this.app.syncClock(input);
     }
 
     // toggleMedia(device) {

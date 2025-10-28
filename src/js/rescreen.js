@@ -123,6 +123,15 @@ class Output {
     this.registry = { elapsed: 1 };
 
     this.epoch = Date.now();
+    this.bpm = 0;
+    this.beat = [0, 0];
+    this.timing = [0, 0];
+
+    this.defaultClock = null;
+    this.pulseCount = 0;
+    this.beatStart = null;
+    this.beatTick = false;
+    this.resetBeat = false;
 
     this.videos = new Array(6).fill(null);
     this.scripts = [];
@@ -132,6 +141,8 @@ class Output {
     this.glAttrs = new Array(6).fill(null);
 
     this.gl = null;
+    this.clock = null;
+
     this.attrs = {
       main: null,
       effects: [],
@@ -221,7 +232,12 @@ class Output {
     let start = Date.now();
     let len = this.videos.length - 1;
     let state = JSON.parse(JSON.stringify(this.state));
+    let beat = this.beatTick ? this.beat : null;
+
     state.elapsed = Date.now() - this.epoch;
+    state.bpm = this.bpm;
+    state.beat = beat;
+    state.timing = this.timing;
 
     for (let i = 0; i < state.scripts.length; i++) {
       let script = this.scripts[i];
@@ -230,18 +246,16 @@ class Output {
       let disabled = slot.disabled;
 
       if (!disabled) {
-        this.registry[i] = script(
-          state,
-          values[0],
-          values[1],
-          i,
-          this.registry,
-        );
+        try {
+          script(state, values[0], values[1], slot.id, this.registry);
+        } catch (e) {
+          console.log(e);
+        }
       }
     }
-    this.registry.elapsed = state.elapsed;
 
-    // console.log(this.registry);
+    this.beatTick = false;
+    this.registry.elapsed = state.elapsed;
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.drawFrame(state);
@@ -934,13 +948,16 @@ class Output {
     let { effects, scripts } = state;
 
     this.scripts = scripts.map((script) => {
+      let raw_code = script.slot.script.code;
+      let code = raw_code.replace(/\&gt\;/g, ">").replace(/\&lt\;/g, "<");
+
       return new Function(
         "state",
         "effect_x",
         "effect_y",
         "script_id",
         "registry",
-        ScriptTemplate(script.slot.script.code),
+        ScriptTemplate(code),
       );
     });
 
@@ -950,60 +967,95 @@ class Output {
       });
     });
 
-    //   let { slots } = state;
+    for (var i = 0; i < state.slots.length; i++) {
+      if (state.slots[i].effect !== "__script") {
+        delete this.registry[i];
+      }
+    }
+  }
 
-    //   let used = [];
-    //   let unused = Effects.map((e) => e.id);
-    //   let scripts = [];
+  setClock(clock, bpm) {
+    if (clock === "default") {
+      this.clock = setTimeout(
+        () => {
+          this.handleBeat({ data: [248] });
+        },
+        (60 / bpm) * 1000,
+      );
 
-    //   for (var i = 0; i < slots.length; i++) {
-    //     let effect = slots[i].effect;
+      return;
+    }
 
-    //     if (!!effect) {
-    //       if (effect === "__script") {
-    //         scripts.push({
-    //           fn: new Function(
-    //             "state",
-    //             "effect_x",
-    //             "effect_y",
-    //             "script_id",
-    //             "registry",
-    //             ScriptTemplate(slots[i].script.code),
-    //           ),
-    //           slot: i,
-    //         });
-    //       } else {
-    //         used.push({
-    //           id: effect,
-    //           slot: slots[i],
-    //         });
-    //         unused.splice(unused.indexOf(effect), 1);
-    //       }
-    //     }
-    //   }
+    if (!!navigator.requestMIDIAccess) {
+      navigator.requestMIDIAccess().then(
+        (midiAccess) => {
+          for (const entry of midiAccess.inputs) {
+            if (entry[1].name === clock) {
+              this.clock = entry[1];
 
-    //   unused = unused.map((e) => {
-    //     return {
-    //       id: e,
-    //       slot: {
-    //         values: new Array(6).fill(null).map(() => {
-    //           return [0, 0];
-    //         }),
-    //       },
-    //     };
-    //   });
+              entry[1].onmidimessage = this.handleBeat.bind(this);
+            }
+          }
+        },
+        (msg) => {
+          console.error(`Failed to get MIDI access - ${msg}`);
+        },
+      );
+    } else {
+      console.log("No Midi Access");
+    }
+  }
 
-    //   this.scripts = scripts;
-    //   this.effects = [...used, ...unused].map((effect) => {
-    //     let context = this.attrs.effects.find((e) => {
-    //       return e.id === effect.id;
-    //     });
+  handleBeat(e) {
+    if (e.data[0] === 248) {
+      this.pulseCount = (this.pulseCount + 1) % 6;
 
-    //     return {
-    //       ...effect,
-    //       context: context,
-    //     };
-    //   });
+      ////////// Tracking the count //////////
+      if (this.pulseCount === 0) {
+        if (this.resetBeat) {
+          this.beat = [1, 1];
+          this.timing = [Date.now(), Date.now()];
+          this.resetBeat = false;
+        } else {
+          let next4th = this.beat[0];
+          let next16th = (this.beat[1] + 1) % 5 || 1;
+          this.timing[1] = Date.now();
+
+          if (next16th === 1) {
+            next4th = (next4th + 1) % 5 || 1;
+            this.timing[0] = Date.now();
+          }
+
+          this.beat = [next4th, next16th];
+          this.beatTick = true;
+        }
+      }
+      ////////// End Tracking counting //////////
+
+      ////////// Tracking the BPM //////////
+      if (this.beatStart === null) {
+        this.beatStart = Date.now();
+      }
+
+      if (this.pulseCount === 0) {
+        let diff = Date.now() - this.beatStart;
+        let bpm = 60 / (diff / 250);
+
+        this.bpm = bpm;
+        this.beatStart = Date.now();
+      }
+      ////////// End BPM tracking //////////
+    }
+  }
+
+  setOne() {
+    let duration = 125 * (this.bpm / 60);
+
+    if (Date.now() - this.timing[1] < duration) {
+      this.beat = [1, 1];
+    } else {
+      this.resetBeat = true;
+    }
   }
 }
 
@@ -1123,6 +1175,10 @@ class App {
         setLayer.call(this.ui, layer === "input" ? "output" : "input");
         drawUI.call(this.ui);
       }
+
+      if (e.keyCode === 49) {
+        this.output.setOne.call(this.output);
+      }
     });
 
     window.addEventListener("message", (event) => {
@@ -1156,6 +1212,11 @@ class App {
 
             updateSlots.call(this.output, state);
             this.setState(state);
+          } else if (data.action === "set_clock") {
+            let { name, bpm } = data;
+            let { setClock } = this.output;
+
+            setClock.call(this.output, name, bpm);
           }
           // } else if (data.action === "set_effect") {
           //   console.log("Setting Effects");

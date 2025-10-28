@@ -90,6 +90,73 @@
               </div>
             </li>
             <li>
+              <label class="uk-accordion-title">onBeats(beats, on, off)</label>
+              <div class="uk-accordion-content">
+                <p>
+                  When a midi clock is synced, this method returns a value that
+                  will persist until the next specified beat.
+                  <a href="lfos">Below</a>)
+                </p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {array[array]} 'beats' 
+                       - An array of beats. A beat is an array with the first value
+                         being a value 1-4 representing a quarter notes in a measure
+                         and the second value 1-4 representing the 16th notes of the 
+                         quater notes. Either value can also be a wildcard'*' 
+                      @param {function(beat, value)} 'on' 
+                       - a callback function which is called on the specified beat. The 
+                         return value will be persisted until the next beat specified in 
+                         the 'beats' array. This function is passed two arguments, the 
+                         current beat, and the current value
+                      @param {function } 'off' 
+                       - an optional callback function which is called on every frame 
+                         that does NOT fall on a specified beat. It's return value
+                         will persist until the next beat. It is passed the current beat 
+                         (which will always be null), and the persisted value, so this
+                         function can be used to modify that value. 
+
+                      @returns {any} 
+                       - A persisted variable
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      // This function will return a value of 1 at the start of 
+                      // each beat, and fade that by 10% on each frame
+                      let pixelate_value = onBeats(
+                        [["*", 1]],
+                        (b, v) => { return 1 },
+                        (b, v) => { return v * 0.9 }
+                      );
+
+                      // sets the "pixelate" on video 0 to the value returned 
+                      // by the onBeats function above
+                      setValues("Pixelate", 0, pixelate_value, pixelate_value);
+
+                      // This function return a random value on beats 2 and 4
+                      let random_value = onBeats(
+                        [[2, 1], [4, 1]],
+                        () => { return Math.random() }
+                      );
+
+                      // This sets the 'cosine palette' effect to be fully on
+                      // with the color rotation changing to the random value
+                      // set by the above onBeats function 
+                      setValues("Cosine Palette", 0, 1, random_value);
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li>
               <label class="uk-accordion-title">getSelectedVideo()</label>
               <div class="uk-accordion-content">
                 <p>Returns the currently selected video</p>
