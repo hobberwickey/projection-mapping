@@ -286,6 +286,74 @@ export const ScriptTemplate = function (script) {
 			}
 		}
 
+		const createShape = function(inputs, outputs) {
+			if (!Array.isArray(inputs) || !Array.isArray(outputs)) {
+				return
+			}
+
+			if (inputs.length !== outputs.length) {
+				return 
+			}
+
+			for (let i=0; i<inputs.length; i++) {
+				inputs[i][0] = Math.max(0, Math.min(1, inputs[i][0]))
+				inputs[i][1] = Math.max(0, Math.min(1, inputs[i][1]))
+				outputs[i][0] = Math.max(0, Math.min(1, outputs[i][0]))
+				outputs[i][1] = Math.max(0, Math.min(1, outputs[i][1]))
+			}
+
+			let shape = {
+				id: "",
+        type: "",
+        label: "",
+        opacity: new Array(state.videos.length).fill(0),
+			};
+
+			if (inputs.length === 3) {
+				shape.tris = [	
+					{input: [
+						[inputs[0][0], inputs[0][1]],
+						[inputs[1][0], inputs[1][1]],
+						[inputs[2][0], inputs[2][1]],
+					],
+					output: [
+						[outputs[0][0], outputs[0][1]],
+						[outputs[1][0], outputs[1][1]],
+						[outputs[2][0], outputs[2][1]],
+					]}
+				]
+			} else if (inputs.length === 4) {
+				shape.tris = [
+					{input: [
+						[inputs[0][0], inputs[0][1]],
+						[inputs[1][0], inputs[1][1]],
+						[inputs[2][0], inputs[2][1]],
+					],
+					output: [
+						[outputs[0][0], outputs[0][1]],
+						[outputs[1][0], outputs[1][1]],
+						[outputs[2][0], outputs[2][1]],
+					]},
+					{input: [
+						[inputs[0][0], inputs[0][1]],
+						[inputs[2][0], inputs[2][1]],
+						[inputs[3][0], inputs[3][1]],
+					],
+					output: [
+						[outputs[0][0], outputs[0][1]],
+						[outputs[2][0], outputs[2][1]],
+						[outputs[3][0], outputs[3][1]],
+					]}
+				]
+			} else {
+				return
+			}
+
+			state.shapes.push(shape);
+
+			return shape;
+		}
+
 		${script}
 
 		return lfos;
