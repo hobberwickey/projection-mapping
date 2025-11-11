@@ -273,7 +273,8 @@ class Output {
     // Get the attributes
     let attrs = this.attrs;
     let videosLen = this.videos.length - 1;
-    let activeBuffer = 1;
+    // let activeBuffer = 1;
+    let activeBuffers = new Array(this.videos.length).fill(0);
 
     for (var j = videosLen; j >= 0; j--) {
       let video = videos[j];
@@ -288,34 +289,56 @@ class Output {
       this.updateTexture(gl, texture, videoEl);
     }
 
+    // First draw the texture to the first frame buffer
+    for (var j = videosLen; j >= 0; j--) {
+      let video = videos[j];
+      let vals = [0, 0];
+      let videoEl = this.videos[j];
+      let texture = this.textures[j];
+
+      // Skip if video isn't playing
+      if (videoEl === null || videoEl.currentTime === 0) {
+        continue;
+      }
+
+      gl.bindTexture(gl.TEXTURE_2D, texture.src);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[0]);
+      gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
+      gl.useProgram(attrs.main.program);
+      this.drawShapes(gl, videoEl, j, attrs.main, shapes, [0, 0], -1);
+    }
+
     for (var i = 0; i < effects.length; i++) {
       gl.useProgram(effects[i].program);
-      activeBuffer = (activeBuffer + 1) % 2;
+
       for (var j = videosLen; j >= 0; j--) {
         let video = videos[j];
         let vals = [...state.effects[i].slot.values[j]];
         let videoEl = this.videos[j];
         let texture = this.textures[j];
 
+        // Skip if this effect isn't being used
+        if (vals[0] === 0 && vals[1] === 0) {
+          continue;
+        }
+
         // Skip if video isn't playing
         if (videoEl === null || videoEl.currentTime === 0) {
           continue;
         }
 
-        if (i === 0) {
-          gl.bindTexture(gl.TEXTURE_2D, texture.src);
-        } else {
-          gl.bindTexture(
-            gl.TEXTURE_2D,
-            texture.attrs.textures[(activeBuffer + 1) % 2],
-          );
-        }
+        let activeBuffer = activeBuffers[j];
+        let drawBuffer = (activeBuffer + 1) % 2;
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[activeBuffer]);
+        gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[drawBuffer]);
         gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
         this.drawShapes(gl, videoEl, j, effects[i], shapes, vals, -1);
+
+        activeBuffers[j] = drawBuffer;
       }
     }
 
@@ -330,7 +353,9 @@ class Output {
         continue;
       }
 
-      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffer]);
+      console.log(j, activeBuffers[j]);
+
+      gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffers[j]]);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, 1280, 720);
       // gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
@@ -349,6 +374,12 @@ class Output {
     ]);
 
     for (var i = 0; i < shapes.length; i++) {
+      let opacity = shapes[i].opacity[idx];
+
+      if (opacity === 0) {
+        continue;
+      }
+
       let tris = shapes[i].tris;
 
       if (flip === 1 && shapes[i].type === "quad") {
@@ -388,8 +419,6 @@ class Output {
 
           oPnts = tris[j].output;
         }
-
-        let opacity = shapes[i].opacity[idx];
 
         gl.bindBuffer(gl.ARRAY_BUFFER, attrs.buffers.position);
         gl.bufferData(
