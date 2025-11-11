@@ -53,7 +53,7 @@ export const ScriptTemplate = function (script) {
 			for (var i=0; i<beats.length; i++) {
 				beat_id = beat_id + beats[i][0] + "." + beats[i][1];
 			}
-			let current = registry[script_id].beats[beat_id] || null;
+			let current = registry[script_id].beats[beat_id];
 			if (state.beat !== null) {
 				let match = beats.find((beat) => {
 					let match1 = beat[0] === state.beat[0] || beat[0] === "*";
@@ -63,8 +63,7 @@ export const ScriptTemplate = function (script) {
 				})
 
 				if (match) {
-		      let new_value = on(state.beat, current);
-					registry[script_id].beats[beat_id] = new_value;
+		      registry[script_id].beats[beat_id] = on(state.beat, current);
 				}
 			} else {
 				if (!!off) {
@@ -72,7 +71,7 @@ export const ScriptTemplate = function (script) {
 				}
 			}
 
-			return registry[script_id].beats[beat_id] || null;
+			return registry[script_id].beats[beat_id];
 		}
 
 		// Deprecated
@@ -268,7 +267,7 @@ export const ScriptTemplate = function (script) {
 
 			for (let i=0; i<shapes.length; i++) {
 				let shape = state.shapes[shapes[i]];
-
+				
 				if (!shape) {
 					continue;
 				}
@@ -286,7 +285,9 @@ export const ScriptTemplate = function (script) {
 			}
 		}
 
-		const createShape = function(inputs, outputs) {
+		const createShape = function(inputs, outputs, opacity) {
+			opacity = opacity || 0;
+
 			if (!Array.isArray(inputs) || !Array.isArray(outputs)) {
 				return
 			}
@@ -304,9 +305,9 @@ export const ScriptTemplate = function (script) {
 
 			let shape = {
 				id: "",
-        type: "",
+        type: inputs.length === 3 ? 'triangle' : 'quad',
         label: "",
-        opacity: new Array(state.videos.length).fill(0),
+        opacity: new Array(state.videos.length).fill(opacity),
 			};
 
 			if (inputs.length === 3) {
