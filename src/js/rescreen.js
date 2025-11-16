@@ -181,8 +181,8 @@ class Output {
       return a;
     }, []);
 
-    console.log(effects, used, unused);
-    console.log([...used, ...unused]);
+    // console.log(effects, used, unused);
+    // console.log([...used, ...unused]);
   }
 
   setState() {
@@ -238,6 +238,7 @@ class Output {
     state.bpm = this.bpm;
     state.beat = beat;
     state.timing = this.timing;
+    state.elements = this.videos;
 
     for (let i = 0; i < state.scripts.length; i++) {
       let script = this.scripts[i];
@@ -352,8 +353,6 @@ class Output {
       if (videoEl === null || videoEl.currentTime === 0) {
         continue;
       }
-
-      console.log(j, activeBuffers[j]);
 
       gl.bindTexture(gl.TEXTURE_2D, texture.attrs.textures[activeBuffers[j]]);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);

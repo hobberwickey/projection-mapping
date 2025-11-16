@@ -192,13 +192,58 @@ export const ScriptTemplate = function (script) {
 
 				for (let j=0; j<videos.length; j++) {
 					if (x !== null) {
-						set[j][0] = Math.max(0, Math.min(1, x || 0));
+						set[videos[j]][0] = Math.max(0, Math.min(1, x || 0));
 					}
 
 					if (y !== null) {
-						set[j][1] = Math.max(0, Math.min(1, y || 0));;
+						set[videos[j]][1] = Math.max(0, Math.min(1, y || 0));;
 					} 
 				}
+			}
+		}
+
+		const setTime = function(videos, start) {
+			if (!Array.isArray(videos)) {
+				videos = [videos];
+			}
+
+			let element;
+			for (var i=0; i<videos.length; i++) {
+				element = state.elements[videos[i]];
+				element.currentTime = start;
+			}
+		}
+
+		const setLoop = function(videos, start, end) {
+			if (!Array.isArray(videos)) {
+				videos = [videos];
+			}
+
+			let element;
+			for (var i=0; i<videos.length; i++) {
+				element = state.elements[videos[i]];
+				end = end || element.duration;
+				start = start || 0;
+
+				if (element.currentTime > end) {
+					element.currentTime = start;
+				}
+
+				if (element.currentTime < start) {
+					element.currentTime = start;
+				}
+			}
+		}
+
+		const setPlaybackRate = function(videos, rate) {
+			if (!Array.isArray(videos)) {
+				videos = [videos];
+			}
+
+			let element;
+			for (var i=0; i<videos.length; i++) {
+				element = state.elements[videos[i]];
+				element.playbackRate = rate;
 			}
 		}
 

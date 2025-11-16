@@ -378,90 +378,21 @@
             </li>
 
             <li>
-              <label class="uk-accordion-title">getEffectById(id)</label>
-              <div class="uk-accordion-content">
-                <p>
-                  Get's an effect by it's human reabable id and returns an array
-                  of the slot indexes where it's assigned
-                </p>
-                <div>
-                  <pre>
-                    <code class="language-js">
-                      /*
-                      @param {enum} 'id' 
-                       - the effect's id. Options are
-                         - video_controls
-                         - brightness_opacity
-                         - color_opacity
-                         - cosine_palette
-                         - pixelate
-                         - prism
-                         - zoom
-                         - shift
-                         - color_adjust
-                      
-                      @returns {array} 
-                       - An array of the effects indexes
-                      */
-                    </code>
-                  </pre>
-                </div>
-                <p>Example:</p>
-                <div class="example">
-                  <pre>
-                    <code class="language-js">
-                      // Continually move the 'shift' effect
-                      // for the first video
-
-                      // Get effects indexes
-                      let shift = getEffectById('shift');
-
-                      // if there are no shifts assigned, return
-                      if (shift.length === 0){
-                        return;
-                      }
-
-                      // Create a timer for x and y
-                      let xShift = lfo(0, 1, 1 - effect_x * 2).saw();
-                      let yShift = lfo(0, 1, 1 - effect_y * 2).saw();
-
-                      // special case. If effect_x or
-                      // effect_y are zero, just set
-                      // the shift to whatever it is
-                      // by default
-                      let current = getEffectValues(shift[0], 0)
-                      if (effect_x === 0) {
-                        xShift = current[0];
-                      }
-
-                      if (effect_y === 0) {
-                        yShift = current[1];
-                      }
-
-                      // Set the effect values for the
-                      // first video
-                      setEffectValues(shift, 0, xShift, yShift);
-                    </code>
-                  </pre>
-                </div>
-              </div>
-            </li>
-            <li>
               <label class="uk-accordion-title">
-                setEffectValues(effects, videos, x, y)
+                setValues(effect, videos, x, y)
               </label>
               <div class="uk-accordion-content">
                 <p>
-                  Sets the x and y values for one or more effect values for one
-                  or more videos. Setting a value to null will leave it at
-                  whatever the slider's value is
+                  Sets the x and y values for the given effect and videos.
+                  Setting a value to null will leave it at whatever the slider's
+                  value is.
                 </p>
 
                 <div class="example">
                   <pre>
                     <code class="language-js">
                       /*
-                      @param {number|array} 'effects' 
+                      @param {string} 'effect' 
                        - the index of the effects
                       @param {number|array} 'videos'
                        - the index of the videos
@@ -485,17 +416,185 @@
                         // Get the video opacity
                         let opacity = getVideoOpacity(i);
 
-                        // Get the zoom and prism indexes
-                        let zoom = getEffectById("zoom");
-                        let prism = getEffectById("prism");
                         
                         // Set the zoom effect (x and y)
-                        setEffectValues(zoom, i, opacity, opacity);
+                        setValues("Zoom", i, opacity, opacity);
 
                         // Set the prism x value. Using null
                         // for y value will just default it to
                         // the slider's value
-                        setEffectValues(prism, i, opacity/2, null);
+                        setValues("Prism", i, opacity/2, null);
+                      }
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <label class="uk-accordion-title">setTime(videos, time)</label>
+              <div class="uk-accordion-content">
+                <p>Jumps one or more videos to a set time</p>
+                <div>
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {number|array} 'videos' 
+                       - a video index, or array of video indexes 
+                      @param {float} 'time' 
+                       - the time (in seconds) to jump to    
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <label class="uk-accordion-title"
+                >setLoop(videos, start, end)</label
+              >
+              <div class="uk-accordion-content">
+                <p>Loops a video between the start and end time</p>
+                <div>
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {number|array} 'videos' 
+                       - a video index, or array of video indexes 
+                      @param {float} 'start' 
+                       - the start time (in seconds) of the loop   
+                      @param {float} 'end' 
+                       - the end time (in seconds) of the loop 
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <label class="uk-accordion-title"
+                >setPlaybackRate(videos, rate)</label
+              >
+              <div class="uk-accordion-content">
+                <p>Sets the playback rate of one or more videos</p>
+                <div>
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {number|array} 'videos' 
+                       - a video index, or array of video indexes 
+                      @param {float} 'rate' 
+                       - the playback rate   
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <label class="uk-accordion-title">
+                createShape(inputs, output, opacity)
+              </label>
+              <div class="uk-accordion-content">
+                <p>
+                  Adds a temporary shape with the given vertecies. If three
+                  vertecies are passed in, the shape will be a triangle. If four
+                  are passed in, it will be a quad.
+                </p>
+
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /*
+                      @param {array[array[x,y]]} 'effects' 
+                       - the index of the effects
+                      @param {array[array[x,y]]} 'videos'
+                       - the index of the videos
+                      @param {number} 'opacity'
+                       - the opacity (0-1) value
+                      
+                      @returns {object[shape]} 
+                       - a shape object
+                      */
+                    </code>
+                  </pre>
+                </div>
+                <p>Example:</p>
+                <div class="example">
+                  <pre>
+                    <code class="language-js">
+                      /////// Script for creating shapes ///////
+
+                      // Get the count of the original shapes
+                      let shapesLen = state.shapes.length;
+
+                      // Set all the opacity on those shapes to zero
+                      for (let i = 0; i < shapesLen; i++) {
+                        let shape = state.shapes[i];
+                        for (let j = 0; j < shape.opacity.length; j++) {
+                          shape.opacity[j] = 0;
+                        }
+                      }
+
+                      // Get the ratios for dividing up the screen
+                      let wr = 1 / 16;
+                      let hr = 1 / 9;
+
+                      // loop over the x and x planes
+                      for (let y = 0; y < 1; y++) {
+                        for (let x = 0; x < 1; x++) {
+                          // get the current rectangle boundaries
+                          let w1 = wr * x;
+                          let w2 = wr * (x + 1);
+                          let w3 = (w2 - w1) / 2;
+
+                          let h1 = hr * y;
+                          let h2 = hr * (y + 1);
+
+                          let opacity = x % 2 === y % 2 ? 1 : 0;
+
+                          // Create a new shape
+                          let newShape = createShape(
+                            [
+                              [w1, h1],
+                              [w2, h1],
+                              [w3, h2],
+                            ],
+                            [
+                              [w1, h1],
+                              [w2, h1],
+                              [w3, h2],
+                            ],
+                            opacity,
+                          );
+                        }
                       }
                     </code>
                   </pre>
@@ -504,7 +603,7 @@
             </li>
             <li>
               <label class="uk-accordion-title">
-                getEffectValues(effect, video)
+                getValues(effect, video)
               </label>
               <div class="uk-accordion-content">
                 <p>Gets the current values (x,y) for an effect/video</p>
