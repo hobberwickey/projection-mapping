@@ -306,7 +306,7 @@ class Output {
       gl.bindFramebuffer(gl.FRAMEBUFFER, texture.attrs.buffers[0]);
       gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
       gl.useProgram(attrs.main.program);
-      this.drawShapes(gl, videoEl, j, attrs.main, shapes, [0, 0], -1);
+      this.drawShapes(gl, videoEl, j, attrs.main, shapes, [0, 0], -1, true);
     }
 
     for (var i = 0; i < effects.length; i++) {
@@ -317,6 +317,8 @@ class Output {
         let vals = [...state.effects[i].slot.values[j]];
         let videoEl = this.videos[j];
         let texture = this.textures[j];
+
+        console.log(i, state.effects, vals);
 
         // Skip if this effect isn't being used
         if (vals[0] === 0 && vals[1] === 0) {
@@ -337,7 +339,7 @@ class Output {
         gl.viewport(0, 0, videoEl.videoWidth, videoEl.videoHeight);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        this.drawShapes(gl, videoEl, j, effects[i], shapes, vals, -1);
+        this.drawShapes(gl, videoEl, j, effects[i], shapes, vals, -1, true);
 
         activeBuffers[j] = drawBuffer;
       }
@@ -363,7 +365,7 @@ class Output {
     }
   }
 
-  drawShapes(gl, video, idx, attrs, shapes, values, flip) {
+  drawShapes(gl, video, idx, attrs, shapes, values, flip, ignoreOpacity) {
     // gl.useProgram(attrs.program);
     gl.uniform2fv(attrs.uniforms.effect, values);
     gl.uniform1f(attrs.uniforms.flip, flip);
@@ -464,7 +466,7 @@ class Output {
           0,
           0,
         );
-        gl.uniform1f(attrs.uniforms.opacity, opacity);
+        gl.uniform1f(attrs.uniforms.opacity, ignoreOpacity ? 1 : opacity);
         gl.uniform1i(attrs.uniforms.sampler, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       }
