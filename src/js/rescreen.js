@@ -318,8 +318,6 @@ class Output {
         let videoEl = this.videos[j];
         let texture = this.textures[j];
 
-        console.log(i, state.effects, vals);
-
         // Skip if this effect isn't being used
         if (vals[0] === 0 && vals[1] === 0) {
           continue;
